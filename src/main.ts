@@ -1,14 +1,16 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
+import { GameScene } from './scenes/GameScene';
+import { LEVEL_ONE } from './game/config/levels';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  width: 768,
-  height: 480,
+  width: LEVEL_ONE.cols * LEVEL_ONE.tileSize,
+  height: LEVEL_ONE.rows * LEVEL_ONE.tileSize,
   backgroundColor: '#1d2b1f',
   pixelArt: true,
   parent: 'game',
-  scene: [BootScene],
+  scene: [BootScene, GameScene],
 };
 
 new Phaser.Game(config);

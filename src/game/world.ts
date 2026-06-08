@@ -10,6 +10,22 @@ import { GameState, type GameStatus } from './state/gameState';
 import { WaveManager } from './systems/waveManager';
 import { selectTarget } from './systems/targeting';
 
+export interface ShotEvent {
+  from: Vec2;
+  to: Vec2;
+  heroId: string;
+}
+
+export interface DeathEvent {
+  pos: Vec2;
+  enemyTypeId: string;
+}
+
+export interface WorldEvents {
+  shots: ShotEvent[];
+  deaths: DeathEvent[];
+}
+
 export interface WorldConfig {
   level: LevelConfig;
   enemyTypes: Record<string, EnemyType>;
@@ -26,6 +42,7 @@ export class World {
   readonly waveManager: WaveManager;
   enemies: Enemy[] = [];
   towers: Tower[] = [];
+  readonly events: WorldEvents = { shots: [], deaths: [] };
 
   constructor(cfg: WorldConfig) {
     this.level = cfg.level;
@@ -78,6 +95,8 @@ export class World {
   }
 
   update(dt: number): void {
+    this.events.shots = [];
+    this.events.deaths = [];
     if (this.state.status !== 'playing') return;
 
     // 1. spawn
@@ -97,6 +116,11 @@ export class World {
         if (target) {
           target.takeDamage(t.type.damage);
           t.resetCooldown();
+          this.events.shots.push({
+            from: { x: t.pos.x, y: t.pos.y },
+            to: { x: target.pos.x, y: target.pos.y },
+            heroId: t.type.id,
+          });
         }
       }
     }
@@ -108,6 +132,7 @@ export class World {
         this.state.loseLife(e.type.leakDamage);
       } else if (e.isDead) {
         this.economy.earn(e.type.reward);
+        this.events.deaths.push({ pos: { x: e.pos.x, y: e.pos.y }, enemyTypeId: e.type.id });
       } else {
         survivors.push(e);
       }

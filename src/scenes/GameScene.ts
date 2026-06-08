@@ -6,24 +6,23 @@ import { HERO_TYPES } from '../game/config/heroes';
 import { WAVES } from '../game/config/waves';
 import { loadSave, saveBestWave } from '../services/localSave';
 import type { Vec2 } from '../game/geometry';
-
-const HERO_COLORS: Record<string, number> = {
-  lapulapu: 0xffcf5c,
-  gabriela: 0x5cc7ff,
-};
-const ENEMY_COLORS: Record<string, number> = {
-  aswang: 0xc0392b,
-  tiktik: 0x8e44ad,
-};
+import type { Enemy } from '../game/entities/enemy';
+import type { Tower } from '../game/entities/tower';
+import { renderMap } from '../render/mapRenderer';
+import { EnemyView } from '../render/enemyView';
+import { TowerView } from '../render/towerView';
+import { spawnProjectile, spawnHitPuff, spawnDeath } from '../render/fx';
 
 export class GameScene extends Phaser.Scene {
   private world!: World;
-  private gfx!: Phaser.GameObjects.Graphics;
+  private hpBars!: Phaser.GameObjects.Graphics;
   private hudText!: Phaser.GameObjects.Text;
   private overlayText!: Phaser.GameObjects.Text;
   private selectedHeroId = 'lapulapu';
   private bestWave = 0;
   private endHandled = false;
+  private enemyViews = new Map<Enemy, EnemyView>();
+  private towerViews = new Map<Tower, TowerView>();
 
   constructor() {
     super('Game');
@@ -38,22 +37,25 @@ export class GameScene extends Phaser.Scene {
     });
     this.bestWave = loadSave().bestWave;
     this.endHandled = false;
+    this.enemyViews.clear();
+    this.towerViews.clear();
 
-    this.gfx = this.add.graphics();
+    renderMap(this, LEVEL_ONE);
+    this.hpBars = this.add.graphics().setDepth(9);
 
     this.hudText = this.add
       .text(8, 8, '', { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff' })
-      .setDepth(10);
+      .setDepth(20);
 
     this.overlayText = this.add
-      .text(LEVEL_ONE.cols * LEVEL_ONE.tileSize / 2, LEVEL_ONE.rows * LEVEL_ONE.tileSize / 2, '', {
+      .text(this.scale.width / 2, this.scale.height / 2, '', {
         fontFamily: 'monospace',
         fontSize: '32px',
         color: '#ffffff',
         align: 'center',
       })
       .setOrigin(0.5)
-      .setDepth(10);
+      .setDepth(20);
 
     this.input.keyboard?.on('keydown-ONE', () => (this.selectedHeroId = 'lapulapu'));
     this.input.keyboard?.on('keydown-TWO', () => (this.selectedHeroId = 'gabriela'));
@@ -83,46 +85,60 @@ export class GameScene extends Phaser.Scene {
     if (this.world.status === 'playing') {
       this.world.update(delta / 1000);
     }
-    this.draw();
+    this.consumeEvents();
+    this.syncViews();
+    this.drawHpBars();
     this.updateHud();
     this.handleEndState();
   }
 
-  private draw(): void {
-    const g = this.gfx;
-    g.clear();
-
-    // path
-    g.lineStyle(LEVEL_ONE.tileSize * 0.6, 0x3a2c1f, 1);
-    g.beginPath();
-    const path = LEVEL_ONE.path;
-    g.moveTo(path[0].x, path[0].y);
-    for (let i = 1; i < path.length; i++) g.lineTo(path[i].x, path[i].y);
-    g.strokePath();
-
-    // build spots
-    for (const s of LEVEL_ONE.buildSpots) {
-      g.fillStyle(0x2e4a32, 1);
-      g.fillRect(s.x - 18, s.y - 18, 36, 36);
+  private consumeEvents(): void {
+    for (const shot of this.world.events.shots) {
+      for (const view of this.towerViews.values()) {
+        if (view.sprite.x === shot.from.x && view.sprite.y === shot.from.y) {
+          view.playAttack(shot.to.x);
+        }
+      }
+      spawnProjectile(this, shot.from, shot.to);
+      spawnHitPuff(this, shot.to);
     }
+    for (const death of this.world.events.deaths) {
+      spawnDeath(this, death.enemyTypeId, death.pos);
+    }
+  }
 
-    // towers + range
+  private syncViews(): void {
     for (const t of this.world.towers) {
-      g.fillStyle(0x000000, 0.12);
-      g.fillCircle(t.pos.x, t.pos.y, t.type.range);
-      g.fillStyle(HERO_COLORS[t.type.id] ?? 0xffffff, 1);
-      g.fillCircle(t.pos.x, t.pos.y, 14);
+      if (!this.towerViews.has(t)) {
+        this.towerViews.set(t, new TowerView(this, t));
+      }
     }
-
-    // enemies + hp bar
+    const live = new Set(this.world.enemies);
     for (const e of this.world.enemies) {
-      g.fillStyle(ENEMY_COLORS[e.type.id] ?? 0xffffff, 1);
-      g.fillCircle(e.pos.x, e.pos.y, 10);
+      let view = this.enemyViews.get(e);
+      if (!view) {
+        view = new EnemyView(this, e);
+        this.enemyViews.set(e, view);
+      }
+      view.sync(e);
+    }
+    for (const [e, view] of this.enemyViews) {
+      if (!live.has(e)) {
+        view.destroy();
+        this.enemyViews.delete(e);
+      }
+    }
+  }
+
+  private drawHpBars(): void {
+    const g = this.hpBars;
+    g.clear();
+    for (const e of this.world.enemies) {
       const frac = Math.max(0, e.hp / e.type.maxHp);
       g.fillStyle(0x000000, 0.6);
-      g.fillRect(e.pos.x - 11, e.pos.y - 18, 22, 4);
+      g.fillRect(e.pos.x - 11, e.pos.y - 22, 22, 4);
       g.fillStyle(0x2ecc71, 1);
-      g.fillRect(e.pos.x - 11, e.pos.y - 18, 22 * frac, 4);
+      g.fillRect(e.pos.x - 11, e.pos.y - 22, 22 * frac, 4);
     }
   }
 

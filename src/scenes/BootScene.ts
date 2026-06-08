@@ -6,7 +6,6 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    // No assets to preload yet (placeholder graphics are drawn immediately).
-    this.scene.start('Game');
+    this.scene.start('Preload');
   }
 }

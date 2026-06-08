@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
+import { PreloadScene } from './scenes/PreloadScene';
 import { GameScene } from './scenes/GameScene';
 import { LEVEL_ONE } from './game/config/levels';
 
@@ -10,7 +11,7 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#1d2b1f',
   pixelArt: true,
   parent: 'game',
-  scene: [BootScene, GameScene],
+  scene: [BootScene, PreloadScene, GameScene],
 };
 
 new Phaser.Game(config);

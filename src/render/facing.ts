@@ -1,4 +1,6 @@
-export type Facing = 'down' | 'up' | 'side';
+import type { Facing } from '../assets/manifest';
+
+export type { Facing };
 
 export interface FacingResult {
   facing: Facing;

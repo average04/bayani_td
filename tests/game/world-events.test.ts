@@ -54,6 +54,8 @@ describe('World events', () => {
         sawShot = true;
         expect(w.events.shots[0].heroId).toBe('h');
         expect(w.events.shots[0].from).toEqual({ x: 50, y: 48 });
+        expect(typeof w.events.shots[0].to.x).toBe('number');
+        expect(w.events.shots[0].to.y).toBe(0);
       }
       if (w.events.deaths.length > 0) {
         sawDeath = true;
@@ -64,10 +66,21 @@ describe('World events', () => {
     expect(sawDeath).toBe(true);
   });
 
-  it('clears event buffers each tick', () => {
-    const w = new World(makeConfig()); // no tower, no wave started
+  it('clears event buffers each tick while keeping the same array identity', () => {
+    const w = new World(makeConfig());
+    const shotsRef = w.events.shots;
+    w.placeTower('h', { x: 50, y: 48 });
+    w.startNextWave();
+    // tick until a shot is recorded
+    let recorded = false;
+    for (let i = 0; i < 5 && !recorded; i++) {
+      w.update(0.1);
+      if (w.events.shots.length > 0) recorded = true;
+    }
+    expect(recorded).toBe(true);
+    // a subsequent tick clears the buffer in place, preserving array identity
     w.update(0.1);
     expect(w.events.shots).toEqual([]);
-    expect(w.events.deaths).toEqual([]);
+    expect(w.events.shots).toBe(shotsRef);
   });
 });

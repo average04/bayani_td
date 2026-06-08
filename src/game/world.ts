@@ -95,8 +95,8 @@ export class World {
   }
 
   update(dt: number): void {
-    this.events.shots = [];
-    this.events.deaths = [];
+    this.events.shots.length = 0;
+    this.events.deaths.length = 0;
     if (this.state.status !== 'playing') return;
 
     // 1. spawn

@@ -16,8 +16,8 @@ export class PreloadScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    for (const c of MANIFEST.characters) {
-      this.load.spritesheet(c.key, c.path, { frameWidth: c.frameWidth, frameHeight: c.frameHeight });
+    for (const s of MANIFEST.sheets) {
+      this.load.spritesheet(s.key, s.path, { frameWidth: s.frameWidth, frameHeight: s.frameHeight });
     }
     this.load.image(MANIFEST.fx.projectile.key, MANIFEST.fx.projectile.path);
     this.load.spritesheet(MANIFEST.fx.hitPuff.key, MANIFEST.fx.hitPuff.path, {

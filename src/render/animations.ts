@@ -1,16 +1,23 @@
 import Phaser from 'phaser';
-import { MANIFEST } from '../assets/manifest';
+import { MANIFEST, type Facing } from '../assets/manifest';
+
+const STATES = ['idle', 'walk', 'attack', 'death'] as const;
+const FACINGS: Facing[] = ['down', 'up', 'side'];
 
 export function registerAnimations(scene: Phaser.Scene): void {
   for (const c of MANIFEST.characters) {
-    for (const state of ['idle', 'walk', 'attack', 'death'] as const) {
-      const spec = c.anims[state];
-      scene.anims.create({
-        key: `${c.key}-${state}`,
-        frames: scene.anims.generateFrameNumbers(c.key, { start: spec.start, end: spec.end }),
-        frameRate: spec.frameRate,
-        repeat: spec.repeat,
-      });
+    for (const state of STATES) {
+      const clip = c.anims[state];
+      for (const facing of FACINGS) {
+        const row = clip.rows[facing];
+        if (!row) continue;
+        scene.anims.create({
+          key: `${c.key}-${state}-${facing}`,
+          frames: scene.anims.generateFrameNumbers(clip.sheet, { start: row.start, end: row.end }),
+          frameRate: clip.frameRate,
+          repeat: clip.repeat,
+        });
+      }
     }
   }
   const hp = MANIFEST.fx.hitPuff;

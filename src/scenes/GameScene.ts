@@ -41,11 +41,11 @@ export class GameScene extends Phaser.Scene {
     this.towerViews.clear();
 
     renderMap(this, LEVEL_ONE);
-    this.hpBars = this.add.graphics().setDepth(9);
+    this.hpBars = this.add.graphics().setDepth(9000);
 
     this.hudText = this.add
       .text(8, 8, '', { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff' })
-      .setDepth(20);
+      .setDepth(10000);
 
     this.overlayText = this.add
       .text(this.scale.width / 2, this.scale.height / 2, '', {
@@ -55,7 +55,7 @@ export class GameScene extends Phaser.Scene {
         align: 'center',
       })
       .setOrigin(0.5)
-      .setDepth(20);
+      .setDepth(10000);
 
     this.input.keyboard?.on('keydown-ONE', () => (this.selectedHeroId = 'lapulapu'));
     this.input.keyboard?.on('keydown-TWO', () => (this.selectedHeroId = 'gabriela'));
@@ -96,7 +96,7 @@ export class GameScene extends Phaser.Scene {
     for (const shot of this.world.events.shots) {
       for (const view of this.towerViews.values()) {
         if (view.sprite.x === shot.from.x && view.sprite.y === shot.from.y) {
-          view.playAttack(shot.to.x);
+          view.playAttack(shot.to.x, shot.to.y);
         }
       }
       spawnProjectile(this, shot.from, shot.to);

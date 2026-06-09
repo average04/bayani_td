@@ -17,18 +17,26 @@ Built in the [Universal LPC Spritesheet Character Generator](https://sanderfrenk
 - **Clothes:** earth-tone **vest / sleeveless top** + **loincloth** (or simple pants).
 - **Weapon:** **Sword** (or Saber) — stands in for the bolo; visible during the swing.
 
-## 3. Source & handoff
+## 3. Source & approach (revised: scripted compositing)
 
-The user exports via **Download spritesheet** — the **standard 64×64 universal sheet** (no expanded/extra animation sets toggled on) — saves the PNG, and gives the path. The user also keeps the generator's **credits** (CSV/TXT) for attribution (LPC assets are CC-BY-SA 3.0 / GPL). Claude then does the wiring.
+The browser tool could not reliably drive the LPC generator (interactions timed out), so the sheet is built by a **script** instead: `scripts/build-lapulapu-sprite.mjs` (npm `gen:lapulapu`). It downloads classic-layout layer PNGs from [makrohn/Universal-LPC-spritesheet](https://github.com/makrohn/Universal-LPC-spritesheet) and alpha-composites them (back→front) into the 832×1344 sheet. All layers share the universal grid, so no offsets are needed. Layers:
 
-## 4. Wiring (the actual code change — `src/assets/manifest.ts` + the PNG)
+1. `body/male/tanned2` — tanned warrior body (includes head/face)
+2. `legs/skirt/male/robe_skirt_male` — lower-body wrap (loincloth/kilt)
+3. `torso/leather/chest_male` — leather chest / vest
+4. `hair/male/bangsshort/black` — short black hair
+5. `head/bandanas/male/red` — red headband
+6. `weapons/right hand/male/dagger_male` — the **bolo** (a short blade; the oversize curved saber uses a non-aligned 1152×768 grid, deferred)
 
-1. Place the PNG at `public/assets/sprites/lapulapu/sheet.png` (replacing the current bare-body sheet).
-2. **Measure** the PNG's width×height. Confirm it is **13 columns wide (832px)** — the standard ULPC grid — and set `MANIFEST.sheets[lapulapu].frameCount = (width/64) * (height/64)`.
-3. The standard ULPC row order (spellcast, thrust, **walk**, **slash**, shoot, **hurt**) places **walk-down at 130–138**, **slash-down at 182–187**, **hurt at 260–265** — matching the current manifest. **Verify by eye**; if the generator's layout differs, remap the `rows` offsets in `lapulapuChar`.
-4. Set Lapu-Lapu's **idle** clip to a swing-ready **slash frame** (e.g. `down: { start: 182, end: 182 }`, final frame chosen by what reads best) so the **bolo stays in hand at rest** — LPC only draws the weapon during the swing. Leave walk/attack/death clips unchanged.
-5. Keep `displayScale 0.6` / `originY 0.85`; tune only if the dressed silhouette sits wrong.
-6. Add a short **attribution comment** beside the lapulapu sheet def listing the generator + layer credits.
+## 4. Wiring
+
+- Output overwrites `public/assets/sprites/lapulapu/sheet.png` — same **832×1344 / 273-frame** layout as before, so `MANIFEST` needs **no changes** (frame indices and `displayScale 0.6` / `originY 0.85` still hold).
+- The dagger layer is drawn on the **walk and slash frames**, so the bolo is visible at idle (frame 130) too — **no idle-frame tweak needed** (the earlier plan to repose idle on a slash frame is unnecessary).
+- Attribution recorded in `CREDITS.md`.
+
+## 4b. Verification (done)
+
+Frames 130/144/156/182/185 extracted and viewed: tanned warrior with red headband, black hair, leather vest, brown wrap, and the blade in his right hand across walk/slash. `npm run build` clean.
 
 ## 5. Verification
 

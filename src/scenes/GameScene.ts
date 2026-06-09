@@ -13,7 +13,7 @@ import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
 import { spawnProjectile, spawnHitPuff, spawnDeath, spawnSpin } from '../render/fx';
 import { getUI } from '../ui';
-import { buildUiState } from '../ui/uiState';
+import { buildUiState, buildUpgradePanel } from '../ui/uiState';
 
 const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
 
@@ -21,6 +21,8 @@ export class GameScene extends Phaser.Scene {
   private world!: World;
   private hpBars!: Phaser.GameObjects.Graphics;
   private ghost!: Phaser.GameObjects.Graphics;
+  private selRing!: Phaser.GameObjects.Graphics;
+  private selectedTower: Tower | null = null;
   // the hero armed for deployment, or null when nothing is being deployed
   private selectedHeroId: string | null = null;
   private bestWave = 0;
@@ -43,34 +45,51 @@ export class GameScene extends Phaser.Scene {
     this.endHandled = false;
     this.enemyViews.clear();
     this.towerViews.clear();
+    this.selectedTower = null;
 
     renderMap(this, LEVEL_ONE);
     this.hpBars = this.add.graphics().setDepth(9000);
     this.ghost = this.add.graphics().setDepth(8000);
+    this.selRing = this.add.graphics().setDepth(7000);
 
     HERO_ORDER.forEach((id, i) => {
-      this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => (this.selectedHeroId = id));
+      this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => {
+        this.selectedHeroId = id;
+        this.selectedTower = null;
+      });
     });
     this.input.keyboard?.on('keydown-SPACE', () => this.world.startNextWave());
     this.input.keyboard?.on('keydown-R', () => {
       if (this.world.status !== 'playing') this.scene.restart();
     });
     // Esc / right-click cancel the in-progress deployment
-    this.input.keyboard?.on('keydown-ESC', () => (this.selectedHeroId = null));
+    this.input.keyboard?.on('keydown-ESC', () => {
+      this.selectedHeroId = null;
+      this.selectedTower = null;
+    });
     this.input.mouse?.disableContextMenu();
 
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (p.rightButtonDown()) {
         this.selectedHeroId = null;
+        this.selectedTower = null;
         return;
       }
-      this.tryPlaceTower(p.x, p.y);
+      if (this.selectedHeroId) {
+        this.tryPlaceTower(p.x, p.y);
+        return;
+      }
+      this.selectedTower = this.world.towerAt(p.x, p.y); // null when clicking empty ground
     });
 
     const ui = getUI();
     // clicking the armed hero again cancels deployment
     ui.onSelectHero = (id) => {
       this.selectedHeroId = this.selectedHeroId === id ? null : id;
+      this.selectedTower = null;
+    };
+    ui.onUpgrade = (path) => {
+      if (this.selectedTower) this.world.upgradeTower(this.selectedTower, path);
     };
     ui.onStartWave = () => {
       this.world.startNextWave();
@@ -102,6 +121,18 @@ export class GameScene extends Phaser.Scene {
     g.strokeRect(col * cs, row * cs, cs * 2, cs * 2);
   }
 
+  private drawSelection(): void {
+    const g = this.selRing;
+    g.clear();
+    const t = this.selectedTower;
+    if (!t) return;
+    const cs = LEVEL_ONE.cellSize;
+    g.lineStyle(2, 0xf0d999, 0.95);
+    g.strokeRect(t.pos.x - cs, t.pos.y - cs, cs * 2, cs * 2);
+    g.lineStyle(1, 0xf0d999, 0.45);
+    g.strokeCircle(t.pos.x, t.pos.y, t.stats.range);
+  }
+
   update(_time: number, delta: number): void {
     if (this.world.status === 'playing') {
       this.world.update(delta / 1000);
@@ -110,6 +141,10 @@ export class GameScene extends Phaser.Scene {
     this.syncViews();
     this.drawHpBars();
     this.drawGhost();
+    this.drawSelection();
+    getUI().setUpgradePanel(
+      this.selectedTower ? buildUpgradePanel(this.selectedTower.type.id, this.selectedTower.levels, this.world.gold) : null,
+    );
     getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, HERO_ORDER, HERO_TYPES));
     this.handleEndState();
   }

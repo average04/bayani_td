@@ -1,0 +1,101 @@
+html, body { margin: 0; min-height: 100%; background: #0d140e; }
+body { display: flex; justify-content: center; padding: 16px 0; }
+
+#game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Trebuchet MS', system-ui, sans-serif;
+  user-select: none;
+}
+
+/* ---- top HUD bar ---- */
+.ui-top {
+  width: 768px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 10px 16px;
+  color: #f6e6bd;
+  text-shadow: 0 1px 0 #2c1f0f;
+  background: linear-gradient(#7d5d34, #5c4324);
+  border: 3px solid #3a2914;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+}
+.ui-stat { display: flex; align-items: center; gap: 8px; }
+.ui-stat.ui-wave { margin-left: auto; }
+.ui-lab { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: .7; }
+.ui-statval b { font-size: 17px; font-weight: 800; }
+.ui-ico {
+  width: 24px; height: 24px; border-radius: 5px;
+  background: #caa24a33; border: 1.5px solid #bd9358;
+  background-size: cover; background-position: center;
+}
+
+/* ---- stage + overlay ---- */
+.ui-stage { position: relative; width: 768px; height: 480px; border-left: 3px solid #3a2914; border-right: 3px solid #3a2914; }
+.ui-stage canvas { display: block; }
+/* z-index keeps the overlay above the Phaser canvas (injected after createUI runs) */
+.ui-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
+
+.ui-start {
+  position: absolute; right: 12px; bottom: 12px; pointer-events: auto;
+  padding: 10px 18px; color: #f8eccb; font-weight: 800; letter-spacing: .5px; cursor: pointer;
+  background: linear-gradient(#caa24a, #a9802f); border: 2px solid #3a2914; border-radius: 8px;
+  box-shadow: 0 3px 0 #5c4012, inset 0 1px 0 #f0d999;
+}
+.ui-start:disabled { filter: grayscale(.6) brightness(.7); cursor: default; box-shadow: none; }
+
+.ui-tooltip {
+  position: absolute; left: 12px; bottom: 12px; width: 180px; pointer-events: none;
+  background: #e7d4a4; border: 2px solid #3a2914; border-radius: 8px; padding: 8px 10px;
+  color: #4a3719; font-size: 12px; box-shadow: 0 6px 14px rgba(0,0,0,.4);
+}
+.ui-tooltip h4 { margin: 0 0 5px; font-size: 13px; color: #5c3d12; }
+.ui-trow { display: flex; justify-content: space-between; margin-top: 2px; }
+
+.ui-end {
+  position: absolute; inset: 0; pointer-events: auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(20, 14, 6, .55);
+}
+.ui-end-title { margin: 0; font-size: 40px; letter-spacing: 2px; color: #f6e6bd; text-shadow: 0 2px 0 #2c1f0f; }
+.ui-end-title.won { color: #ffd76a; }
+.ui-end-title.lost { color: #e07a5f; }
+.ui-end-sub { margin: 0; color: #e7d4a4; }
+.ui-restart {
+  margin-top: 8px; padding: 10px 22px; cursor: pointer; color: #f8eccb; font-weight: 800; letter-spacing: .5px;
+  background: linear-gradient(#caa24a, #a9802f); border: 2px solid #3a2914; border-radius: 8px;
+  box-shadow: 0 3px 0 #5c4012, inset 0 1px 0 #f0d999;
+}
+
+/* ---- build menu ---- */
+.ui-bottom {
+  width: 768px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: #e7d4a4;
+  background-image: linear-gradient(rgba(120,80,30,.05) 1px, transparent 1px);
+  background-size: 100% 7px;
+  border: 3px solid #3a2914;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+.ui-tile {
+  flex: 1; text-align: center; padding: 9px 4px; cursor: pointer;
+  color: #f8eccb; font-weight: 700; font-size: 12.5px; line-height: 1.25;
+  background: linear-gradient(#8a6736, #694e29); border: 2px solid #3a2914; border-radius: 8px;
+  box-shadow: inset 0 1px 0 #bd9358, 0 2px 0 #2c1f0f;
+}
+.ui-portrait {
+  display: block; width: 34px; height: 34px; margin: 0 auto 4px; border-radius: 6px;
+  background: #caa24a33; border: 1.5px solid #bd9358; background-size: cover; background-position: center;
+}
+.ui-tcost { display: block; font-weight: 700; font-size: 11px; margin-top: 3px; color: #ffe9b0; }
+.ui-tkey { display: block; font-size: 9px; opacity: .7; margin-top: 2px; }
+.ui-tile.sel { outline: 3px solid #d4af37; outline-offset: 1px; background: linear-gradient(#a07c3e, #7d5d34); }
+.ui-tile.poor { filter: grayscale(.6) brightness(.7); cursor: not-allowed; }

@@ -17,3 +17,5 @@ export const HERO_TYPES: Record<string, HeroType> = {
   diwata: { id: 'diwata', name: 'Diwata', cost: 90, range: 130, damage: 4, fireRate: 1.5, slow: { factor: 0.5, duration: 1.5 } },
   mangkukulam: { id: 'mangkukulam', name: 'Mangkukulam', cost: 110, range: 120, damage: 5, fireRate: 1, poison: { dps: 8, duration: 3 } },
 };
+
+export const HERO_ORDER = ['lapulapu', 'gabriela', 'bernardo', 'diwata', 'mangkukulam'];

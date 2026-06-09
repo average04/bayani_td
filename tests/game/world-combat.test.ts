@@ -44,6 +44,22 @@ describe('World combat effects', () => {
     expect(e2.hp).toBe(90);
   });
 
+  it('a spin hero hits every enemy within range of itself, not around a target', () => {
+    const hero: HeroType = { id: 'spinner', name: 'Sp', cost: 0, range: 80, damage: 30, fireRate: 0.0001, spin: true };
+    const w = world(hero, { plain }); // tower placed at cell (2,2) -> center (72,72)
+    const near = new Enemy(plain, level.path);
+    near.pos = { x: 72, y: 120 }; // 48px away -> within range 80
+    const near2 = new Enemy(plain, level.path);
+    near2.pos = { x: 120, y: 72 }; // 48px away -> within range 80
+    const far = new Enemy(plain, level.path);
+    far.pos = { x: 300, y: 72 }; // 228px away -> out of range
+    w.enemies.push(near, near2, far);
+    w.update(0.016);
+    expect(near.hp).toBe(70);
+    expect(near2.hp).toBe(70);
+    expect(far.hp).toBe(100);
+  });
+
   it('a slow hero slows its target', () => {
     const hero: HeroType = { id: 'slower', name: 'Sl', cost: 0, range: 300, damage: 1, fireRate: 0.0001, slow: { factor: 0.5, duration: 2 } };
     const w = world(hero, { plain });

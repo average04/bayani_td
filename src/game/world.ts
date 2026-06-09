@@ -101,6 +101,14 @@ export class World {
     return true;
   }
 
+  private applyHit(affected: Enemy[], hero: HeroType): void {
+    for (const e of affected) {
+      e.takeDamage(hero.damage);
+      if (hero.slow) e.applySlow(hero.slow.factor, hero.slow.duration);
+      if (hero.poison) e.applyPoison(hero.poison.dps, hero.poison.duration);
+    }
+  }
+
   update(dt: number): void {
     this.events.shots.length = 0;
     this.events.deaths.length = 0;
@@ -118,27 +126,36 @@ export class World {
     // 3. towers fire
     for (const t of this.towers) {
       t.update(dt);
-      if (t.canFire) {
+      if (!t.canFire) continue;
+      const hero = t.type;
+      if (hero.spin) {
+        // melee spin: every swing hits all enemies within range of the hero itself
+        const affected = this.enemies.filter(
+          (e) => !e.isDead && !e.reachedEnd && distance(e.pos, t.pos) <= hero.range,
+        );
+        if (affected.length === 0) continue;
+        this.applyHit(affected, hero);
+        t.resetCooldown();
+        this.events.shots.push({
+          from: { x: t.pos.x, y: t.pos.y },
+          to: { x: t.pos.x, y: t.pos.y }, // self-centered: from === to marks a spin
+          heroId: hero.id,
+        });
+      } else {
         const target = selectTarget(t, this.enemies);
-        if (target) {
-          const hero = t.type;
-          const affected = hero.splashRadius
-            ? this.enemies.filter(
-                (e) => !e.isDead && !e.reachedEnd && distance(e.pos, target.pos) <= hero.splashRadius!,
-              )
-            : [target];
-          for (const e of affected) {
-            e.takeDamage(hero.damage);
-            if (hero.slow) e.applySlow(hero.slow.factor, hero.slow.duration);
-            if (hero.poison) e.applyPoison(hero.poison.dps, hero.poison.duration);
-          }
-          t.resetCooldown();
-          this.events.shots.push({
-            from: { x: t.pos.x, y: t.pos.y },
-            to: { x: target.pos.x, y: target.pos.y },
-            heroId: hero.id,
-          });
-        }
+        if (!target) continue;
+        const affected = hero.splashRadius
+          ? this.enemies.filter(
+              (e) => !e.isDead && !e.reachedEnd && distance(e.pos, target.pos) <= hero.splashRadius!,
+            )
+          : [target];
+        this.applyHit(affected, hero);
+        t.resetCooldown();
+        this.events.shots.push({
+          from: { x: t.pos.x, y: t.pos.y },
+          to: { x: target.pos.x, y: target.pos.y },
+          heroId: hero.id,
+        });
       }
     }
 

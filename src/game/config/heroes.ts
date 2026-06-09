@@ -8,10 +8,12 @@ export interface HeroType {
   splashRadius?: number; // if set, damage all enemies within this radius of the target
   slow?: { factor: number; duration: number }; // on-hit speed multiplier for a duration
   poison?: { dps: number; duration: number }; // on-hit damage-over-time (ignores armor)
+  spin?: boolean; // melee spin: each swing hits ALL enemies within `range` of the hero itself (no single target)
 }
 
 export const HERO_TYPES: Record<string, HeroType> = {
-  lapulapu: { id: 'lapulapu', name: 'Lapu-Lapu', cost: 100, range: 110, damage: 20, fireRate: 1 },
+  // melee spin: short range, heavy slow swings, hits everything ~1 block around him
+  lapulapu: { id: 'lapulapu', name: 'Lapu-Lapu', cost: 100, range: 80, damage: 45, fireRate: 0.9, spin: true },
   gabriela: { id: 'gabriela', name: 'Gabriela Silang', cost: 75, range: 140, damage: 6, fireRate: 3 },
   bernardo: { id: 'bernardo', name: 'Bernardo Carpio', cost: 120, range: 100, damage: 12, fireRate: 1.2, splashRadius: 50 },
   diwata: { id: 'diwata', name: 'Diwata', cost: 90, range: 130, damage: 4, fireRate: 1.5, slow: { factor: 0.5, duration: 1.5 } },

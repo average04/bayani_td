@@ -23,6 +23,7 @@ function el<T extends HTMLElement = HTMLElement>(tag: string, cls: string, paren
 }
 
 function effectText(h: HeroType): string {
+  if (h.spin) return 'Melee spin (AoE)';
   if (h.splashRadius) return `Splash r${h.splashRadius}`;
   if (h.slow) return `Slow x${h.slow.factor} / ${h.slow.duration}s`;
   if (h.poison) return `Poison ${h.poison.dps}/s / ${h.poison.duration}s`;

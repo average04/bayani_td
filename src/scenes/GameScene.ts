@@ -11,7 +11,7 @@ import type { Tower } from '../game/entities/tower';
 import { renderMap } from '../render/mapRenderer';
 import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
-import { spawnProjectile, spawnHitPuff, spawnDeath } from '../render/fx';
+import { spawnProjectile, spawnHitPuff, spawnDeath, spawnSpin } from '../render/fx';
 import { getUI } from '../ui';
 import { buildUiState } from '../ui/uiState';
 
@@ -121,8 +121,13 @@ export class GameScene extends Phaser.Scene {
           view.playAttack(shot.to.x, shot.to.y);
         }
       }
-      spawnProjectile(this, shot.from, shot.to);
-      spawnHitPuff(this, shot.to);
+      const hero = HERO_TYPES[shot.heroId];
+      if (hero?.spin) {
+        spawnSpin(this, shot.from, hero.range);
+      } else {
+        spawnProjectile(this, shot.from, shot.to);
+        spawnHitPuff(this, shot.to);
+      }
     }
     for (const death of this.world.events.deaths) {
       spawnDeath(this, death.enemyTypeId, death.pos);

@@ -38,12 +38,13 @@ export class Enemy {
     if (this.reachedEnd) return;
 
     // movement at the effective (possibly slowed) speed
-    const speed = this.type.speed * (this.slowTimer > 0 ? this.slowFactor : 1);
+    let speedMult = 1;
     if (this.slowTimer > 0) {
-      this.slowTimer -= dt;
+      speedMult = this.slowFactor;
+      this.slowTimer = Math.max(0, this.slowTimer - dt);
       if (this.slowTimer <= 0) this.slowFactor = 1;
     }
-    let travel = speed * dt;
+    let travel = this.type.speed * speedMult * dt;
     while (travel > 0 && this.pathIndex < this.path.length) {
       const target = this.path[this.pathIndex];
       const dx = target.x - this.pos.x;
@@ -64,6 +65,7 @@ export class Enemy {
   }
 
   takeDamage(amount: number): void {
+    // A hit always lands at least 1 damage — armor can blunt a shot but never fully negate it.
     this.hp -= Math.max(1, amount - (this.type.armor ?? 0));
   }
 

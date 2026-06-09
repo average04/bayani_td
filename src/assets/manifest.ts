@@ -47,8 +47,6 @@ export interface AssetManifest {
   map: { ground: ImageAsset; pathTile: ImageAsset; buildMarker: ImageAsset };
 }
 
-const CHAR_KEYS = ['lapulapu', 'gabriela', 'aswang', 'tiktik'];
-
 // Placeholder sheets are 32x32, 13 frames: idle 0-1 | walk 2-5 | attack 6-8 | death 9-12.
 function placeholderChar(key: string): CharacterAsset {
   return {
@@ -65,14 +63,40 @@ function placeholderChar(key: string): CharacterAsset {
 }
 
 export const MANIFEST: AssetManifest = {
-  sheets: CHAR_KEYS.map((key) => ({
-    key,
-    path: `assets/sprites/${key}.png`,
-    frameWidth: 32,
-    frameHeight: 32,
-    frameCount: 13,
-  })),
-  characters: CHAR_KEYS.map(placeholderChar),
+  sheets: [
+    { key: 'lapulapu', path: 'assets/sprites/lapulapu/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 273 },
+    ...(['gabriela', 'aswang', 'tiktik'] as const).map((key) => ({
+      key,
+      path: `assets/sprites/${key}.png`,
+      frameWidth: 32,
+      frameHeight: 32,
+      frameCount: 13,
+    })),
+  ],
+  characters: [
+    {
+      key: 'lapulapu',
+      displayScale: 0.6,
+      originY: 0.85,
+      anims: {
+        idle: { sheet: 'lapulapu', frameRate: 4, repeat: -1, rows: { down: { start: 130, end: 130 } } },
+        walk: {
+          sheet: 'lapulapu',
+          frameRate: 9,
+          repeat: -1,
+          rows: { down: { start: 130, end: 138 }, up: { start: 104, end: 112 }, side: { start: 143, end: 151 } },
+        },
+        attack: {
+          sheet: 'lapulapu',
+          frameRate: 12,
+          repeat: 0,
+          rows: { down: { start: 182, end: 187 }, up: { start: 156, end: 161 }, side: { start: 195, end: 200 } },
+        },
+        death: { sheet: 'lapulapu', frameRate: 10, repeat: 0, rows: { down: { start: 260, end: 265 } } },
+      },
+    },
+    ...(['gabriela', 'aswang', 'tiktik'] as const).map(placeholderChar),
+  ],
   fx: {
     projectile: { key: 'projectile', path: 'assets/fx/projectile.png' },
     hitPuff: { key: 'hit-puff', path: 'assets/fx/hit-puff.png', frameWidth: 16, frameHeight: 16, frameCount: 4 },

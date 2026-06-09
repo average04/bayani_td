@@ -124,7 +124,25 @@ export class World {
     if (!u || !canUpgradePath(tower.levels, path)) return false;
     if (!this.economy.spend(u.cost)) return false;
     tower.upgrade(path);
+    tower.spent += u.cost;
     return true;
+  }
+
+  sellValue(tower: Tower): number {
+    return Math.floor(tower.spent * 0.7);
+  }
+
+  sellTower(tower: Tower): number {
+    const idx = this.towers.indexOf(tower);
+    if (idx < 0) return 0;
+    const refund = this.sellValue(tower);
+    this.economy.earn(refund);
+    this.towers.splice(idx, 1);
+    const cs = this.level.cellSize;
+    const col = Math.round(tower.pos.x / cs) - 1;
+    const row = Math.round(tower.pos.y / cs) - 1;
+    for (const c of footprintCells(col, row)) this.occupiedCells.delete(cellKey(c.col, c.row));
+    return refund;
   }
 
   private applyHit(affected: Enemy[], stats: TowerStats): void {

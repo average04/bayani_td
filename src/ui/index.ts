@@ -8,6 +8,7 @@ export interface UI {
   onStartWave: () => void;
   onRestart: () => void;
   onUpgrade: (path: number) => void;
+  onSell: () => void;
 }
 
 let instance: UI | null = null;
@@ -100,6 +101,8 @@ export function createUI(mount: HTMLElement): UI {
     btn.addEventListener('click', () => ui.onUpgrade(path));
     upgBtns[p] = btn;
   }
+  const upgSell = el<HTMLButtonElement>('button', 'ui-upg-sell', upg);
+  upgSell.addEventListener('click', () => ui.onSell());
 
   const endPanel = el('div', 'ui-end', overlay);
   endPanel.style.display = 'none';
@@ -140,6 +143,7 @@ export function createUI(mount: HTMLElement): UI {
     onStartWave: () => {},
     onRestart: () => {},
     onUpgrade: () => {},
+    onSell: () => {},
     setUpgradePanel(vm: UpgradePanelVM | null): void {
       if (!vm) {
         upg.style.display = 'none';
@@ -151,6 +155,7 @@ export function createUI(mount: HTMLElement): UI {
       upgStat.range.textContent = String(vm.stats.range);
       upgStat.speed.textContent = `${+vm.stats.fireRate.toFixed(2)}/s`;
       upgStat.effect.textContent = vm.stats.effect;
+      upgSell.textContent = `Sell — $${vm.sellValue}`;
       vm.paths.forEach((pv, p) => {
         upgPathName[p].textContent = pv.name;
         upgPips[p].forEach((dot, i) => dot.classList.toggle('on', i < pv.level));

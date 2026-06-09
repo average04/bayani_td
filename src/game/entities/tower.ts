@@ -8,12 +8,14 @@ export class Tower {
   cooldown: number; // seconds remaining until it can fire
   levels: [number, number] = [0, 0];
   stats: TowerStats;
+  spent: number; // total gold invested (placement + upgrades), for sell refunds
 
   constructor(type: HeroType, pos: Vec2) {
     this.type = type;
     this.pos = pos;
     this.cooldown = 0;
     this.stats = baseStats(type);
+    this.spent = type.cost;
   }
 
   upgrade(path: number): void {

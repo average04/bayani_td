@@ -91,6 +91,12 @@ export class GameScene extends Phaser.Scene {
     ui.onUpgrade = (path) => {
       if (this.selectedTower) this.world.upgradeTower(this.selectedTower, path);
     };
+    ui.onSell = () => {
+      if (this.selectedTower) {
+        this.world.sellTower(this.selectedTower);
+        this.selectedTower = null;
+      }
+    };
     ui.onStartWave = () => {
       this.world.startNextWave();
     };
@@ -143,7 +149,9 @@ export class GameScene extends Phaser.Scene {
     this.drawGhost();
     this.drawSelection();
     getUI().setUpgradePanel(
-      this.selectedTower ? buildUpgradePanel(this.selectedTower.type.id, this.selectedTower.levels, this.world.gold) : null,
+      this.selectedTower
+        ? buildUpgradePanel(this.selectedTower.type.id, this.selectedTower.levels, this.world.gold, this.selectedTower.spent)
+        : null,
     );
     getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, HERO_ORDER, HERO_TYPES));
     this.handleEndState();
@@ -173,6 +181,13 @@ export class GameScene extends Phaser.Scene {
     for (const t of this.world.towers) {
       if (!this.towerViews.has(t)) {
         this.towerViews.set(t, new TowerView(this, t));
+      }
+    }
+    const liveTowers = new Set(this.world.towers);
+    for (const [t, view] of this.towerViews) {
+      if (!liveTowers.has(t)) {
+        view.destroy();
+        this.towerViews.delete(t);
       }
     }
     const live = new Set(this.world.enemies);

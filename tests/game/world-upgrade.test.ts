@@ -46,4 +46,16 @@ describe('World upgrades', () => {
     expect(w.upgradeTower(t, 0)).toBe(false);
     expect(t.levels).toEqual([0, 0]);
   });
+
+  it('sells a tower for a 70% refund and frees its cells', () => {
+    const w = new World(cfg());
+    w.placeTower('lapulapu', 4, 4); // -100 -> 900
+    const t = w.towers[0];
+    w.upgradeTower(t, 0); // -60 -> 840; spent = 160
+    expect(w.sellValue(t)).toBe(112); // floor(160 * 0.7)
+    expect(w.sellTower(t)).toBe(112);
+    expect(w.gold).toBe(840 + 112);
+    expect(w.towers).toHaveLength(0);
+    expect(w.placeTower('lapulapu', 4, 4)).toBe(true); // cells were freed
+  });
 });

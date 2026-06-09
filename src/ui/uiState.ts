@@ -48,6 +48,7 @@ export interface UpgradePanelVM {
   heroId: string;
   heroName: string;
   stats: { damage: number; range: number; fireRate: number; effect: string };
+  sellValue: number;
   paths: [UpgradePathVM, UpgradePathVM];
 }
 
@@ -63,6 +64,7 @@ export function buildUpgradePanel(
   heroId: string,
   levels: readonly [number, number],
   gold: number,
+  spent = 0,
 ): UpgradePanelVM | null {
   const paths = UPGRADES[heroId];
   const hero = HERO_TYPES[heroId];
@@ -83,6 +85,7 @@ export function buildUpgradePanel(
     heroId,
     heroName: hero.name,
     stats: { damage: eff.damage, range: eff.range, fireRate: eff.fireRate, effect: statsEffect(eff) },
+    sellValue: Math.floor(spent * 0.7),
     paths: [mk(0), mk(1)],
   };
 }

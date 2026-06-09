@@ -5,6 +5,9 @@ export interface HeroType {
   range: number; // pixels
   damage: number; // per shot
   fireRate: number; // shots per second
+  splashRadius?: number; // if set, damage all enemies within this radius of the target
+  slow?: { factor: number; duration: number }; // on-hit speed multiplier for a duration
+  poison?: { dps: number; duration: number }; // on-hit damage-over-time (ignores armor)
 }
 
 export const HERO_TYPES: Record<string, HeroType> = {

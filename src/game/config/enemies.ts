@@ -5,6 +5,8 @@ export interface EnemyType {
   speed: number; // pixels per second
   reward: number; // gold granted when killed
   leakDamage: number; // lives lost if it reaches the base
+  armor?: number; // flat per-hit damage reduction (default 0)
+  regenPerSec?: number; // hp healed per second (default 0)
 }
 
 export const ENEMY_TYPES: Record<string, EnemyType> = {

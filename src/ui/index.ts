@@ -1,12 +1,6 @@
 import { HERO_TYPES, HERO_ORDER, type HeroType } from '../game/config/heroes';
 import { STORE } from '../game/config/store';
-import type { UiState, UpgradePanelVM } from './uiState';
-
-export interface StorePanelVM {
-  name: string;
-  income: string;
-  sellValue: number;
-}
+import type { UiState, UpgradePanelVM, StorePanelVM } from './uiState';
 
 export interface UI {
   update(vm: UiState): void;
@@ -18,6 +12,7 @@ export interface UI {
   onUpgrade: (path: number) => void;
   onSell: () => void;
   onSellStore: () => void;
+  onUpgradeStore: (path: number) => void;
   onCycleTarget: () => void;
 }
 
@@ -116,11 +111,26 @@ export function createUI(mount: HTMLElement): UI {
   const upgSell = el<HTMLButtonElement>('button', 'ui-upg-sell', upg);
   upgSell.addEventListener('click', () => ui.onSell());
 
-  // store info panel (shown when a placed store is selected)
+  // store info + upgrade panel (shown when a placed store is selected)
   const storePanel = el('div', 'ui-store', overlay);
   storePanel.style.display = 'none';
   const storeName = el('div', 'ui-upg-name', storePanel);
   const storeIncome = el('div', 'ui-store-income', storePanel);
+  const storePathName: HTMLElement[] = [];
+  const storePips: HTMLElement[][] = [];
+  const storeBtns: HTMLButtonElement[] = [];
+  for (let p = 0; p < 2; p++) {
+    const row = el('div', 'ui-upg-path', storePanel);
+    const head = el('div', 'ui-upg-head', row);
+    storePathName[p] = el('span', 'ui-upg-pname', head);
+    const pipBox = el('span', 'ui-upg-pips', head);
+    storePips[p] = [];
+    for (let i = 0; i < 4; i++) storePips[p].push(el('span', 'ui-pip', pipBox));
+    const btn = el<HTMLButtonElement>('button', 'ui-upg-btn', row);
+    const path = p;
+    btn.addEventListener('click', () => ui.onUpgradeStore(path));
+    storeBtns[p] = btn;
+  }
   const storeSell = el<HTMLButtonElement>('button', 'ui-upg-sell', storePanel);
   storeSell.addEventListener('click', () => ui.onSellStore());
 
@@ -183,6 +193,7 @@ export function createUI(mount: HTMLElement): UI {
     onUpgrade: () => {},
     onSell: () => {},
     onSellStore: () => {},
+    onUpgradeStore: () => {},
     onCycleTarget: () => {},
     setStorePanel(vm: StorePanelVM | null): void {
       if (!vm) {
@@ -193,6 +204,19 @@ export function createUI(mount: HTMLElement): UI {
       storeName.textContent = vm.name;
       storeIncome.textContent = vm.income;
       storeSell.textContent = `Sell — $${vm.sellValue}`;
+      vm.paths.forEach((pv, p) => {
+        storePathName[p].textContent = pv.name;
+        storePips[p].forEach((dot, i) => dot.classList.toggle('on', i < pv.level));
+        const btn = storeBtns[p];
+        if (!pv.next) {
+          btn.textContent = 'MAX';
+          btn.disabled = true;
+        } else {
+          btn.textContent = `${pv.next.name} — $${pv.next.cost}`;
+          btn.disabled = !pv.canBuy;
+        }
+        btn.classList.toggle('locked', pv.locked);
+      });
     },
     setUpgradePanel(vm: UpgradePanelVM | null): void {
       if (!vm) {

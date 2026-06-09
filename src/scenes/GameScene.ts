@@ -16,7 +16,7 @@ import { TowerView } from '../render/towerView';
 import { StoreView } from '../render/storeView';
 import { spawnProjectile, spawnHitPuff, spawnDeath, spawnSpin, spawnGoldPopup } from '../render/fx';
 import { getUI } from '../ui';
-import { buildUiState, buildUpgradePanel } from '../ui/uiState';
+import { buildUiState, buildUpgradePanel, buildStorePanel } from '../ui/uiState';
 
 const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
 
@@ -127,6 +127,9 @@ export class GameScene extends Phaser.Scene {
         this.selectedStore = null;
       }
     };
+    ui.onUpgradeStore = (path) => {
+      if (this.selectedStore) this.world.upgradeStore(this.selectedStore, path);
+    };
     ui.onCycleTarget = () => this.selectedTower?.cycleTarget();
     ui.onStartWave = () => {
       this.world.startNextWave();
@@ -212,11 +215,7 @@ export class GameScene extends Phaser.Scene {
     );
     getUI().setStorePanel(
       this.selectedStore
-        ? {
-            name: STORE.name,
-            income: `+${STORE.incomeAmount} gold / ${STORE.incomeInterval}s`,
-            sellValue: Math.floor(this.selectedStore.spent * STORE.sellRefund),
-          }
+        ? buildStorePanel(this.selectedStore.levels, this.world.gold, this.selectedStore.spent)
         : null,
     );
     getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, HERO_ORDER, HERO_TYPES));

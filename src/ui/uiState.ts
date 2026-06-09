@@ -2,6 +2,7 @@ import type { HeroType } from '../game/config/heroes';
 import type { GameStatus } from '../game/state/gameState';
 import { UPGRADES, nextUpgrade, canUpgradePath, effectiveStats, type TowerStats } from '../game/config/upgrades';
 import { HERO_TYPES } from '../game/config/heroes';
+import { STORE, STORE_UPGRADES, nextStoreUpgrade, effectiveStoreIncome } from '../game/config/store';
 import type { TargetMode } from '../game/entities/tower';
 
 export interface WorldLike {
@@ -92,6 +93,31 @@ export function buildUpgradePanel(
     targetMode: eff.spin ? null : targetMode,
     paths: [mk(0), mk(1)],
   };
+}
+
+export interface StorePanelVM {
+  name: string;
+  income: string;
+  sellValue: number;
+  paths: [UpgradePathVM, UpgradePathVM];
+}
+
+export function buildStorePanel(levels: readonly [number, number], gold: number, spent: number): StorePanelVM {
+  const inc = effectiveStoreIncome(levels);
+  const income =
+    `+${inc.tickAmount} / ${inc.tickInterval}s` + (inc.passivePerSec > 0 ? ` · +${inc.passivePerSec}/s` : '');
+  const mk = (p: number): UpgradePathVM => {
+    const up = nextStoreUpgrade(levels, p);
+    const ruleOk = canUpgradePath(levels, p);
+    return {
+      name: STORE_UPGRADES[p].name,
+      level: levels[p],
+      next: up ? { name: up.name, cost: up.cost } : null,
+      locked: up !== null && !ruleOk,
+      canBuy: up !== null && ruleOk && gold >= up.cost,
+    };
+  };
+  return { name: STORE.name, income, sellValue: Math.floor(spent * STORE.sellRefund), paths: [mk(0), mk(1)] };
 }
 
 export function buildUiState(

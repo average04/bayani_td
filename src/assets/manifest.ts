@@ -48,7 +48,8 @@ export interface AssetManifest {
 }
 
 // Placeholder sheets are 32x32, 13 frames: idle 0-1 | walk 2-5 | attack 6-8 | death 9-12.
-function placeholderChar(key: string): CharacterAsset {
+// Exported so it remains available for future unsourced characters.
+export function placeholderChar(key: string): CharacterAsset {
   return {
     key,
     displayScale: 1,
@@ -66,13 +67,12 @@ export const MANIFEST: AssetManifest = {
   sheets: [
     { key: 'lapulapu', path: 'assets/sprites/lapulapu/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 273 },
     { key: 'gabriela', path: 'assets/sprites/gabriela/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 273 },
-    ...(['aswang', 'tiktik'] as const).map((key) => ({
-      key,
-      path: `assets/sprites/${key}.png`,
-      frameWidth: 32,
-      frameHeight: 32,
-      frameCount: 13,
-    })),
+    // aswang: ghost sprite (bluecarrot16 / LPC Monsters, CC-BY-SA 3.0 / GPL 3.0)
+    // 384x256 → 64×64 frames, 6 cols × 4 rows = 24 frames; rows = down/up/left/right float cycle
+    { key: 'aswang', path: 'assets/sprites/aswang/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 24 },
+    // tiktik: bat sprite (bagzie / bluecarrot16 / LPC Monsters, CC-BY-SA 3.0 / GPL 3.0)
+    // 448x256 → 64×64 frames, 7 cols × 4 rows = 28 frames; rows = down/up/left/right fly cycle
+    { key: 'tiktik', path: 'assets/sprites/tiktik/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 28 },
   ],
   characters: [
     {
@@ -117,7 +117,50 @@ export const MANIFEST: AssetManifest = {
         death: { sheet: 'gabriela', frameRate: 10, repeat: 0, rows: { down: { start: 260, end: 265 } } },
       },
     },
-    ...(['aswang', 'tiktik'] as const).map(placeholderChar),
+    {
+      key: 'aswang',
+      displayScale: 0.55,
+      originY: 0.85,
+      anims: {
+        // 6 cols × 4 rows = 24 frames; row 0 = down (0-5), row 1 = up (6-11), row 2 = side (12-17), row 3 = right (18-23)
+        idle: { sheet: 'aswang', frameRate: 4, repeat: -1, rows: { down: { start: 0, end: 0 } } },
+        walk: {
+          sheet: 'aswang',
+          frameRate: 6,
+          repeat: -1,
+          rows: { down: { start: 0, end: 5 }, up: { start: 6, end: 11 }, side: { start: 12, end: 17 } },
+        },
+        attack: {
+          sheet: 'aswang',
+          frameRate: 8,
+          repeat: 0,
+          rows: { down: { start: 0, end: 5 }, up: { start: 6, end: 11 }, side: { start: 12, end: 17 } },
+        },
+        death: { sheet: 'aswang', frameRate: 6, repeat: 0, rows: { down: { start: 21, end: 23 } } },
+      },
+    },
+    {
+      key: 'tiktik',
+      displayScale: 0.5,
+      originY: 0.85,
+      anims: {
+        // 7 cols × 4 rows = 28 frames; row 0 = down (0-6), row 1 = up (7-13), row 2 = side (14-20), row 3 = right (21-27)
+        idle: { sheet: 'tiktik', frameRate: 4, repeat: -1, rows: { down: { start: 0, end: 0 } } },
+        walk: {
+          sheet: 'tiktik',
+          frameRate: 8,
+          repeat: -1,
+          rows: { down: { start: 0, end: 6 }, up: { start: 7, end: 13 }, side: { start: 14, end: 20 } },
+        },
+        attack: {
+          sheet: 'tiktik',
+          frameRate: 10,
+          repeat: 0,
+          rows: { down: { start: 0, end: 6 }, up: { start: 7, end: 13 }, side: { start: 14, end: 20 } },
+        },
+        death: { sheet: 'tiktik', frameRate: 6, repeat: 0, rows: { down: { start: 25, end: 27 } } },
+      },
+    },
   ],
   fx: {
     projectile: { key: 'projectile', path: 'assets/fx/projectile.png' },

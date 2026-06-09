@@ -17,7 +17,6 @@ const level: LevelConfig = {
     { x: 0, y: 0 },
     { x: 1000, y: 0 },
   ],
-  buildSpots: [{ x: 100, y: 40 }],
   startingGold: 1000,
   startingLives: 50,
 };

@@ -8,7 +8,6 @@ export interface LevelConfig {
   rows: number;
   cellSize: number;
   path: Vec2[]; // pixel waypoints, spawn -> base
-  buildSpots: Vec2[]; // pixel centers where towers may be placed
   startingGold: number;
   startingLives: number;
 }
@@ -28,16 +27,6 @@ export const LEVEL_ONE: LevelConfig = {
     { x: 600, y: 360 },
     { x: 600, y: 120 },
     { x: 744, y: 120 },
-  ],
-  // tile centers not on the path
-  buildSpots: [
-    { x: 168, y: 168 },
-    { x: 264, y: 264 },
-    { x: 456, y: 312 },
-    { x: 456, y: 408 },
-    { x: 552, y: 216 },
-    { x: 648, y: 216 },
-    { x: 696, y: 168 },
   ],
   startingGold: 150,
   startingLives: 20,

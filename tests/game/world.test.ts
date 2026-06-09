@@ -63,6 +63,18 @@ describe('World', () => {
     expect(w.status).toBe('won');
   });
 
+  it('emits a gold event when an enemy is killed', () => {
+    const w = new World(makeConfig());
+    w.placeTower('h', 2, 2);
+    w.startNextWave();
+    const amounts: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      w.update(0.1);
+      for (const g of w.events.gold) amounts.push(g.amount);
+    }
+    expect(amounts).toContain(5); // the killed enemy's reward
+  });
+
   it('loses a life and the game when an enemy leaks', () => {
     const w = new World(makeConfig()); // no tower placed
     w.startNextWave();

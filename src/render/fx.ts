@@ -44,6 +44,29 @@ export function spawnDeath(scene: Phaser.Scene, enemyTypeId: string, at: Vec2): 
   s.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => s.destroy());
 }
 
+// Rising "+N" gold text that floats up and fades, for gold gained at a position.
+export function spawnGoldPopup(scene: Phaser.Scene, at: Vec2, amount: number): void {
+  const t = scene.add
+    .text(at.x, at.y - 8, `+${amount}`, {
+      fontFamily: 'Trebuchet MS, sans-serif',
+      fontSize: '14px',
+      color: '#ffe28a',
+      fontStyle: 'bold',
+      stroke: '#2c1f0f',
+      strokeThickness: 3,
+    })
+    .setOrigin(0.5)
+    .setDepth(FX_DEPTH + 100);
+  scene.tweens.add({
+    targets: t,
+    y: at.y - 30,
+    alpha: 0,
+    duration: 800,
+    ease: 'Cubic.Out',
+    onComplete: () => t.destroy(),
+  });
+}
+
 function deathAnimKey(scene: Phaser.Scene, enemyTypeId: string): string {
   const down = `${enemyTypeId}-death-down`;
   return scene.anims.exists(down) ? down : `${enemyTypeId}-walk-down`;

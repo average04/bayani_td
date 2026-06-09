@@ -14,7 +14,7 @@ import { renderMap } from '../render/mapRenderer';
 import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
 import { StoreView } from '../render/storeView';
-import { spawnProjectile, spawnHitPuff, spawnDeath, spawnSpin } from '../render/fx';
+import { spawnProjectile, spawnHitPuff, spawnDeath, spawnSpin, spawnGoldPopup } from '../render/fx';
 import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel } from '../ui/uiState';
 
@@ -240,6 +240,9 @@ export class GameScene extends Phaser.Scene {
     }
     for (const death of this.world.events.deaths) {
       spawnDeath(this, death.enemyTypeId, death.pos);
+    }
+    for (const g of this.world.events.gold) {
+      spawnGoldPopup(this, g.pos, g.amount);
     }
   }
 

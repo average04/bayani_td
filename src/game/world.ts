@@ -25,9 +25,15 @@ export interface DeathEvent {
   enemyTypeId: string;
 }
 
+export interface GoldEvent {
+  pos: Vec2;
+  amount: number;
+}
+
 export interface WorldEvents {
   shots: ShotEvent[];
   deaths: DeathEvent[];
+  gold: GoldEvent[];
 }
 
 export interface WorldConfig {
@@ -47,7 +53,7 @@ export class World {
   enemies: Enemy[] = [];
   towers: Tower[] = [];
   stores: Store[] = [];
-  readonly events: WorldEvents = { shots: [], deaths: [] };
+  readonly events: WorldEvents = { shots: [], deaths: [], gold: [] };
   private readonly blockedCells: Set<string>;
   private readonly occupiedCells = new Set<string>();
 
@@ -194,6 +200,7 @@ export class World {
   update(dt: number): void {
     this.events.shots.length = 0;
     this.events.deaths.length = 0;
+    this.events.gold.length = 0;
     if (this.state.status !== 'playing') return;
 
     // 1. spawn
@@ -243,7 +250,10 @@ export class World {
     // 3.5 stores generate passive income
     for (const st of this.stores) {
       const inc = st.tick(dt);
-      if (inc) this.economy.earn(inc);
+      if (inc) {
+        this.economy.earn(inc);
+        this.events.gold.push({ pos: { x: st.pos.x, y: st.pos.y }, amount: inc });
+      }
     }
 
     // 4. resolve leaks (lose life) and deaths (reward)
@@ -254,6 +264,7 @@ export class World {
       } else if (e.isDead) {
         this.economy.earn(e.type.reward);
         this.events.deaths.push({ pos: { x: e.pos.x, y: e.pos.y }, enemyTypeId: e.type.id });
+        this.events.gold.push({ pos: { x: e.pos.x, y: e.pos.y }, amount: e.type.reward });
       } else {
         survivors.push(e);
       }

@@ -15,21 +15,27 @@ export function spawnHitPuff(scene: Phaser.Scene, at: Vec2): void {
   s.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => s.destroy());
 }
 
-// Expanding ring for a melee spin attack, sized to the hero's reach.
+// A sword spinning so fast around the hero it reads as a blurred steel whirl (melee spin):
+// a faint swept disc + a few ghosted blade streaks, rotating fast and fading out.
 export function spawnSpin(scene: Phaser.Scene, at: Vec2, radius: number): void {
-  const ring = scene.add
-    .circle(at.x, at.y, radius, 0xffe28a, 0)
-    .setStrokeStyle(3, 0xffe28a, 0.9)
-    .setScale(0.35)
-    .setDepth(FX_DEPTH);
-  scene.tweens.add({
-    targets: ring,
-    scale: 1,
-    alpha: 0,
-    duration: 220,
-    ease: 'Cubic.Out',
-    onComplete: () => ring.destroy(),
-  });
+  const r = Math.max(34, radius * 0.95);
+  const g = scene.add.graphics({ x: at.x, y: at.y }).setDepth(FX_DEPTH);
+  const streak = (deg: number, w: number): void => {
+    const t = (deg * Math.PI) / 180;
+    const dx = Math.cos(t);
+    const dy = Math.sin(t);
+    g.fillPoints([{ x: -dy * w, y: dx * w }, { x: dy * w, y: -dx * w }, { x: dx * r, y: dy * r }], true);
+  };
+  g.fillStyle(0xcfd6e0, 0.12);
+  g.fillCircle(0, 0, r); // soft swept disc (the blur the blade carves out)
+  g.fillStyle(0xeef2f7, 0.4);
+  streak(0, 4);
+  streak(120, 4);
+  streak(240, 4); // ghosted blade streaks
+  g.lineStyle(2, 0xeef2f7, 0.5);
+  g.strokeCircle(0, 0, r * 0.96); // bright leading rim
+  scene.tweens.add({ targets: g, angle: 1440, duration: 300, ease: 'Linear', onComplete: () => g.destroy() });
+  scene.tweens.add({ targets: g, alpha: 0, duration: 130, delay: 170 });
 }
 
 export function spawnDeath(scene: Phaser.Scene, enemyTypeId: string, at: Vec2): void {

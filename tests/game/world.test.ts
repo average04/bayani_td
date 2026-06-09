@@ -11,6 +11,7 @@ const level: LevelConfig = {
   tileSize: 48,
   cols: 10,
   rows: 4,
+  cellSize: 24,
   path: [
     { x: 0, y: 0 },
     { x: 100, y: 0 },

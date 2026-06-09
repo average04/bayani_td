@@ -6,6 +6,7 @@ export interface LevelConfig {
   tileSize: number;
   cols: number;
   rows: number;
+  cellSize: number;
   path: Vec2[]; // pixel waypoints, spawn -> base
   buildSpots: Vec2[]; // pixel centers where towers may be placed
   startingGold: number;
@@ -18,6 +19,7 @@ export const LEVEL_ONE: LevelConfig = {
   tileSize: 48,
   cols: 16,
   rows: 10,
+  cellSize: 24,
   // (col,row) -> px center: (0,4)(7,4)(7,7)(12,7)(12,2)(15,2)
   path: [
     { x: 24, y: 216 },

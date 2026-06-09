@@ -5,6 +5,7 @@ import { PreloadScene } from './scenes/PreloadScene';
 import { GameScene } from './scenes/GameScene';
 import { LEVEL_ONE } from './game/config/levels';
 import { createUI } from './ui';
+import { showHomeScreen } from './ui/homeScreen';
 
 createUI(document.getElementById('game')!);
 
@@ -18,4 +19,10 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [BootScene, PreloadScene, GameScene],
 };
 
-new Phaser.Game(config);
+// Title screen first; the Phaser game is created only when a mode is chosen.
+let game: Phaser.Game | null = null;
+showHomeScreen({
+  onInfinite: () => {
+    if (!game) game = new Phaser.Game(config);
+  },
+});

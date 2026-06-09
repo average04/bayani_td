@@ -179,3 +179,32 @@ body { display: flex; justify-content: center; padding: 16px 0; }
 }
 .ui-store-income { font-size: 12px; margin: 6px 0 10px; color: #f0d999; font-weight: 700; }
 .ui-portrait-store { background: linear-gradient(#a83f2c 0 30%, #caa24a 30% 44%, #e9d6a3 44% 100%); }
+
+/* ---- home / title screen ---- */
+.ui-home {
+  position: fixed; inset: 0; z-index: 100; user-select: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  font-family: 'Trebuchet MS', system-ui, sans-serif;
+  background: radial-gradient(circle at 50% 28%, #2c4030, #0d140e 75%);
+  color: #f6e6bd;
+}
+.ui-home-title { margin: 0; font-size: 58px; letter-spacing: 3px; color: #f0d999; text-shadow: 0 3px 0 #2c1f0f, 0 0 20px rgba(240,217,153,.3); }
+.ui-home-sub { margin: 0 0 30px; color: #cdb98a; letter-spacing: 1px; }
+.ui-home-modes { display: flex; gap: 18px; }
+.ui-home-mode {
+  width: 230px; padding: 24px 16px; cursor: pointer; text-align: center; font-family: inherit;
+  display: flex; flex-direction: column; gap: 8px; color: #f6e6bd;
+  background: linear-gradient(#7d5d34, #5c4324); border: 3px solid #3a2914; border-radius: 12px;
+  box-shadow: 0 5px 0 #2c1f0f, inset 0 1px 0 #bd9358; transition: transform .08s;
+}
+.ui-home-mode:hover { transform: translateY(-3px); }
+.ui-home-mode-name { font-size: 24px; font-weight: 800; }
+.ui-home-mode-desc { font-size: 12px; opacity: .8; }
+.ui-home-mode.soon { filter: grayscale(.55) brightness(.78); }
+.ui-home-note { height: 18px; margin: 16px 0 0; color: #ffd76a; font-weight: 700; }
+.ui-home-heroes { display: flex; gap: 10px; margin-top: 22px; }
+.ui-home-hero {
+  width: 46px; height: 46px; border-radius: 8px; border: 2px solid #3a2914;
+  background-size: cover; background-position: center 22%; background-color: #caa24a22;
+  box-shadow: 0 2px 0 #2c1f0f;
+}

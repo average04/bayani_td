@@ -56,6 +56,16 @@ body { display: flex; justify-content: center; padding: 16px 0; }
 .ui-tooltip h4 { margin: 0 0 5px; font-size: 13px; color: #5c3d12; }
 .ui-trow { display: flex; justify-content: space-between; margin-top: 2px; }
 
+/* "Deploying: <hero>" banner, shown only while a hero is armed for placement */
+.ui-deploy {
+  position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
+  pointer-events: none; align-items: center; gap: 8px; white-space: nowrap;
+  padding: 6px 14px; color: #2c1f0f; font-weight: 800; font-size: 13px;
+  background: linear-gradient(#caa24a, #a9802f); border: 2px solid #3a2914; border-radius: 8px;
+  box-shadow: 0 3px 0 #5c4012, inset 0 1px 0 #f0d999;
+}
+.ui-deploy-hint { font-weight: 600; font-size: 11px; opacity: .7; }
+
 .ui-end {
   position: absolute; inset: 0; pointer-events: auto;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;

@@ -21,7 +21,8 @@ export class GameScene extends Phaser.Scene {
   private world!: World;
   private hpBars!: Phaser.GameObjects.Graphics;
   private ghost!: Phaser.GameObjects.Graphics;
-  private selectedHeroId = 'lapulapu';
+  // the hero armed for deployment, or null when nothing is being deployed
+  private selectedHeroId: string | null = null;
   private bestWave = 0;
   private endHandled = false;
   private enemyViews = new Map<Enemy, EnemyView>();
@@ -54,12 +55,22 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-R', () => {
       if (this.world.status !== 'playing') this.scene.restart();
     });
+    // Esc / right-click cancel the in-progress deployment
+    this.input.keyboard?.on('keydown-ESC', () => (this.selectedHeroId = null));
+    this.input.mouse?.disableContextMenu();
 
-    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.tryPlaceTower(p.x, p.y));
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.rightButtonDown()) {
+        this.selectedHeroId = null;
+        return;
+      }
+      this.tryPlaceTower(p.x, p.y);
+    });
 
     const ui = getUI();
+    // clicking the armed hero again cancels deployment
     ui.onSelectHero = (id) => {
-      this.selectedHeroId = id;
+      this.selectedHeroId = this.selectedHeroId === id ? null : id;
     };
     ui.onStartWave = () => {
       this.world.startNextWave();
@@ -70,7 +81,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private tryPlaceTower(x: number, y: number): void {
-    if (this.world.status !== 'playing') return;
+    if (this.world.status !== 'playing' || !this.selectedHeroId) return;
     const { col, row } = footprintTopLeftAt(LEVEL_ONE, x, y);
     this.world.placeTower(this.selectedHeroId, col, row);
   }
@@ -78,7 +89,7 @@ export class GameScene extends Phaser.Scene {
   private drawGhost(): void {
     const g = this.ghost;
     g.clear();
-    if (this.world.status !== 'playing') return;
+    if (this.world.status !== 'playing' || !this.selectedHeroId) return;
     const p = this.input.activePointer;
     if (p.x < 0 || p.y < 0 || p.x > this.scale.width || p.y > this.scale.height) return;
     const { col, row } = footprintTopLeftAt(LEVEL_ONE, p.x, p.y);

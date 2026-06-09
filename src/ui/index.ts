@@ -64,6 +64,10 @@ export function createUI(mount: HTMLElement): UI {
   const tooltip = el('div', 'ui-tooltip', overlay);
   tooltip.style.display = 'none';
 
+  // banner shown while a hero is armed for deployment
+  const deploy = el('div', 'ui-deploy', overlay);
+  deploy.style.display = 'none';
+
   const endPanel = el('div', 'ui-end', overlay);
   endPanel.style.display = 'none';
   const endTitle = el('h2', 'ui-end-title', endPanel);
@@ -111,6 +115,15 @@ export function createUI(mount: HTMLElement): UI {
         const tile = tiles[h.id];
         tile.classList.toggle('sel', h.selected);
         tile.classList.toggle('poor', !h.affordable);
+      }
+      if (vm.status === 'playing' && vm.selectedHeroId) {
+        const h = HERO_TYPES[vm.selectedHeroId];
+        deploy.innerHTML =
+          `Deploying: ${h.name}` +
+          ` <span class="ui-deploy-hint">click to place &middot; right-click / Esc to cancel</span>`;
+        deploy.style.display = 'flex';
+      } else {
+        deploy.style.display = 'none';
       }
       if (vm.status === 'playing') {
         endPanel.style.display = 'none';

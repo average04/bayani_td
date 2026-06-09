@@ -26,7 +26,7 @@ export interface UiState {
   status: GameStatus;
   bestWave: number;
   canStartWave: boolean;
-  selectedHeroId: string;
+  selectedHeroId: string | null;
   heroes: HeroVM[];
 }
 
@@ -36,7 +36,7 @@ export function canAfford(gold: number, cost: number): boolean {
 
 export function buildUiState(
   world: WorldLike,
-  selectedHeroId: string,
+  selectedHeroId: string | null,
   bestWave: number,
   heroOrder: string[],
   heroTypes: Record<string, HeroType>,

@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "gen:placeholders": "node scripts/gen-placeholders.mjs"
+    "gen:placeholders": "node scripts/gen-placeholders.mjs",
+    "gen:map": "node scripts/gen-map-art.mjs"
   },
   "dependencies": {
     "phaser": "^3.80.1"

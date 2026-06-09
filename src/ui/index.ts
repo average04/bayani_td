@@ -75,6 +75,16 @@ export function createUI(mount: HTMLElement): UI {
   const upg = el('div', 'ui-upg', overlay);
   upg.style.display = 'none';
   const upgName = el('div', 'ui-upg-name', upg);
+  const upgStat: Record<string, HTMLElement> = {};
+  const mkStat = (label: string, key: string): void => {
+    const row = el('div', 'ui-upg-srow', upg);
+    el('span', 'ui-upg-slabel', row).textContent = label;
+    upgStat[key] = el('span', 'ui-upg-sval', row);
+  };
+  mkStat('Damage', 'damage');
+  mkStat('Range', 'range');
+  mkStat('Atk Speed', 'speed');
+  mkStat('Effect', 'effect');
   const upgPathName: HTMLElement[] = [];
   const upgPips: HTMLElement[][] = [];
   const upgBtns: HTMLButtonElement[] = [];
@@ -137,6 +147,10 @@ export function createUI(mount: HTMLElement): UI {
       }
       upg.style.display = 'block';
       upgName.textContent = vm.heroName;
+      upgStat.damage.textContent = String(vm.stats.damage);
+      upgStat.range.textContent = String(vm.stats.range);
+      upgStat.speed.textContent = `${+vm.stats.fireRate.toFixed(2)}/s`;
+      upgStat.effect.textContent = vm.stats.effect;
       vm.paths.forEach((pv, p) => {
         upgPathName[p].textContent = pv.name;
         upgPips[p].forEach((dot, i) => dot.classList.toggle('on', i < pv.level));

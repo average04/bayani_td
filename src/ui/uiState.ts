@@ -1,6 +1,6 @@
 import type { HeroType } from '../game/config/heroes';
 import type { GameStatus } from '../game/state/gameState';
-import { UPGRADES, nextUpgrade, canUpgradePath } from '../game/config/upgrades';
+import { UPGRADES, nextUpgrade, canUpgradePath, effectiveStats, type TowerStats } from '../game/config/upgrades';
 import { HERO_TYPES } from '../game/config/heroes';
 
 export interface WorldLike {
@@ -47,7 +47,16 @@ export interface UpgradePathVM {
 export interface UpgradePanelVM {
   heroId: string;
   heroName: string;
+  stats: { damage: number; range: number; fireRate: number; effect: string };
   paths: [UpgradePathVM, UpgradePathVM];
+}
+
+function statsEffect(s: TowerStats): string {
+  if (s.spin) return 'Melee spin';
+  if (s.splashRadius) return `Splash r${s.splashRadius}`;
+  if (s.slow) return `Slow x${s.slow.factor} / ${s.slow.duration}s`;
+  if (s.poison) return `Poison ${s.poison.dps}/s`;
+  return 'Single target';
 }
 
 export function buildUpgradePanel(
@@ -58,6 +67,7 @@ export function buildUpgradePanel(
   const paths = UPGRADES[heroId];
   const hero = HERO_TYPES[heroId];
   if (!paths || !hero) return null;
+  const eff = effectiveStats(hero, levels);
   const mk = (p: number): UpgradePathVM => {
     const up = nextUpgrade(hero, levels, p);
     const ruleOk = canUpgradePath(levels, p);
@@ -69,7 +79,12 @@ export function buildUpgradePanel(
       canBuy: up !== null && ruleOk && gold >= up.cost,
     };
   };
-  return { heroId, heroName: hero.name, paths: [mk(0), mk(1)] };
+  return {
+    heroId,
+    heroName: hero.name,
+    stats: { damage: eff.damage, range: eff.range, fireRate: eff.fireRate, effect: statsEffect(eff) },
+    paths: [mk(0), mk(1)],
+  };
 }
 
 export function buildUiState(

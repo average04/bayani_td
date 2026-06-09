@@ -1,9 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { buildUpgradePanel } from '../../../src/ui/uiState';
+import { HERO_TYPES } from '../../../src/game/config/heroes';
 
 describe('buildUpgradePanel', () => {
   it('returns null for a hero with no upgrades', () => {
     expect(buildUpgradePanel('gabriela', [0, 0], 1000)).toBeNull();
+  });
+
+  it('reports the current effective stats', () => {
+    const lapu = HERO_TYPES.lapulapu;
+    const base = buildUpgradePanel('lapulapu', [0, 0], 1000)!;
+    expect(base.stats).toEqual({ damage: lapu.damage, range: lapu.range, fireRate: lapu.fireRate, effect: 'Melee spin' });
+    const upgraded = buildUpgradePanel('lapulapu', [2, 0], 1000)!;
+    expect(upgraded.stats.damage).toBe(lapu.damage + 12 + 20);
+    expect(upgraded.stats.range).toBe(lapu.range + 10);
   });
 
   it('describes both paths with the next upgrade and affordability', () => {

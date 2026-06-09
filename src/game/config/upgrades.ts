@@ -54,6 +54,94 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
       ],
     },
   ],
+
+  // Gabriela — fast single-target shooter (base: dmg 6, range 140, rate 3).
+  gabriela: [
+    {
+      name: 'Sharpshooter',
+      levels: [
+        { name: 'Steady Aim', cost: 55, desc: '+3 damage, +15 range', delta: { damage: 3, range: 15 } },
+        { name: 'Marksman', cost: 110, desc: '+5 damage', delta: { damage: 5 } },
+        { name: 'Piercing Shot', cost: 200, desc: '+10 damage, +20 range', delta: { damage: 10, range: 20 } },
+        { name: 'Revolution', cost: 380, desc: '+20 damage, +30 range', delta: { damage: 20, range: 30 } },
+      ],
+    },
+    {
+      name: 'Rapid Fire',
+      levels: [
+        { name: 'Quick Reload', cost: 60, desc: '+1.0 attack speed', delta: { fireRate: 1.0 } },
+        { name: 'Volley', cost: 120, desc: '+1.5 attack speed', delta: { fireRate: 1.5 } },
+        { name: 'Suppressing Fire', cost: 210, desc: 'Shots splash r40', delta: { splashRadius: 40 } },
+        { name: 'Katipunan Storm', cost: 400, desc: '+2.0 atk speed, +20 splash', delta: { fireRate: 2.0, splashRadius: 20 } },
+      ],
+    },
+  ],
+
+  // Bernardo — splash strongman (base: dmg 12, range 100, rate 1.2, splash 50).
+  bernardo: [
+    {
+      name: 'Earthshaker',
+      levels: [
+        { name: 'Heavy Fists', cost: 70, desc: '+8 damage', delta: { damage: 8 } },
+        { name: 'Tremor', cost: 130, desc: '+20 splash radius', delta: { splashRadius: 20 } },
+        { name: 'Boulder Toss', cost: 240, desc: '+15 damage, +20 splash', delta: { damage: 15, splashRadius: 20 } },
+        { name: 'Mountain Breaker', cost: 450, desc: '+40 damage, +30 splash', delta: { damage: 40, splashRadius: 30 } },
+      ],
+    },
+    {
+      name: 'Relentless',
+      levels: [
+        { name: 'Faster Swings', cost: 60, desc: '+0.5 attack speed', delta: { fireRate: 0.5 } },
+        { name: 'Ground Pound', cost: 130, desc: '+0.8 attack speed', delta: { fireRate: 0.8 } },
+        { name: 'Staggering Blow', cost: 220, desc: 'Hits Slow 0.6x / 1s', delta: { slow: { factor: 0.6, duration: 1 } } },
+        { name: 'Unstoppable', cost: 420, desc: '+1.0 atk speed, Slow 0.5x / 1.5s', delta: { fireRate: 1.0, slow: { factor: 0.5, duration: 1.5 } } },
+      ],
+    },
+  ],
+
+  // Diwata — slow support (base: dmg 4, range 130, rate 1.5, slow 0.5/1.5s).
+  diwata: [
+    {
+      name: 'Deep Chill',
+      levels: [
+        { name: 'Chilling Aura', cost: 60, desc: 'Slow 0.4x / 1.5s, +15 range', delta: { slow: { factor: 0.4, duration: 1.5 }, range: 15 } },
+        { name: 'Deep Freeze', cost: 120, desc: 'Slow 0.3x / 2s', delta: { slow: { factor: 0.3, duration: 2 } } },
+        { name: 'Bitter Cold', cost: 220, desc: 'Slow 0.25x / 2.5s, +20 range', delta: { slow: { factor: 0.25, duration: 2.5 }, range: 20 } },
+        { name: 'Eternal Winter', cost: 400, desc: 'Slow 0.15x / 3s', delta: { slow: { factor: 0.15, duration: 3 } } },
+      ],
+    },
+    {
+      name: "Nature's Wrath",
+      levels: [
+        { name: 'Thorn Lash', cost: 55, desc: '+4 damage', delta: { damage: 4 } },
+        { name: 'Quick Spirits', cost: 110, desc: '+1.0 attack speed', delta: { fireRate: 1.0 } },
+        { name: 'Bramble', cost: 200, desc: '+8 damage, +1.0 attack speed', delta: { damage: 8, fireRate: 1.0 } },
+        { name: 'Forest Fury', cost: 360, desc: '+18 damage', delta: { damage: 18 } },
+      ],
+    },
+  ],
+
+  // Mangkukulam — poison caster (base: dmg 5, range 120, rate 1, poison 8/3s).
+  mangkukulam: [
+    {
+      name: 'Curse',
+      levels: [
+        { name: 'Hex', cost: 60, desc: 'Poison 12/s, 3s', delta: { poison: { dps: 12, duration: 3 } } },
+        { name: 'Wasting Curse', cost: 120, desc: 'Poison 18/s, 4s', delta: { poison: { dps: 18, duration: 4 } } },
+        { name: 'Plague', cost: 220, desc: 'Poison 28/s, 5s, +15 range', delta: { poison: { dps: 28, duration: 5 }, range: 15 } },
+        { name: 'Death Curse', cost: 410, desc: 'Poison 45/s, 6s', delta: { poison: { dps: 45, duration: 6 } } },
+      ],
+    },
+    {
+      name: 'Dark Arts',
+      levels: [
+        { name: 'Quick Hexes', cost: 55, desc: '+0.5 attack speed', delta: { fireRate: 0.5 } },
+        { name: 'Cursed Bolt', cost: 110, desc: '+6 damage', delta: { damage: 6 } },
+        { name: 'Voodoo Spread', cost: 210, desc: 'Curse splashes r45', delta: { splashRadius: 45 } },
+        { name: 'Malediction', cost: 390, desc: '+0.8 atk speed, +12 damage', delta: { fireRate: 0.8, damage: 12 } },
+      ],
+    },
+  ],
 };
 
 export function baseStats(hero: HeroType): TowerStats {

@@ -33,6 +33,17 @@ describe('upgrades', () => {
   it('nextUpgrade returns the next level or null', () => {
     expect(nextUpgrade(lapu, [0, 0], 0)?.cost).toBe(60);
     expect(nextUpgrade(lapu, [4, 0], 0)).toBeNull();
-    expect(nextUpgrade(HERO_TYPES.gabriela, [0, 0], 0)).toBeNull();
+    expect(nextUpgrade({ ...HERO_TYPES.gabriela, id: 'nobody' }, [0, 0], 0)).toBeNull(); // no UPGRADES entry
+  });
+
+  it('every authored hero has 2 paths of 4 levels with positive costs', () => {
+    for (const [id, u] of Object.entries(UPGRADES)) {
+      expect(HERO_TYPES[id], `${id} should be a real hero`).toBeDefined();
+      expect(u).toHaveLength(2);
+      for (const path of u) {
+        expect(path.levels).toHaveLength(4);
+        for (const lvl of path.levels) expect(lvl.cost).toBeGreaterThan(0);
+      }
+    }
   });
 });

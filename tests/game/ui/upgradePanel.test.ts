@@ -4,7 +4,7 @@ import { HERO_TYPES } from '../../../src/game/config/heroes';
 
 describe('buildUpgradePanel', () => {
   it('returns null for a hero with no upgrades', () => {
-    expect(buildUpgradePanel('gabriela', [0, 0], 1000)).toBeNull();
+    expect(buildUpgradePanel('nobody', [0, 0], 1000)).toBeNull();
   });
 
   it('reports the current effective stats', () => {

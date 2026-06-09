@@ -171,3 +171,11 @@ body { display: flex; justify-content: center; padding: 16px 0; }
   width: 100%; margin: 6px 0 2px; padding: 4px; cursor: pointer; color: #f6e6bd; font-weight: 700; font-size: 11px;
   background: linear-gradient(#5c4a2c, #463720); border: 2px solid #3a2914; border-radius: 6px;
 }
+.ui-store {
+  position: absolute; left: 12px; top: 12px; width: 210px; pointer-events: auto;
+  padding: 10px; color: #f6e6bd; box-sizing: border-box;
+  background: linear-gradient(#7d5d34, #5c4324); border: 3px solid #3a2914; border-radius: 10px;
+  box-shadow: 0 6px 14px rgba(0,0,0,.45);
+}
+.ui-store-income { font-size: 12px; margin: 6px 0 10px; color: #f0d999; font-weight: 700; }
+.ui-portrait-store { background: linear-gradient(#a83f2c 0 30%, #caa24a 30% 44%, #e9d6a3 44% 100%); }

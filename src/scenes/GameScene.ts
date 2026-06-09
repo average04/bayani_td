@@ -3,14 +3,17 @@ import { World } from '../game/world';
 import { LEVEL_ONE } from '../game/config/levels';
 import { ENEMY_TYPES } from '../game/config/enemies';
 import { HERO_TYPES, HERO_ORDER } from '../game/config/heroes';
+import { STORE } from '../game/config/store';
 import { WAVES } from '../game/config/waves';
 import { loadSave, saveBestWave } from '../services/localSave';
 import { footprintTopLeftAt } from '../game/grid';
 import type { Enemy } from '../game/entities/enemy';
 import type { Tower } from '../game/entities/tower';
+import type { Store } from '../game/entities/store';
 import { renderMap } from '../render/mapRenderer';
 import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
+import { StoreView } from '../render/storeView';
 import { spawnProjectile, spawnHitPuff, spawnDeath, spawnSpin } from '../render/fx';
 import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel } from '../ui/uiState';
@@ -23,12 +26,14 @@ export class GameScene extends Phaser.Scene {
   private ghost!: Phaser.GameObjects.Graphics;
   private selRing!: Phaser.GameObjects.Graphics;
   private selectedTower: Tower | null = null;
-  // the hero armed for deployment, or null when nothing is being deployed
+  private selectedStore: Store | null = null;
+  // the hero (or 'store') armed for deployment, or null when nothing is being deployed
   private selectedHeroId: string | null = null;
   private bestWave = 0;
   private endHandled = false;
   private enemyViews = new Map<Enemy, EnemyView>();
   private towerViews = new Map<Tower, TowerView>();
+  private storeViews = new Map<Store, StoreView>();
 
   constructor() {
     super('Game');
@@ -45,7 +50,9 @@ export class GameScene extends Phaser.Scene {
     this.endHandled = false;
     this.enemyViews.clear();
     this.towerViews.clear();
+    this.storeViews.clear();
     this.selectedTower = null;
+    this.selectedStore = null;
 
     renderMap(this, LEVEL_ONE);
     this.hpBars = this.add.graphics().setDepth(9000);
@@ -56,7 +63,13 @@ export class GameScene extends Phaser.Scene {
       this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => {
         this.selectedHeroId = id;
         this.selectedTower = null;
+        this.selectedStore = null;
       });
+    });
+    this.input.keyboard?.on('keydown-SIX', () => {
+      this.selectedHeroId = STORE.id;
+      this.selectedTower = null;
+      this.selectedStore = null;
     });
     this.input.keyboard?.on('keydown-SPACE', () => this.world.startNextWave());
     this.input.keyboard?.on('keydown-R', () => {
@@ -66,6 +79,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ESC', () => {
       this.selectedHeroId = null;
       this.selectedTower = null;
+      this.selectedStore = null;
     });
     this.input.mouse?.disableContextMenu();
 
@@ -73,13 +87,22 @@ export class GameScene extends Phaser.Scene {
       if (p.rightButtonDown()) {
         this.selectedHeroId = null;
         this.selectedTower = null;
+        this.selectedStore = null;
         return;
       }
       if (this.selectedHeroId) {
-        this.tryPlaceTower(p.x, p.y);
+        this.tryPlaceBuild(p.x, p.y);
         return;
       }
-      this.selectedTower = this.world.towerAt(p.x, p.y); // null when clicking empty ground
+      // not armed: select a placed building under the cursor (store first, then tower)
+      const store = this.world.storeAt(p.x, p.y);
+      if (store) {
+        this.selectedStore = store;
+        this.selectedTower = null;
+        return;
+      }
+      this.selectedTower = this.world.towerAt(p.x, p.y);
+      this.selectedStore = null;
     });
 
     const ui = getUI();
@@ -87,6 +110,7 @@ export class GameScene extends Phaser.Scene {
     ui.onSelectHero = (id) => {
       this.selectedHeroId = this.selectedHeroId === id ? null : id;
       this.selectedTower = null;
+      this.selectedStore = null;
     };
     ui.onUpgrade = (path) => {
       if (this.selectedTower) this.world.upgradeTower(this.selectedTower, path);
@@ -95,6 +119,12 @@ export class GameScene extends Phaser.Scene {
       if (this.selectedTower) {
         this.world.sellTower(this.selectedTower);
         this.selectedTower = null;
+      }
+    };
+    ui.onSellStore = () => {
+      if (this.selectedStore) {
+        this.world.sellStore(this.selectedStore);
+        this.selectedStore = null;
       }
     };
     ui.onCycleTarget = () => this.selectedTower?.cycleTarget();
@@ -106,8 +136,13 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
-  private tryPlaceTower(x: number, y: number): void {
+  private tryPlaceBuild(x: number, y: number): void {
     if (this.world.status !== 'playing' || !this.selectedHeroId) return;
+    if (this.selectedHeroId === STORE.id) {
+      const { col, row } = footprintTopLeftAt(LEVEL_ONE, x, y, STORE.width, STORE.height);
+      this.world.placeStore(col, row);
+      return;
+    }
     const { col, row } = footprintTopLeftAt(LEVEL_ONE, x, y);
     this.world.placeTower(this.selectedHeroId, col, row);
   }
@@ -118,10 +153,19 @@ export class GameScene extends Phaser.Scene {
     if (this.world.status !== 'playing' || !this.selectedHeroId) return;
     const p = this.input.activePointer;
     if (p.x < 0 || p.y < 0 || p.x > this.scale.width || p.y > this.scale.height) return;
+    const cs = LEVEL_ONE.cellSize;
+    if (this.selectedHeroId === STORE.id) {
+      const { col, row } = footprintTopLeftAt(LEVEL_ONE, p.x, p.y, STORE.width, STORE.height);
+      const ok = this.world.canPlaceStoreAt(col, row) && this.world.gold >= STORE.cost;
+      g.fillStyle(ok ? 0x2ecc71 : 0xe74c3c, 0.35);
+      g.lineStyle(2, ok ? 0x2ecc71 : 0xe74c3c, 0.9);
+      g.fillRect(col * cs, row * cs, cs * STORE.width, cs * STORE.height);
+      g.strokeRect(col * cs, row * cs, cs * STORE.width, cs * STORE.height);
+      return;
+    }
     const { col, row } = footprintTopLeftAt(LEVEL_ONE, p.x, p.y);
     const hero = HERO_TYPES[this.selectedHeroId];
     const ok = this.world.canPlaceAt(col, row) && this.world.gold >= hero.cost;
-    const cs = LEVEL_ONE.cellSize;
     g.fillStyle(ok ? 0x2ecc71 : 0xe74c3c, 0.35);
     g.lineStyle(2, ok ? 0x2ecc71 : 0xe74c3c, 0.9);
     g.fillRect(col * cs, row * cs, cs * 2, cs * 2);
@@ -131,9 +175,15 @@ export class GameScene extends Phaser.Scene {
   private drawSelection(): void {
     const g = this.selRing;
     g.clear();
+    const cs = LEVEL_ONE.cellSize;
+    if (this.selectedStore) {
+      const s = this.selectedStore;
+      g.lineStyle(2, 0xf0d999, 0.95);
+      g.strokeRect(s.pos.x - (STORE.width * cs) / 2, s.pos.y - (STORE.height * cs) / 2, STORE.width * cs, STORE.height * cs);
+      return;
+    }
     const t = this.selectedTower;
     if (!t) return;
-    const cs = LEVEL_ONE.cellSize;
     g.lineStyle(2, 0xf0d999, 0.95);
     g.strokeRect(t.pos.x - cs, t.pos.y - cs, cs * 2, cs * 2);
     g.lineStyle(1, 0xf0d999, 0.45);
@@ -158,6 +208,15 @@ export class GameScene extends Phaser.Scene {
             this.selectedTower.spent,
             this.selectedTower.targetMode,
           )
+        : null,
+    );
+    getUI().setStorePanel(
+      this.selectedStore
+        ? {
+            name: STORE.name,
+            income: `+${STORE.incomeAmount} gold / ${STORE.incomeInterval}s`,
+            sellValue: Math.floor(this.selectedStore.spent * 0.7),
+          }
         : null,
     );
     getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, HERO_ORDER, HERO_TYPES));
@@ -195,6 +254,16 @@ export class GameScene extends Phaser.Scene {
       if (!liveTowers.has(t)) {
         view.destroy();
         this.towerViews.delete(t);
+      }
+    }
+    for (const st of this.world.stores) {
+      if (!this.storeViews.has(st)) this.storeViews.set(st, new StoreView(this, st));
+    }
+    const liveStores = new Set(this.world.stores);
+    for (const [st, view] of this.storeViews) {
+      if (!liveStores.has(st)) {
+        view.destroy();
+        this.storeViews.delete(st);
       }
     }
     const live = new Set(this.world.enemies);

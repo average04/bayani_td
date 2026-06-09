@@ -1,14 +1,23 @@
 import { HERO_TYPES, HERO_ORDER, type HeroType } from '../game/config/heroes';
+import { STORE } from '../game/config/store';
 import type { UiState, UpgradePanelVM } from './uiState';
+
+export interface StorePanelVM {
+  name: string;
+  income: string;
+  sellValue: number;
+}
 
 export interface UI {
   update(vm: UiState): void;
   setUpgradePanel(vm: UpgradePanelVM | null): void;
+  setStorePanel(vm: StorePanelVM | null): void;
   onSelectHero: (id: string) => void;
   onStartWave: () => void;
   onRestart: () => void;
   onUpgrade: (path: number) => void;
   onSell: () => void;
+  onSellStore: () => void;
   onCycleTarget: () => void;
 }
 
@@ -107,6 +116,14 @@ export function createUI(mount: HTMLElement): UI {
   const upgSell = el<HTMLButtonElement>('button', 'ui-upg-sell', upg);
   upgSell.addEventListener('click', () => ui.onSell());
 
+  // store info panel (shown when a placed store is selected)
+  const storePanel = el('div', 'ui-store', overlay);
+  storePanel.style.display = 'none';
+  const storeName = el('div', 'ui-upg-name', storePanel);
+  const storeIncome = el('div', 'ui-store-income', storePanel);
+  const storeSell = el<HTMLButtonElement>('button', 'ui-upg-sell', storePanel);
+  storeSell.addEventListener('click', () => ui.onSellStore());
+
   const endPanel = el('div', 'ui-end', overlay);
   endPanel.style.display = 'none';
   const endTitle = el('h2', 'ui-end-title', endPanel);
@@ -141,13 +158,42 @@ export function createUI(mount: HTMLElement): UI {
     tiles[id] = tile;
   });
 
+  // sari-sari store (economy) build tile
+  const storeTile = el('div', 'ui-tile ui-tile-store', bottom);
+  el('span', 'ui-portrait ui-portrait-store', storeTile);
+  el('div', 'ui-tname', storeTile).textContent = STORE.name;
+  el('small', 'ui-tcost', storeTile).textContent = `$${STORE.cost}`;
+  el('span', 'ui-tkey', storeTile).textContent = '[6]';
+  storeTile.addEventListener('click', () => ui.onSelectHero(STORE.id));
+  storeTile.addEventListener('mouseenter', () => {
+    tooltip.innerHTML =
+      `<h4>${STORE.name}</h4>` +
+      `<div class="ui-trow"><span>Income</span><b>+${STORE.incomeAmount}g / ${STORE.incomeInterval}s</b></div>` +
+      `<div class="ui-trow"><span>Cost</span><b>$${STORE.cost}</b></div>`;
+    tooltip.style.display = 'block';
+  });
+  storeTile.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+  });
+
   const ui: UI = {
     onSelectHero: () => {},
     onStartWave: () => {},
     onRestart: () => {},
     onUpgrade: () => {},
     onSell: () => {},
+    onSellStore: () => {},
     onCycleTarget: () => {},
+    setStorePanel(vm: StorePanelVM | null): void {
+      if (!vm) {
+        storePanel.style.display = 'none';
+        return;
+      }
+      storePanel.style.display = 'block';
+      storeName.textContent = vm.name;
+      storeIncome.textContent = vm.income;
+      storeSell.textContent = `Sell — $${vm.sellValue}`;
+    },
     setUpgradePanel(vm: UpgradePanelVM | null): void {
       if (!vm) {
         upg.style.display = 'none';
@@ -191,10 +237,12 @@ export function createUI(mount: HTMLElement): UI {
         tile.classList.toggle('sel', h.selected);
         tile.classList.toggle('poor', !h.affordable);
       }
+      storeTile.classList.toggle('sel', vm.selectedHeroId === STORE.id);
+      storeTile.classList.toggle('poor', vm.gold < STORE.cost);
       if (vm.status === 'playing' && vm.selectedHeroId) {
-        const h = HERO_TYPES[vm.selectedHeroId];
+        const name = vm.selectedHeroId === STORE.id ? STORE.name : HERO_TYPES[vm.selectedHeroId].name;
         deploy.innerHTML =
-          `Deploying: ${h.name}` +
+          `Deploying: ${name}` +
           ` <span class="ui-deploy-hint">click to place &middot; right-click / Esc to cancel</span>`;
         deploy.style.display = 'flex';
       } else {

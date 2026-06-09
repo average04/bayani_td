@@ -45,7 +45,7 @@ describe('World events', () => {
 
   it('records a shot (from tower to target) and a death when the enemy is killed', () => {
     const w = new World(makeConfig());
-    w.placeTower('h', { x: 50, y: 48 });
+    w.placeTower('h', 2, 2);
     w.startNextWave();
     let sawShot = false;
     let sawDeath = false;
@@ -54,7 +54,7 @@ describe('World events', () => {
       if (w.events.shots.length > 0) {
         sawShot = true;
         expect(w.events.shots[0].heroId).toBe('h');
-        expect(w.events.shots[0].from).toEqual({ x: 50, y: 48 });
+        expect(w.events.shots[0].from).toEqual({ x: 72, y: 72 });
         expect(typeof w.events.shots[0].to.x).toBe('number');
         expect(w.events.shots[0].to.y).toBe(0);
       }
@@ -70,7 +70,7 @@ describe('World events', () => {
   it('clears event buffers each tick while keeping the same array identity', () => {
     const w = new World(makeConfig());
     const shotsRef = w.events.shots;
-    w.placeTower('h', { x: 50, y: 48 });
+    w.placeTower('h', 2, 2);
     w.startNextWave();
     // tick until a shot is recorded
     let recorded = false;

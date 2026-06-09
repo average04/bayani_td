@@ -3,6 +3,7 @@ import type { EnemyType } from './config/enemies';
 import type { HeroType } from './config/heroes';
 import type { WaveConfig } from './config/waves';
 import { distance, type Vec2 } from './geometry';
+import { pathCells, canPlace, footprintCenter, footprintCells, cellKey } from './grid';
 import { Enemy } from './entities/enemy';
 import { Tower } from './entities/tower';
 import { Economy } from './systems/economy';
@@ -43,6 +44,8 @@ export class World {
   enemies: Enemy[] = [];
   towers: Tower[] = [];
   readonly events: WorldEvents = { shots: [], deaths: [] };
+  private readonly blockedCells: Set<string>;
+  private readonly occupiedCells = new Set<string>();
 
   constructor(cfg: WorldConfig) {
     this.level = cfg.level;
@@ -51,6 +54,7 @@ export class World {
     this.economy = new Economy(cfg.level.startingGold);
     this.state = new GameState(cfg.level.startingLives);
     this.waveManager = new WaveManager(cfg.waves);
+    this.blockedCells = pathCells(cfg.level);
   }
 
   get gold(): number {
@@ -83,14 +87,17 @@ export class World {
     return true;
   }
 
-  placeTower(heroId: string, pos: Vec2): boolean {
+  canPlaceAt(col: number, row: number): boolean {
+    return canPlace(this.level, this.blockedCells, this.occupiedCells, col, row);
+  }
+
+  placeTower(heroId: string, col: number, row: number): boolean {
     const hero = this.heroTypes[heroId];
     if (!hero) return false;
-    const spot = this.level.buildSpots.find((s) => s.x === pos.x && s.y === pos.y);
-    if (!spot) return false;
-    if (this.towers.some((t) => t.pos.x === pos.x && t.pos.y === pos.y)) return false;
+    if (!this.canPlaceAt(col, row)) return false;
     if (!this.economy.spend(hero.cost)) return false;
-    this.towers.push(new Tower(hero, { x: pos.x, y: pos.y }));
+    this.towers.push(new Tower(hero, footprintCenter(this.level, col, row)));
+    for (const cell of footprintCells(col, row)) this.occupiedCells.add(cellKey(cell.col, cell.row));
     return true;
   }
 

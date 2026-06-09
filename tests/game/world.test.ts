@@ -37,24 +37,25 @@ function makeConfig(): WorldConfig {
 }
 
 describe('World', () => {
-  it('places a tower on a build spot and charges gold', () => {
+  it('places a tower on a valid cell and charges gold', () => {
     const w = new World(makeConfig());
-    expect(w.placeTower('h', { x: 50, y: 48 })).toBe(true);
+    expect(w.placeTower('h', 2, 2)).toBe(true);
     expect(w.gold).toBe(50);
     expect(w.towers.length).toBe(1);
   });
 
-  it('rejects tower placement off a build spot, on an occupied spot, or when broke', () => {
+  it('rejects placement on the path, on an occupied footprint, or when broke', () => {
     const w = new World(makeConfig());
-    expect(w.placeTower('h', { x: 999, y: 999 })).toBe(false);
-    expect(w.placeTower('h', { x: 50, y: 48 })).toBe(true);
-    expect(w.placeTower('h', { x: 50, y: 48 })).toBe(false); // occupied
-    expect(w.placeTower('h', { x: 50, y: 48 })).toBe(false); // also broke now
+    expect(w.placeTower('h', 0, 0)).toBe(false); // footprint over the path
+    expect(w.placeTower('h', 2, 2)).toBe(true); // gold 100 -> 50
+    expect(w.placeTower('h', 2, 2)).toBe(false); // occupied
+    expect(w.placeTower('h', 5, 2)).toBe(true); // gold 50 -> 0
+    expect(w.placeTower('h', 8, 2)).toBe(false); // broke
   });
 
   it('lets a tower kill the spawned enemy and awards gold', () => {
     const w = new World(makeConfig());
-    w.placeTower('h', { x: 50, y: 48 });
+    w.placeTower('h', 2, 2);
     expect(w.startNextWave()).toBe(true);
     // tick until the enemy spawns and is shot
     for (let i = 0; i < 5; i++) w.update(0.1);

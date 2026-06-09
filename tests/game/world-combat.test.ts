@@ -27,7 +27,7 @@ const armored: EnemyType = { id: 'armored', name: 'A', maxHp: 100, speed: 0, rew
 function world(hero: HeroType, enemyTypes: Record<string, EnemyType>): World {
   const cfg: WorldConfig = { level, enemyTypes, heroTypes: { [hero.id]: hero }, waves: [] };
   const w = new World(cfg);
-  w.placeTower(hero.id, { x: 100, y: 40 });
+  w.placeTower(hero.id, 2, 2);
   return w;
 }
 

@@ -137,3 +137,24 @@ body { display: flex; justify-content: center; padding: 16px 0; }
 .ui-ico-lives { background-image: url(/assets/ui/icon-lives.png); }
 .ui-ico-gold { background-image: url(/assets/ui/icon-gold.png); }
 .ui-ico-wave { background-image: url(/assets/ui/icon-wave.png); }
+
+/* ---- upgrade panel (selected tower) ---- */
+.ui-upg {
+  position: absolute; left: 12px; top: 12px; width: 210px; pointer-events: auto;
+  padding: 10px; color: #f6e6bd; box-sizing: border-box;
+  background: linear-gradient(#7d5d34, #5c4324); border: 3px solid #3a2914; border-radius: 10px;
+  box-shadow: 0 6px 14px rgba(0,0,0,.45);
+}
+.ui-upg-name { font-weight: 800; font-size: 15px; margin-bottom: 8px; text-shadow: 0 1px 0 #2c1f0f; }
+.ui-upg-path { margin-top: 8px; }
+.ui-upg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.ui-upg-pname { font-size: 12px; font-weight: 700; }
+.ui-pip { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 3px; background: rgba(0,0,0,.35); border: 1px solid #3a2914; }
+.ui-pip.on { background: #f0d999; }
+.ui-upg-btn {
+  width: 100%; padding: 6px 8px; cursor: pointer; color: #2c1f0f; font-weight: 800; font-size: 11px;
+  background: linear-gradient(#caa24a, #a9802f); border: 2px solid #3a2914; border-radius: 6px;
+  box-shadow: 0 2px 0 #5c4012, inset 0 1px 0 #f0d999;
+}
+.ui-upg-btn:disabled { filter: grayscale(.6) brightness(.72); cursor: default; box-shadow: none; }
+.ui-upg-btn.locked { filter: grayscale(.8) brightness(.6); }

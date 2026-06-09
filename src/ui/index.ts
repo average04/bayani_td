@@ -1,11 +1,13 @@
 import { HERO_TYPES, HERO_ORDER, type HeroType } from '../game/config/heroes';
-import type { UiState } from './uiState';
+import type { UiState, UpgradePanelVM } from './uiState';
 
 export interface UI {
   update(vm: UiState): void;
+  setUpgradePanel(vm: UpgradePanelVM | null): void;
   onSelectHero: (id: string) => void;
   onStartWave: () => void;
   onRestart: () => void;
+  onUpgrade: (path: number) => void;
 }
 
 let instance: UI | null = null;
@@ -69,6 +71,26 @@ export function createUI(mount: HTMLElement): UI {
   const deploy = el('div', 'ui-deploy', overlay);
   deploy.style.display = 'none';
 
+  // upgrade panel (shown when a placed tower is selected)
+  const upg = el('div', 'ui-upg', overlay);
+  upg.style.display = 'none';
+  const upgName = el('div', 'ui-upg-name', upg);
+  const upgPathName: HTMLElement[] = [];
+  const upgPips: HTMLElement[][] = [];
+  const upgBtns: HTMLButtonElement[] = [];
+  for (let p = 0; p < 2; p++) {
+    const row = el('div', 'ui-upg-path', upg);
+    const head = el('div', 'ui-upg-head', row);
+    upgPathName[p] = el('span', 'ui-upg-pname', head);
+    const pipBox = el('span', 'ui-upg-pips', head);
+    upgPips[p] = [];
+    for (let i = 0; i < 4; i++) upgPips[p].push(el('span', 'ui-pip', pipBox));
+    const btn = el<HTMLButtonElement>('button', 'ui-upg-btn', row);
+    const path = p;
+    btn.addEventListener('click', () => ui.onUpgrade(path));
+    upgBtns[p] = btn;
+  }
+
   const endPanel = el('div', 'ui-end', overlay);
   endPanel.style.display = 'none';
   const endTitle = el('h2', 'ui-end-title', endPanel);
@@ -107,6 +129,28 @@ export function createUI(mount: HTMLElement): UI {
     onSelectHero: () => {},
     onStartWave: () => {},
     onRestart: () => {},
+    onUpgrade: () => {},
+    setUpgradePanel(vm: UpgradePanelVM | null): void {
+      if (!vm) {
+        upg.style.display = 'none';
+        return;
+      }
+      upg.style.display = 'block';
+      upgName.textContent = vm.heroName;
+      vm.paths.forEach((pv, p) => {
+        upgPathName[p].textContent = pv.name;
+        upgPips[p].forEach((dot, i) => dot.classList.toggle('on', i < pv.level));
+        const btn = upgBtns[p];
+        if (!pv.next) {
+          btn.textContent = 'MAX';
+          btn.disabled = true;
+        } else {
+          btn.textContent = `${pv.next.name} — $${pv.next.cost}`;
+          btn.disabled = !pv.canBuy;
+        }
+        btn.classList.toggle('locked', pv.locked);
+      });
+    },
     update(vm: UiState): void {
       livesV.textContent = String(vm.lives);
       goldV.textContent = String(vm.gold);

@@ -65,7 +65,8 @@ function placeholderChar(key: string): CharacterAsset {
 export const MANIFEST: AssetManifest = {
   sheets: [
     { key: 'lapulapu', path: 'assets/sprites/lapulapu/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 273 },
-    ...(['gabriela', 'aswang', 'tiktik'] as const).map((key) => ({
+    { key: 'gabriela', path: 'assets/sprites/gabriela/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 273 },
+    ...(['aswang', 'tiktik'] as const).map((key) => ({
       key,
       path: `assets/sprites/${key}.png`,
       frameWidth: 32,
@@ -95,7 +96,28 @@ export const MANIFEST: AssetManifest = {
         death: { sheet: 'lapulapu', frameRate: 10, repeat: 0, rows: { down: { start: 260, end: 265 } } },
       },
     },
-    ...(['gabriela', 'aswang', 'tiktik'] as const).map(placeholderChar),
+    {
+      key: 'gabriela',
+      displayScale: 0.6,
+      originY: 0.85,
+      anims: {
+        idle: { sheet: 'gabriela', frameRate: 4, repeat: -1, rows: { down: { start: 130, end: 130 } } },
+        walk: {
+          sheet: 'gabriela',
+          frameRate: 9,
+          repeat: -1,
+          rows: { down: { start: 130, end: 138 }, up: { start: 104, end: 112 }, side: { start: 143, end: 151 } },
+        },
+        attack: {
+          sheet: 'gabriela',
+          frameRate: 12,
+          repeat: 0,
+          rows: { down: { start: 182, end: 187 }, up: { start: 156, end: 161 }, side: { start: 195, end: 200 } },
+        },
+        death: { sheet: 'gabriela', frameRate: 10, repeat: 0, rows: { down: { start: 260, end: 265 } } },
+      },
+    },
+    ...(['aswang', 'tiktik'] as const).map(placeholderChar),
   ],
   fx: {
     projectile: { key: 'projectile', path: 'assets/fx/projectile.png' },

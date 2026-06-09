@@ -7,7 +7,7 @@ import { pathCells, canPlace, footprintCenter, footprintCells, cellKey } from '.
 import { Enemy } from './entities/enemy';
 import { Tower } from './entities/tower';
 import { Store } from './entities/store';
-import { STORE } from './config/store';
+import { STORE, nextStoreUpgrade } from './config/store';
 import { Economy } from './systems/economy';
 import { GameState, type GameStatus } from './state/gameState';
 import { WaveManager } from './systems/waveManager';
@@ -187,6 +187,24 @@ export class World {
       this.occupiedCells.delete(cellKey(c.col, c.row));
     }
     return refund;
+  }
+
+  canUpgradeStore(store: Store, path: number): boolean {
+    return nextStoreUpgrade(store.levels, path) !== null && canUpgradePath(store.levels, path);
+  }
+
+  nextStoreUpgradeCost(store: Store, path: number): number | null {
+    const u = nextStoreUpgrade(store.levels, path);
+    return u ? u.cost : null;
+  }
+
+  upgradeStore(store: Store, path: number): boolean {
+    const u = nextStoreUpgrade(store.levels, path);
+    if (!u || !canUpgradePath(store.levels, path)) return false;
+    if (!this.economy.spend(u.cost)) return false;
+    store.upgrade(path);
+    store.spent += u.cost;
+    return true;
   }
 
   private applyHit(affected: Enemy[], stats: TowerStats): void {

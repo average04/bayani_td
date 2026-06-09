@@ -44,4 +44,36 @@ describe('Sari-Sari store', () => {
     expect(w.stores).toHaveLength(0);
     expect(w.placeStore(4, 4)).toBe(true); // cells were freed
   });
+
+  it('upgrades the tick path for bigger payouts', () => {
+    const w = new World(cfg());
+    w.placeStore(4, 4); // gold 850
+    const st = w.stores[0];
+    expect(w.upgradeStore(st, 0)).toBe(true); // Bulk Goods +5, cost 80
+    expect(w.gold).toBe(850 - 80);
+    expect(st.income.tickAmount).toBe(STORE.incomeAmount + 5);
+    w.update(STORE.incomeInterval); // a payout
+    expect(w.gold).toBe(850 - 80 + STORE.incomeAmount + 5);
+  });
+
+  it('upgrades the passive path for a per-second drip', () => {
+    const w = new World(cfg());
+    w.placeStore(4, 4);
+    const st = w.stores[0];
+    w.upgradeStore(st, 1); // Regulars +1/s, cost 90
+    expect(st.income.passivePerSec).toBe(1);
+    const before = w.gold;
+    w.update(1); // one passive second (under the 5s tick interval)
+    expect(w.gold).toBe(before + 1);
+  });
+
+  it('enforces the cross-path lock on store upgrades', () => {
+    const w = new World(cfg(5000));
+    w.placeStore(4, 4);
+    const st = w.stores[0];
+    st.upgrade(0); st.upgrade(0); st.upgrade(0); // tick path -> 3
+    st.upgrade(1); st.upgrade(1); // passive path -> 2
+    expect(w.canUpgradeStore(st, 1)).toBe(false); // passive can't pass 2 while tick is 3
+    expect(w.canUpgradeStore(st, 0)).toBe(true);
+  });
 });

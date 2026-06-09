@@ -4,9 +4,9 @@ import { MANIFEST } from '../../src/assets/manifest';
 const STATES = ['idle', 'walk', 'attack', 'death'] as const;
 
 describe('asset manifest', () => {
-  it('has the four expected characters with unique keys', () => {
-    const keys = MANIFEST.characters.map((c) => c.key).sort();
-    expect(keys).toEqual(['aswang', 'gabriela', 'lapulapu', 'tiktik']);
+  it('has the base characters with unique keys', () => {
+    const keys = MANIFEST.characters.map((c) => c.key);
+    for (const base of ['lapulapu', 'gabriela', 'aswang', 'tiktik']) expect(keys).toContain(base);
     expect(new Set(keys).size).toBe(keys.length);
   });
 

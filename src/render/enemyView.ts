@@ -13,7 +13,10 @@ export class EnemyView {
     const c = getCharacter(this.key);
     const baseSheet = c ? c.anims.walk.sheet : this.key;
     this.sprite = scene.add.sprite(enemy.pos.x, enemy.pos.y, baseSheet);
-    if (c) this.sprite.setOrigin(0.5, c.originY).setScale(c.displayScale);
+    if (c) {
+      this.sprite.setOrigin(0.5, c.originY).setScale(c.displayScale);
+      if (c.tint !== undefined) this.sprite.setTint(c.tint);
+    }
     this.sprite.setDepth(enemy.pos.y);
     this.play(`${this.key}-walk-down`);
     this.last = { x: enemy.pos.x, y: enemy.pos.y };

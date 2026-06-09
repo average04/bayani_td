@@ -12,7 +12,10 @@ export class TowerView {
     const c = getCharacter(this.key);
     const baseSheet = c ? c.anims.idle.sheet : this.key;
     this.sprite = scene.add.sprite(tower.pos.x, tower.pos.y, baseSheet);
-    if (c) this.sprite.setOrigin(0.5, c.originY).setScale(c.displayScale);
+    if (c) {
+      this.sprite.setOrigin(0.5, c.originY).setScale(c.displayScale);
+      if (c.tint !== undefined) this.sprite.setTint(c.tint);
+    }
     this.sprite.setDepth(tower.pos.y);
     this.play(`${this.key}-idle-down`);
   }

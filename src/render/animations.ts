@@ -19,14 +19,6 @@ export function registerAnimations(scene: Phaser.Scene): void {
         });
       }
     }
-    if (c.attackSpin) {
-      scene.anims.create({
-        key: `${c.key}-attack-spin`,
-        frames: scene.anims.generateFrameNumbers(c.attackSpin.sheet, { frames: c.attackSpin.frames }),
-        frameRate: c.attackSpin.frameRate,
-        repeat: 0,
-      });
-    }
   }
   const hp = MANIFEST.fx.hitPuff;
   scene.anims.create({

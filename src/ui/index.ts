@@ -91,6 +91,7 @@ export function createUI(mount: HTMLElement): UI {
         `<h4>${h.name}</h4>` +
         `<div class="ui-trow"><span>Range</span><b>${h.range}</b></div>` +
         `<div class="ui-trow"><span>Damage</span><b>${h.damage}</b></div>` +
+        `<div class="ui-trow"><span>Attack Speed</span><b>${h.fireRate}/s</b></div>` +
         `<div class="ui-trow"><span>Effect</span><b>${effectText(h)}</b></div>` +
         `<div class="ui-trow"><span>Cost</span><b>$${h.cost}</b></div>`;
       tooltip.style.display = 'block';

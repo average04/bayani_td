@@ -6,6 +6,8 @@ import { distance, type Vec2 } from './geometry';
 import { pathCells, canPlace, footprintCenter, footprintCells, cellKey } from './grid';
 import { Enemy } from './entities/enemy';
 import { Tower } from './entities/tower';
+import { Store } from './entities/store';
+import { STORE } from './config/store';
 import { Economy } from './systems/economy';
 import { GameState, type GameStatus } from './state/gameState';
 import { WaveManager } from './systems/waveManager';
@@ -44,6 +46,7 @@ export class World {
   readonly waveManager: WaveManager;
   enemies: Enemy[] = [];
   towers: Tower[] = [];
+  stores: Store[] = [];
   readonly events: WorldEvents = { shots: [], deaths: [] };
   private readonly blockedCells: Set<string>;
   private readonly occupiedCells = new Set<string>();
@@ -145,6 +148,41 @@ export class World {
     return refund;
   }
 
+  canPlaceStoreAt(col: number, row: number): boolean {
+    return canPlace(this.level, this.blockedCells, this.occupiedCells, col, row, STORE.width, STORE.height);
+  }
+
+  placeStore(col: number, row: number): boolean {
+    if (!this.canPlaceStoreAt(col, row)) return false;
+    if (!this.economy.spend(STORE.cost)) return false;
+    const pos = footprintCenter(this.level, col, row, STORE.width, STORE.height);
+    this.stores.push(new Store(pos, col, row));
+    for (const c of footprintCells(col, row, STORE.width, STORE.height)) this.occupiedCells.add(cellKey(c.col, c.row));
+    return true;
+  }
+
+  storeAt(x: number, y: number): Store | null {
+    const cs = this.level.cellSize;
+    const hw = (STORE.width * cs) / 2;
+    const hh = (STORE.height * cs) / 2;
+    for (const st of this.stores) {
+      if (Math.abs(x - st.pos.x) <= hw && Math.abs(y - st.pos.y) <= hh) return st;
+    }
+    return null;
+  }
+
+  sellStore(store: Store): number {
+    const idx = this.stores.indexOf(store);
+    if (idx < 0) return 0;
+    const refund = Math.floor(store.spent * 0.7);
+    this.economy.earn(refund);
+    this.stores.splice(idx, 1);
+    for (const c of footprintCells(store.col, store.row, STORE.width, STORE.height)) {
+      this.occupiedCells.delete(cellKey(c.col, c.row));
+    }
+    return refund;
+  }
+
   private applyHit(affected: Enemy[], stats: TowerStats): void {
     for (const e of affected) {
       e.takeDamage(stats.damage);
@@ -200,6 +238,12 @@ export class World {
           heroId: t.type.id,
         });
       }
+    }
+
+    // 3.5 stores generate passive income
+    for (const st of this.stores) {
+      const inc = st.tick(dt);
+      if (inc) this.economy.earn(inc);
     }
 
     // 4. resolve leaks (lose life) and deaths (reward)

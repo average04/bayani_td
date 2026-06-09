@@ -2,7 +2,7 @@ import type { LevelConfig } from './config/levels';
 import type { EnemyType } from './config/enemies';
 import type { HeroType } from './config/heroes';
 import type { WaveConfig } from './config/waves';
-import type { Vec2 } from './geometry';
+import { distance, type Vec2 } from './geometry';
 import { Enemy } from './entities/enemy';
 import { Tower } from './entities/tower';
 import { Economy } from './systems/economy';
@@ -114,12 +114,22 @@ export class World {
       if (t.canFire) {
         const target = selectTarget(t, this.enemies);
         if (target) {
-          target.takeDamage(t.type.damage);
+          const hero = t.type;
+          const affected = hero.splashRadius
+            ? this.enemies.filter(
+                (e) => !e.isDead && !e.reachedEnd && distance(e.pos, target.pos) <= hero.splashRadius!,
+              )
+            : [target];
+          for (const e of affected) {
+            e.takeDamage(hero.damage);
+            if (hero.slow) e.applySlow(hero.slow.factor, hero.slow.duration);
+            if (hero.poison) e.applyPoison(hero.poison.dps, hero.poison.duration);
+          }
           t.resetCooldown();
           this.events.shots.push({
             from: { x: t.pos.x, y: t.pos.y },
             to: { x: target.pos.x, y: target.pos.y },
-            heroId: t.type.id,
+            heroId: hero.id,
           });
         }
       }

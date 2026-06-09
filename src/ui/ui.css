@@ -99,3 +99,15 @@ body { display: flex; justify-content: center; padding: 16px 0; }
 .ui-tkey { display: block; font-size: 9px; opacity: .7; margin-top: 2px; }
 .ui-tile.sel { outline: 3px solid #d4af37; outline-offset: 1px; background: linear-gradient(#a07c3e, #7d5d34); }
 .ui-tile.poor { filter: grayscale(.6) brightness(.7); cursor: not-allowed; }
+
+/* Real pixel-art UI assets (drop into public/assets/ui/; fall back to the placeholder
+   gradient if a file is absent). Pixelated rendering keeps them crisp at small sizes. */
+.ui-portrait, .ui-ico { image-rendering: pixelated; }
+.ui-portrait-lapulapu { background-image: url(/assets/ui/portrait-lapulapu.png); }
+.ui-portrait-gabriela { background-image: url(/assets/ui/portrait-gabriela.png); }
+.ui-portrait-bernardo { background-image: url(/assets/ui/portrait-bernardo.png); }
+.ui-portrait-diwata { background-image: url(/assets/ui/portrait-diwata.png); }
+.ui-portrait-mangkukulam { background-image: url(/assets/ui/portrait-mangkukulam.png); }
+.ui-ico-lives { background-image: url(/assets/ui/icon-lives.png); }
+.ui-ico-gold { background-image: url(/assets/ui/icon-gold.png); }
+.ui-ico-wave { background-image: url(/assets/ui/icon-wave.png); }

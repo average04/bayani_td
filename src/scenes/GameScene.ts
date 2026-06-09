@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { World } from '../game/world';
 import { LEVEL_ONE } from '../game/config/levels';
 import { ENEMY_TYPES } from '../game/config/enemies';
-import { HERO_TYPES } from '../game/config/heroes';
+import { HERO_TYPES, HERO_ORDER } from '../game/config/heroes';
 import { WAVES } from '../game/config/waves';
 import { loadSave, saveBestWave } from '../services/localSave';
 import type { Vec2 } from '../game/geometry';
@@ -12,15 +12,14 @@ import { renderMap } from '../render/mapRenderer';
 import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
 import { spawnProjectile, spawnHitPuff, spawnDeath } from '../render/fx';
+import { getUI } from '../ui';
+import { buildUiState } from '../ui/uiState';
 
-const HERO_ORDER = ['lapulapu', 'gabriela', 'bernardo', 'diwata', 'mangkukulam'];
 const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
 
 export class GameScene extends Phaser.Scene {
   private world!: World;
   private hpBars!: Phaser.GameObjects.Graphics;
-  private hudText!: Phaser.GameObjects.Text;
-  private overlayText!: Phaser.GameObjects.Text;
   private selectedHeroId = 'lapulapu';
   private bestWave = 0;
   private endHandled = false;
@@ -46,20 +45,6 @@ export class GameScene extends Phaser.Scene {
     renderMap(this, LEVEL_ONE);
     this.hpBars = this.add.graphics().setDepth(9000);
 
-    this.hudText = this.add
-      .text(8, 8, '', { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff' })
-      .setDepth(10000);
-
-    this.overlayText = this.add
-      .text(this.scale.width / 2, this.scale.height / 2, '', {
-        fontFamily: 'monospace',
-        fontSize: '32px',
-        color: '#ffffff',
-        align: 'center',
-      })
-      .setOrigin(0.5)
-      .setDepth(10000);
-
     HERO_ORDER.forEach((id, i) => {
       this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => (this.selectedHeroId = id));
     });
@@ -69,6 +54,17 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.tryPlaceTower(p.x, p.y));
+
+    const ui = getUI();
+    ui.onSelectHero = (id) => {
+      this.selectedHeroId = id;
+    };
+    ui.onStartWave = () => {
+      this.world.startNextWave();
+    };
+    ui.onRestart = () => {
+      if (this.world.status !== 'playing') this.scene.restart();
+    };
   }
 
   private tryPlaceTower(x: number, y: number): void {
@@ -92,7 +88,7 @@ export class GameScene extends Phaser.Scene {
     this.consumeEvents();
     this.syncViews();
     this.drawHpBars();
-    this.updateHud();
+    getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, HERO_ORDER, HERO_TYPES));
     this.handleEndState();
   }
 
@@ -146,26 +142,10 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private updateHud(): void {
-    const w = this.world;
-    const hero = HERO_TYPES[this.selectedHeroId];
-    const roster = HERO_ORDER.map((id, i) => `[${i + 1}] ${HERO_TYPES[id].name}`).join('   ');
-    this.hudText.setText(
-      [
-        `Gold: ${w.gold}   Lives: ${w.lives}   Wave: ${w.waveNumber}/${w.totalWaves}   Best: ${this.bestWave}`,
-        `Selected: ${hero.name} ($${hero.cost})   [SPACE] start wave`,
-        roster,
-      ].join('\n'),
-    );
-  }
-
   private handleEndState(): void {
     if (this.world.status === 'playing' || this.endHandled) return;
     this.endHandled = true;
-    const reached = this.world.waveNumber;
-    saveBestWave(reached);
-    this.bestWave = Math.max(this.bestWave, reached);
-    const msg = this.world.status === 'won' ? 'VICTORY!' : 'DEFEAT';
-    this.overlayText.setText(`${msg}\nReached wave ${reached}\nPress R to restart`);
+    saveBestWave(this.world.waveNumber);
+    this.bestWave = Math.max(this.bestWave, this.world.waveNumber);
   }
 }

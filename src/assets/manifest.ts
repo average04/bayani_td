@@ -20,6 +20,12 @@ export interface AnimClip {
   rows: Partial<Record<Facing, DirClip>>; // at least 'down'
 }
 
+export interface FrameListClip {
+  sheet: string; // references a SpriteSheetDef.key
+  frameRate: number;
+  frames: number[]; // explicit, ordered frame indices (non-directional, e.g. a spin)
+}
+
 export interface ImageAsset {
   key: string;
   path: string;
@@ -39,6 +45,13 @@ export interface CharacterAsset {
   originY: number;
   tint?: number; // optional Phaser tint applied to the sprite
   anims: { idle: AnimClip; walk: AnimClip; attack: AnimClip; death: AnimClip };
+  attackSpin?: FrameListClip; // optional non-directional spin attack (preferred over the directional attack)
+}
+
+function range(start: number, end: number): number[] {
+  const out: number[] = [];
+  for (let i = start; i <= end; i++) out.push(i);
+  return out;
 }
 
 export interface AssetManifest {
@@ -86,6 +99,13 @@ const lapulapuChar: CharacterAsset = {
       rows: { down: { start: 252, end: 257 }, up: { start: 216, end: 221 }, side: { start: 270, end: 275 } },
     },
     death: { sheet: 'lapulapu', frameRate: 10, repeat: 0, rows: { down: { start: 360, end: 365 } } },
+  },
+  // spin attack: the four directional slashes chained (down -> right -> up -> left) so he
+  // turns a full circle swinging the sword — matches his "hits everything around him" kit.
+  attackSpin: {
+    sheet: 'lapulapu',
+    frameRate: 24,
+    frames: [...range(252, 257), ...range(270, 275), ...range(216, 221), ...range(234, 239)],
   },
 };
 
@@ -159,7 +179,8 @@ const tiktikChar: CharacterAsset = {
 
 // A new character that reuses an existing sheet, recolored by tint and optionally rescaled.
 function variant(base: CharacterAsset, key: string, tint: number, displayScale = base.displayScale): CharacterAsset {
-  return { ...base, key, tint, displayScale };
+  // tint-variants are not spin attackers, so drop any inherited spin clip
+  return { ...base, key, tint, displayScale, attackSpin: undefined };
 }
 
 export const MANIFEST: AssetManifest = {

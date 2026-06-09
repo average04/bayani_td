@@ -21,6 +21,16 @@ export class TowerView {
   }
 
   playAttack(targetX: number, targetY: number): void {
+    // Spin attackers (e.g. Lapu-Lapu) play one non-directional whirl instead of a facing slash.
+    const spinKey = `${this.key}-attack-spin`;
+    if (this.sprite.scene.anims.exists(spinKey)) {
+      this.sprite.setFlipX(false);
+      this.sprite.play(spinKey, true);
+      this.sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+        this.play(`${this.key}-idle-down`);
+      });
+      return;
+    }
     const { facing, flipX } = facingFromDelta(targetX - this.sprite.x, targetY - this.sprite.y);
     this.sprite.setFlipX(flipX);
     this.sprite.play(this.resolve(`${this.key}-attack-${facing}`, `${this.key}-attack-down`), true);

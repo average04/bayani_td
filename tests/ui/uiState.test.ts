@@ -14,6 +14,7 @@ const world = {
   totalWaves: 6,
   status: 'playing' as const,
   nextWaveIn: 3,
+  passiveIncome: 0,
 };
 
 describe('uiState', () => {

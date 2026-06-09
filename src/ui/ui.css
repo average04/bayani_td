@@ -28,6 +28,7 @@ body { display: flex; justify-content: center; padding: 16px 0; }
 .ui-stat.ui-wave { margin-left: auto; }
 .ui-lab { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: .7; }
 .ui-statval b { font-size: 17px; font-weight: 800; }
+.ui-passive { font-size: 11px; font-weight: 700; color: #8aff7a; margin-left: 5px; text-shadow: 0 1px 0 #2c1f0f; }
 .ui-ico {
   width: 24px; height: 24px; border-radius: 5px;
   background: #caa24a33; border: 1.5px solid #bd9358;

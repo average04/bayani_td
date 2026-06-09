@@ -89,6 +89,12 @@ export class World {
   get nextWaveIn(): number | null {
     return this.canStartNextWave() ? Math.max(0, AUTO_START_DELAY - this.nextWaveTimer) : null;
   }
+  // total gold/sec the stores generate (per-second passive drip + averaged tick payouts)
+  get passiveIncome(): number {
+    let g = 0;
+    for (const s of this.stores) g += s.income.passivePerSec + s.income.tickAmount / s.income.tickInterval;
+    return g;
+  }
 
   canStartNextWave(): boolean {
     return (

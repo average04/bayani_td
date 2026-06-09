@@ -51,6 +51,7 @@ export function createUI(mount: HTMLElement): UI {
   };
   const livesV = statValue('lives', 'Lives');
   const goldV = statValue('gold', 'Gold');
+  const passiveV = el('span', 'ui-passive', goldV.parentElement as HTMLElement);
   const waveStat = el('div', 'ui-stat ui-wave', top);
   el('span', 'ui-ico ui-ico-wave', waveStat);
   const waveBox = el('div', 'ui-statval', waveStat);
@@ -251,6 +252,7 @@ export function createUI(mount: HTMLElement): UI {
     update(vm: UiState): void {
       livesV.textContent = String(vm.lives);
       goldV.textContent = String(vm.gold);
+      passiveV.textContent = vm.passiveIncome > 0 ? `+${+vm.passiveIncome.toFixed(1)}/s` : '';
       waveV.textContent = `${vm.wave} / ${vm.totalWaves}`;
       bestV.textContent = String(vm.bestWave);
       if (vm.status === 'playing' && vm.nextWaveIn !== null) {

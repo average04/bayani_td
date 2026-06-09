@@ -43,6 +43,7 @@ export interface WorldConfig {
   enemyTypes: Record<string, EnemyType>;
   heroTypes: Record<string, HeroType>;
   waves: WaveConfig[];
+  generateWave?: (waveNumber: number) => WaveConfig; // endless mode when provided
 }
 
 export class World {
@@ -66,7 +67,7 @@ export class World {
     this.heroTypes = cfg.heroTypes;
     this.economy = new Economy(cfg.level.startingGold);
     this.state = new GameState(cfg.level.startingLives);
-    this.waveManager = new WaveManager(cfg.waves);
+    this.waveManager = new WaveManager(cfg.waves, cfg.generateWave);
     this.blockedCells = pathCells(cfg.level);
   }
 

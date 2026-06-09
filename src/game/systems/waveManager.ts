@@ -7,19 +7,21 @@ interface PendingSpawn {
 
 export class WaveManager {
   private readonly waves: WaveConfig[];
+  private readonly generate?: (waveNumber: number) => WaveConfig; // endless mode when provided
   currentWaveIndex: number; // -1 before any wave starts
   private pending: PendingSpawn[];
   private timer: number;
 
-  constructor(waves: WaveConfig[]) {
+  constructor(waves: WaveConfig[], generate?: (waveNumber: number) => WaveConfig) {
     this.waves = waves;
+    this.generate = generate;
     this.currentWaveIndex = -1;
     this.pending = [];
     this.timer = 0;
   }
 
   get totalWaves(): number {
-    return this.waves.length;
+    return this.generate ? Infinity : this.waves.length;
   }
 
   get currentWaveNumber(): number {
@@ -31,10 +33,11 @@ export class WaveManager {
   }
 
   get hasMoreWaves(): boolean {
-    return this.currentWaveIndex < this.waves.length - 1;
+    return this.generate ? true : this.currentWaveIndex < this.waves.length - 1;
   }
 
   get isComplete(): boolean {
+    if (this.generate) return false; // endless: the run never "completes"
     return this.currentWaveIndex === this.waves.length - 1 && this.pending.length === 0;
   }
 
@@ -42,10 +45,15 @@ export class WaveManager {
     return this.hasMoreWaves && !this.isSpawning;
   }
 
+  private waveAt(index: number): WaveConfig {
+    if (index < this.waves.length) return this.waves[index];
+    return this.generate!(index + 1); // generator takes a 1-based wave number
+  }
+
   startNextWave(): void {
     if (!this.canStartNextWave()) return;
     this.currentWaveIndex++;
-    const wave = this.waves[this.currentWaveIndex];
+    const wave = this.waveAt(this.currentWaveIndex);
     this.pending = [];
     for (const spawn of wave.spawns) {
       for (let i = 0; i < spawn.count; i++) {

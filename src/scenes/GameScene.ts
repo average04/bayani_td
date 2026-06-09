@@ -4,7 +4,7 @@ import { LEVEL_ONE } from '../game/config/levels';
 import { ENEMY_TYPES } from '../game/config/enemies';
 import { HERO_TYPES, HERO_ORDER } from '../game/config/heroes';
 import { STORE } from '../game/config/store';
-import { WAVES } from '../game/config/waves';
+import { WAVES, generateWave } from '../game/config/waves';
 import { loadSave, saveBestWave } from '../services/localSave';
 import { footprintTopLeftAt } from '../game/grid';
 import type { Enemy } from '../game/entities/enemy';
@@ -45,6 +45,7 @@ export class GameScene extends Phaser.Scene {
       enemyTypes: ENEMY_TYPES,
       heroTypes: HERO_TYPES,
       waves: WAVES,
+      generateWave, // endless: keep escalating past the authored waves
     });
     this.bestWave = loadSave().bestWave;
     this.endHandled = false;

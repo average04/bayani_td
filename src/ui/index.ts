@@ -253,7 +253,7 @@ export function createUI(mount: HTMLElement): UI {
       livesV.textContent = String(vm.lives);
       goldV.textContent = String(vm.gold);
       passiveV.textContent = vm.passiveIncome > 0 ? `+${+vm.passiveIncome.toFixed(1)}/s` : '';
-      waveV.textContent = `${vm.wave} / ${vm.totalWaves}`;
+      waveV.textContent = Number.isFinite(vm.totalWaves) ? `${vm.wave} / ${vm.totalWaves}` : `${vm.wave}`;
       bestV.textContent = String(vm.bestWave);
       if (vm.status === 'playing' && vm.nextWaveIn !== null) {
         nextWave.style.display = 'block';
@@ -283,7 +283,9 @@ export function createUI(mount: HTMLElement): UI {
         endPanel.style.display = 'flex';
         endTitle.textContent = vm.status === 'won' ? 'VICTORY' : 'DEFEAT';
         endTitle.className = `ui-end-title ${vm.status}`;
-        endSub.textContent = `Reached wave ${vm.wave} / ${vm.totalWaves}`;
+        endSub.textContent = Number.isFinite(vm.totalWaves)
+          ? `Reached wave ${vm.wave} / ${vm.totalWaves}`
+          : `Reached wave ${vm.wave}`;
       }
     },
   };

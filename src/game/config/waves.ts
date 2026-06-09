@@ -123,3 +123,20 @@ export const WAVES: WaveConfig[] = [
     ],
   },
 ];
+
+// Endless mode: authored waves for 1..16, then ever-escalating procedural waves.
+export function generateWave(n: number): WaveConfig {
+  if (n <= WAVES.length) return WAVES[n - 1];
+  const t = n - WAVES.length; // tiers past the last authored wave (1, 2, 3, …)
+  const grow = (base: number, per: number): number => base + per * t;
+  const tighten = (base: number, per: number, min: number): number => Math.max(min, base - per * t);
+  return {
+    spawns: [
+      { enemyTypeId: 'kapre', count: grow(6, 2), interval: tighten(0.9, 0.03, 0.4) },
+      { enemyTypeId: 'manananggal', count: grow(5, 2), interval: tighten(0.8, 0.03, 0.4) },
+      { enemyTypeId: 'aswang', count: grow(10, 3), interval: tighten(0.4, 0.02, 0.2) },
+      { enemyTypeId: 'tiktik', count: grow(12, 3), interval: tighten(0.3, 0.01, 0.15) },
+      { enemyTypeId: 'tiyanak', count: grow(18, 4), interval: tighten(0.2, 0.01, 0.1) },
+    ],
+  };
+}

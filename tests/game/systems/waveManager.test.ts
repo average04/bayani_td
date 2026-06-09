@@ -41,4 +41,20 @@ describe('WaveManager', () => {
     expect(wm.isComplete).toBe(true);
     expect(wm.hasMoreWaves).toBe(false);
   });
+
+  it('runs endlessly when given a generator, pulling waves past the authored list', () => {
+    const gen = (n: number): WaveConfig => ({ spawns: [{ enemyTypeId: 'g', count: n, interval: 1 }] });
+    const wm = new WaveManager(waves, gen);
+    expect(wm.totalWaves).toBe(Infinity);
+    expect(wm.hasMoreWaves).toBe(true);
+    wm.startNextWave(); // wave 1 (authored 'a' x2)
+    wm.update(2);
+    wm.startNextWave(); // wave 2 (authored 'b')
+    wm.update(1);
+    expect(wm.isComplete).toBe(false); // endless: never completes
+    expect(wm.canStartNextWave()).toBe(true);
+    wm.startNextWave(); // wave 3 -> generated, count = 3
+    expect(wm.currentWaveNumber).toBe(3);
+    expect(wm.update(20)).toEqual(['g', 'g', 'g']);
+  });
 });

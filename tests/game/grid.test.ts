@@ -55,6 +55,15 @@ describe('grid', () => {
     expect(footprintTopLeftAt(level, 9999, 9999)).toEqual({ col: 30, row: 18 });
   });
 
+  it('supports rectangular w x h footprints', () => {
+    expect(footprintCells(0, 0, 4, 2)).toEqual([
+      { col: 0, row: 0 }, { col: 1, row: 0 }, { col: 2, row: 0 }, { col: 3, row: 0 },
+      { col: 0, row: 1 }, { col: 1, row: 1 }, { col: 2, row: 1 }, { col: 3, row: 1 },
+    ]);
+    expect(footprintCenter(level, 2, 3, 4, 2)).toEqual({ x: 96, y: 96 });
+    expect(footprintTopLeftAt(level, 9999, 9999, 4, 2)).toEqual({ col: 28, row: 18 }); // clamped to cols-4, rows-2
+  });
+
   it('marks cells along the path line as blocked', () => {
     const blocked = pathCells(level);
     expect(blocked.has(cellKey(10, 5))).toBe(true); // path at y=120 -> row 5

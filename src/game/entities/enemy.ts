@@ -5,8 +5,12 @@ export class Enemy {
   readonly type: EnemyType;
   hp: number;
   pos: Vec2;
-  pathIndex: number; // index of the next waypoint to walk toward
+  pathIndex: number;
   reachedEnd: boolean;
+  slowFactor = 1;
+  slowTimer = 0;
+  poisonDps = 0;
+  poisonTimer = 0;
   private readonly path: Vec2[];
 
   constructor(type: EnemyType, path: Vec2[]) {
@@ -19,8 +23,27 @@ export class Enemy {
   }
 
   update(dt: number): void {
+    // poison: true damage, ignores armor
+    if (this.poisonTimer > 0) {
+      this.hp -= this.poisonDps * dt;
+      this.poisonTimer -= dt;
+      if (this.poisonTimer <= 0) this.poisonDps = 0;
+    }
+    // regen
+    const regen = this.type.regenPerSec ?? 0;
+    if (regen > 0 && this.hp > 0 && !this.reachedEnd) {
+      this.hp = Math.min(this.type.maxHp, this.hp + regen * dt);
+    }
+
     if (this.reachedEnd) return;
-    let travel = this.type.speed * dt;
+
+    // movement at the effective (possibly slowed) speed
+    const speed = this.type.speed * (this.slowTimer > 0 ? this.slowFactor : 1);
+    if (this.slowTimer > 0) {
+      this.slowTimer -= dt;
+      if (this.slowTimer <= 0) this.slowFactor = 1;
+    }
+    let travel = speed * dt;
     while (travel > 0 && this.pathIndex < this.path.length) {
       const target = this.path[this.pathIndex];
       const dx = target.x - this.pos.x;
@@ -41,7 +64,17 @@ export class Enemy {
   }
 
   takeDamage(amount: number): void {
-    this.hp -= amount;
+    this.hp -= Math.max(1, amount - (this.type.armor ?? 0));
+  }
+
+  applySlow(factor: number, duration: number): void {
+    this.slowFactor = Math.min(this.slowFactor, factor);
+    this.slowTimer = Math.max(this.slowTimer, duration);
+  }
+
+  applyPoison(dps: number, duration: number): void {
+    this.poisonDps = Math.max(this.poisonDps, dps);
+    this.poisonTimer = Math.max(this.poisonTimer, duration);
   }
 
   get isDead(): boolean {

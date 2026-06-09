@@ -40,4 +40,21 @@ describe('selectTarget', () => {
     leaked.reachedEnd = true;
     expect(selectTarget(tower, [dead, leaked])).toBeNull();
   });
+
+  it('honors the tower target mode (first/last/strong/close)', () => {
+    const tower = new Tower(hero, { x: 50, y: 0 });
+    const a = new Enemy(etype, path); // behind, closer to tower, full hp
+    a.pos = { x: 20, y: 0 };
+    const b = new Enemy(etype, path); // ahead, farther, hurt
+    b.pos = { x: 90, y: 0 };
+    b.takeDamage(20); // hp 30 vs a's 50
+    tower.targetMode = 'first';
+    expect(selectTarget(tower, [a, b])).toBe(b); // furthest along
+    tower.targetMode = 'last';
+    expect(selectTarget(tower, [a, b])).toBe(a); // least far along
+    tower.targetMode = 'strong';
+    expect(selectTarget(tower, [a, b])).toBe(a); // highest hp
+    tower.targetMode = 'close';
+    expect(selectTarget(tower, [a, b])).toBe(a); // nearest the tower
+  });
 });

@@ -2,6 +2,9 @@ import type { HeroType } from '../config/heroes';
 import { baseStats, effectiveStats, type TowerStats } from '../config/upgrades';
 import { distance, type Vec2 } from '../geometry';
 
+export type TargetMode = 'first' | 'last' | 'strong' | 'close';
+export const TARGET_MODES: TargetMode[] = ['first', 'last', 'strong', 'close'];
+
 export class Tower {
   readonly type: HeroType;
   readonly pos: Vec2;
@@ -9,6 +12,7 @@ export class Tower {
   levels: [number, number] = [0, 0];
   stats: TowerStats;
   spent: number; // total gold invested (placement + upgrades), for sell refunds
+  targetMode: TargetMode = 'first';
 
   constructor(type: HeroType, pos: Vec2) {
     this.type = type;
@@ -21,6 +25,11 @@ export class Tower {
   upgrade(path: number): void {
     this.levels[path] += 1;
     this.stats = effectiveStats(this.type, this.levels);
+  }
+
+  cycleTarget(): void {
+    const i = TARGET_MODES.indexOf(this.targetMode);
+    this.targetMode = TARGET_MODES[(i + 1) % TARGET_MODES.length];
   }
 
   update(dt: number): void {

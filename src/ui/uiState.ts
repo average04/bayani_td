@@ -2,6 +2,7 @@ import type { HeroType } from '../game/config/heroes';
 import type { GameStatus } from '../game/state/gameState';
 import { UPGRADES, nextUpgrade, canUpgradePath, effectiveStats, type TowerStats } from '../game/config/upgrades';
 import { HERO_TYPES } from '../game/config/heroes';
+import type { TargetMode } from '../game/entities/tower';
 
 export interface WorldLike {
   lives: number;
@@ -49,6 +50,7 @@ export interface UpgradePanelVM {
   heroName: string;
   stats: { damage: number; range: number; fireRate: number; effect: string };
   sellValue: number;
+  targetMode: TargetMode | null; // null = no targeting (e.g. spin/AoE-self heroes)
   paths: [UpgradePathVM, UpgradePathVM];
 }
 
@@ -65,6 +67,7 @@ export function buildUpgradePanel(
   levels: readonly [number, number],
   gold: number,
   spent = 0,
+  targetMode: TargetMode = 'first',
 ): UpgradePanelVM | null {
   const paths = UPGRADES[heroId];
   const hero = HERO_TYPES[heroId];
@@ -86,6 +89,7 @@ export function buildUpgradePanel(
     heroName: hero.name,
     stats: { damage: eff.damage, range: eff.range, fireRate: eff.fireRate, effect: statsEffect(eff) },
     sellValue: Math.floor(spent * 0.7),
+    targetMode: eff.spin ? null : targetMode,
     paths: [mk(0), mk(1)],
   };
 }

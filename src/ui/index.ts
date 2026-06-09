@@ -9,6 +9,7 @@ export interface UI {
   onRestart: () => void;
   onUpgrade: (path: number) => void;
   onSell: () => void;
+  onCycleTarget: () => void;
 }
 
 let instance: UI | null = null;
@@ -86,6 +87,8 @@ export function createUI(mount: HTMLElement): UI {
   mkStat('Range', 'range');
   mkStat('Atk Speed', 'speed');
   mkStat('Effect', 'effect');
+  const upgTarget = el<HTMLButtonElement>('button', 'ui-upg-target', upg);
+  upgTarget.addEventListener('click', () => ui.onCycleTarget());
   const upgPathName: HTMLElement[] = [];
   const upgPips: HTMLElement[][] = [];
   const upgBtns: HTMLButtonElement[] = [];
@@ -144,6 +147,7 @@ export function createUI(mount: HTMLElement): UI {
     onRestart: () => {},
     onUpgrade: () => {},
     onSell: () => {},
+    onCycleTarget: () => {},
     setUpgradePanel(vm: UpgradePanelVM | null): void {
       if (!vm) {
         upg.style.display = 'none';
@@ -156,6 +160,12 @@ export function createUI(mount: HTMLElement): UI {
       upgStat.speed.textContent = `${+vm.stats.fireRate.toFixed(2)}/s`;
       upgStat.effect.textContent = vm.stats.effect;
       upgSell.textContent = `Sell — $${vm.sellValue}`;
+      if (vm.targetMode) {
+        upgTarget.style.display = 'block';
+        upgTarget.textContent = `Target: ${vm.targetMode[0].toUpperCase()}${vm.targetMode.slice(1)}`;
+      } else {
+        upgTarget.style.display = 'none';
+      }
       vm.paths.forEach((pv, p) => {
         upgPathName[p].textContent = pv.name;
         upgPips[p].forEach((dot, i) => dot.classList.toggle('on', i < pv.level));

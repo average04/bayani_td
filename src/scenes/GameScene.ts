@@ -97,6 +97,7 @@ export class GameScene extends Phaser.Scene {
         this.selectedTower = null;
       }
     };
+    ui.onCycleTarget = () => this.selectedTower?.cycleTarget();
     ui.onStartWave = () => {
       this.world.startNextWave();
     };
@@ -150,7 +151,13 @@ export class GameScene extends Phaser.Scene {
     this.drawSelection();
     getUI().setUpgradePanel(
       this.selectedTower
-        ? buildUpgradePanel(this.selectedTower.type.id, this.selectedTower.levels, this.world.gold, this.selectedTower.spent)
+        ? buildUpgradePanel(
+            this.selectedTower.type.id,
+            this.selectedTower.levels,
+            this.world.gold,
+            this.selectedTower.spent,
+            this.selectedTower.targetMode,
+          )
         : null,
     );
     getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, HERO_ORDER, HERO_TYPES));

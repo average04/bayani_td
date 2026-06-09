@@ -1,4 +1,4 @@
-import type { Tower } from '../entities/tower';
+import type { Tower, TargetMode } from '../entities/tower';
 import type { Enemy } from '../entities/enemy';
 import { distance } from '../geometry';
 
@@ -7,11 +7,22 @@ export function selectTarget(tower: Tower, enemies: Enemy[]): Enemy | null {
   for (const e of enemies) {
     if (e.isDead || e.reachedEnd) continue;
     if (!tower.inRange(e.pos)) continue;
-    if (best === null || isFurtherAlong(e, best)) {
-      best = e;
-    }
+    if (best === null || preferred(e, best, tower, tower.targetMode)) best = e;
   }
   return best;
+}
+
+function preferred(e: Enemy, best: Enemy, tower: Tower, mode: TargetMode): boolean {
+  switch (mode) {
+    case 'first':
+      return isFurtherAlong(e, best);
+    case 'last':
+      return isFurtherAlong(best, e);
+    case 'strong':
+      return e.hp > best.hp;
+    case 'close':
+      return distance(tower.pos, e.pos) < distance(tower.pos, best.pos);
+  }
 }
 
 function isFurtherAlong(a: Enemy, b: Enemy): boolean {

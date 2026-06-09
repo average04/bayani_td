@@ -13,7 +13,7 @@ export interface HeroType {
 
 export const HERO_TYPES: Record<string, HeroType> = {
   // melee spin: short range, heavy slow swings, hits everything ~1 block around him
-  lapulapu: { id: 'lapulapu', name: 'Lapu-Lapu', cost: 100, range: 80, damage: 45, fireRate: 0.9, spin: true },
+  lapulapu: { id: 'lapulapu', name: 'Lapu-Lapu', cost: 100, range: 80, damage: 25, fireRate: 1.2, spin: true },
   gabriela: { id: 'gabriela', name: 'Gabriela Silang', cost: 75, range: 140, damage: 6, fireRate: 3 },
   bernardo: { id: 'bernardo', name: 'Bernardo Carpio', cost: 120, range: 100, damage: 12, fireRate: 1.2, splashRadius: 50 },
   diwata: { id: 'diwata', name: 'Diwata', cost: 90, range: 130, damage: 4, fireRate: 1.5, slow: { factor: 0.5, duration: 1.5 } },

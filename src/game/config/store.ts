@@ -6,6 +6,7 @@ export const STORE = {
   cost: 150,
   width: 4, // cells (a 4x2 = "2x4 block" footprint)
   height: 2, // cells
-  incomeInterval: 3, // seconds between payouts
-  incomeAmount: 12, // gold per payout
+  incomeInterval: 5, // seconds between payouts
+  incomeAmount: 5, // gold per payout
+  sellRefund: 0.5, // fraction of spent gold returned on sell
 } as const;

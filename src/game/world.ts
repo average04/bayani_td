@@ -180,7 +180,7 @@ export class World {
   sellStore(store: Store): number {
     const idx = this.stores.indexOf(store);
     if (idx < 0) return 0;
-    const refund = Math.floor(store.spent * 0.7);
+    const refund = Math.floor(store.spent * STORE.sellRefund);
     this.economy.earn(refund);
     this.stores.splice(idx, 1);
     for (const c of footprintCells(store.col, store.row, STORE.width, STORE.height)) {

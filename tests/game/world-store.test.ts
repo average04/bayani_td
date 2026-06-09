@@ -40,7 +40,7 @@ describe('Sari-Sari store', () => {
     w.placeStore(4, 4);
     const found = w.storeAt(w.stores[0].pos.x, w.stores[0].pos.y);
     expect(found).toBe(w.stores[0]);
-    expect(w.sellStore(w.stores[0])).toBe(Math.floor(STORE.cost * 0.7));
+    expect(w.sellStore(w.stores[0])).toBe(Math.floor(STORE.cost * STORE.sellRefund));
     expect(w.stores).toHaveLength(0);
     expect(w.placeStore(4, 4)).toBe(true); // cells were freed
   });

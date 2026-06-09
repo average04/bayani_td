@@ -215,7 +215,7 @@ export class GameScene extends Phaser.Scene {
         ? {
             name: STORE.name,
             income: `+${STORE.incomeAmount} gold / ${STORE.incomeInterval}s`,
-            sellValue: Math.floor(this.selectedStore.spent * 0.7),
+            sellValue: Math.floor(this.selectedStore.spent * STORE.sellRefund),
           }
         : null,
     );

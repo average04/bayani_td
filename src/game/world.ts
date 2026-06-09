@@ -10,6 +10,7 @@ import { Economy } from './systems/economy';
 import { GameState, type GameStatus } from './state/gameState';
 import { WaveManager } from './systems/waveManager';
 import { selectTarget } from './systems/targeting';
+import { canUpgradePath, nextUpgrade, type TowerStats } from './config/upgrades';
 
 export interface ShotEvent {
   from: Vec2;
@@ -101,11 +102,36 @@ export class World {
     return true;
   }
 
-  private applyHit(affected: Enemy[], hero: HeroType): void {
+  towerAt(x: number, y: number): Tower | null {
+    const cs = this.level.cellSize;
+    for (const t of this.towers) {
+      if (Math.abs(x - t.pos.x) <= cs && Math.abs(y - t.pos.y) <= cs) return t;
+    }
+    return null;
+  }
+
+  canUpgrade(tower: Tower, path: number): boolean {
+    return nextUpgrade(tower.type, tower.levels, path) !== null && canUpgradePath(tower.levels, path);
+  }
+
+  nextUpgradeCost(tower: Tower, path: number): number | null {
+    const u = nextUpgrade(tower.type, tower.levels, path);
+    return u ? u.cost : null;
+  }
+
+  upgradeTower(tower: Tower, path: number): boolean {
+    const u = nextUpgrade(tower.type, tower.levels, path);
+    if (!u || !canUpgradePath(tower.levels, path)) return false;
+    if (!this.economy.spend(u.cost)) return false;
+    tower.upgrade(path);
+    return true;
+  }
+
+  private applyHit(affected: Enemy[], stats: TowerStats): void {
     for (const e of affected) {
-      e.takeDamage(hero.damage);
-      if (hero.slow) e.applySlow(hero.slow.factor, hero.slow.duration);
-      if (hero.poison) e.applyPoison(hero.poison.dps, hero.poison.duration);
+      e.takeDamage(stats.damage);
+      if (stats.slow) e.applySlow(stats.slow.factor, stats.slow.duration);
+      if (stats.poison) e.applyPoison(stats.poison.dps, stats.poison.duration);
     }
   }
 
@@ -123,38 +149,37 @@ export class World {
     // 2. move enemies
     for (const e of this.enemies) e.update(dt);
 
-    // 3. towers fire
+    // 3. towers fire (reads effective, upgraded stats)
     for (const t of this.towers) {
       t.update(dt);
       if (!t.canFire) continue;
-      const hero = t.type;
-      if (hero.spin) {
-        // melee spin: every swing hits all enemies within range of the hero itself
+      const s = t.stats;
+      if (s.spin) {
         const affected = this.enemies.filter(
-          (e) => !e.isDead && !e.reachedEnd && distance(e.pos, t.pos) <= hero.range,
+          (e) => !e.isDead && !e.reachedEnd && distance(e.pos, t.pos) <= s.range,
         );
         if (affected.length === 0) continue;
-        this.applyHit(affected, hero);
+        this.applyHit(affected, s);
         t.resetCooldown();
         this.events.shots.push({
           from: { x: t.pos.x, y: t.pos.y },
           to: { x: t.pos.x, y: t.pos.y }, // self-centered: from === to marks a spin
-          heroId: hero.id,
+          heroId: t.type.id,
         });
       } else {
         const target = selectTarget(t, this.enemies);
         if (!target) continue;
-        const affected = hero.splashRadius
+        const affected = s.splashRadius
           ? this.enemies.filter(
-              (e) => !e.isDead && !e.reachedEnd && distance(e.pos, target.pos) <= hero.splashRadius!,
+              (e) => !e.isDead && !e.reachedEnd && distance(e.pos, target.pos) <= s.splashRadius!,
             )
           : [target];
-        this.applyHit(affected, hero);
+        this.applyHit(affected, s);
         t.resetCooldown();
         this.events.shots.push({
           from: { x: t.pos.x, y: t.pos.y },
           to: { x: target.pos.x, y: target.pos.y },
-          heroId: hero.id,
+          heroId: t.type.id,
         });
       }
     }

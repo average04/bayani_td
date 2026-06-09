@@ -17,26 +17,26 @@ Built in the [Universal LPC Spritesheet Character Generator](https://sanderfrenk
 - **Clothes:** earth-tone **vest / sleeveless top** + **loincloth** (or simple pants).
 - **Weapon:** **Sword** (or Saber) — stands in for the bolo; visible during the swing.
 
-## 3. Source & approach (revised: scripted compositing)
+## 3. Source & approach (final: generator export)
 
-The browser tool could not reliably drive the LPC generator (interactions timed out), so the sheet is built by a **script** instead: `scripts/build-lapulapu-sprite.mjs` (npm `gen:lapulapu`). It downloads classic-layout layer PNGs from [makrohn/Universal-LPC-spritesheet](https://github.com/makrohn/Universal-LPC-spritesheet) and alpha-composites them (back→front) into the 832×1344 sheet. All layers share the universal grid, so no offsets are needed. Layers:
-
-1. `body/male/tanned2` — tanned warrior body (includes head/face)
-2. `legs/skirt/male/robe_skirt_male` — lower-body wrap (loincloth/kilt)
-3. `torso/leather/chest_male` — leather chest / vest
-4. `hair/male/bangsshort/black` — short black hair
-5. `head/bandanas/male/red` — red headband
-6. `weapons/right hand/male/dagger_male` — the **bolo** (a short blade; the oversize curved saber uses a non-aligned 1152×768 grid, deferred)
+An interim scripted composite (makrohn layers + a dagger) shipped first, then the user built the character in the [LPC Character Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/) and exported the full **Spritesheet (PNG)** — a red-clad warrior with topknot, red headband, and a blade. That export is the final sprite; the interim script (`scripts/build-lapulapu-sprite.mjs`) was removed to avoid overwriting it.
 
 ## 4. Wiring
 
-- Output overwrites `public/assets/sprites/lapulapu/sheet.png` — same **832×1344 / 273-frame** layout as before, so `MANIFEST` needs **no changes** (frame indices and `displayScale 0.6` / `originY 0.85` still hold).
-- The dagger layer is drawn on the **walk and slash frames**, so the bolo is visible at idle (frame 130) too — **no idle-frame tweak needed** (the earlier plan to repose idle on a slash frame is unnecessary).
-- Attribution recorded in `CREDITS.md`.
+The modern generator exports the **18-column / 66-row (1188-frame)** layout, not the classic 13-column / 273-frame sheet, so the manifest is remapped (verified by rendering an overview + frame strips):
 
-## 4b. Verification (done)
+- `public/assets/sprites/lapulapu/sheet.png` = the user's export (1152×4224).
+- `MANIFEST.sheets[lapulapu].frameCount` = **1188**.
+- Row blocks unchanged in order (walk 8–11, slash 12–15, hurt 20), direction order up/left/down/right; `index = row*18 + col`:
+  - walk: down 180–188, up 144–152, side 198–206
+  - attack (slash): down 252–257, up 216–221, side 270–275
+  - death (hurt): down 360–365
+  - idle: down 180 (the blade shows on walk frames, so the bolo is visible at rest)
+- `displayScale 0.6` / `originY 0.85` unchanged.
 
-Frames 130/144/156/182/185 extracted and viewed: tanned warrior with red headband, black hair, leather vest, brown wrap, and the blade in his right hand across walk/slash. `npm run build` clean.
+## 5. Verification (done)
+
+Overview + full-scale strips confirmed facings (144 up, 180 down with blade, 198 side), the slash swing (252–257), and the stagger-fall death (360–365). `npm run build` clean. Note: `bernardo` and `mangkukulam` are tint-variants that reuse this sheet, so they now appear as recolored Lapu-Lapu until their own polish pass.
 
 ## 5. Verification
 

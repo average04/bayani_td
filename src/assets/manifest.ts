@@ -64,25 +64,28 @@ export function placeholderChar(key: string): CharacterAsset {
   };
 }
 
+// Dressed warrior sheet exported from the LPC generator (modern 18-column / 66-row layout,
+// 1188 frames). Row blocks: spellcast 0-3, thrust 4-7, walk 8-11, slash 12-15, shoot 16-19,
+// hurt 20. Direction order per block: up, left, down, right. index = row*18 + col.
 const lapulapuChar: CharacterAsset = {
   key: 'lapulapu',
   displayScale: 0.6,
   originY: 0.85,
   anims: {
-    idle: { sheet: 'lapulapu', frameRate: 4, repeat: -1, rows: { down: { start: 130, end: 130 } } },
+    idle: { sheet: 'lapulapu', frameRate: 4, repeat: -1, rows: { down: { start: 180, end: 180 } } },
     walk: {
       sheet: 'lapulapu',
       frameRate: 9,
       repeat: -1,
-      rows: { down: { start: 130, end: 138 }, up: { start: 104, end: 112 }, side: { start: 143, end: 151 } },
+      rows: { down: { start: 180, end: 188 }, up: { start: 144, end: 152 }, side: { start: 198, end: 206 } },
     },
     attack: {
       sheet: 'lapulapu',
       frameRate: 12,
       repeat: 0,
-      rows: { down: { start: 182, end: 187 }, up: { start: 156, end: 161 }, side: { start: 195, end: 200 } },
+      rows: { down: { start: 252, end: 257 }, up: { start: 216, end: 221 }, side: { start: 270, end: 275 } },
     },
-    death: { sheet: 'lapulapu', frameRate: 10, repeat: 0, rows: { down: { start: 260, end: 265 } } },
+    death: { sheet: 'lapulapu', frameRate: 10, repeat: 0, rows: { down: { start: 360, end: 365 } } },
   },
 };
 
@@ -161,7 +164,7 @@ function variant(base: CharacterAsset, key: string, tint: number, displayScale =
 
 export const MANIFEST: AssetManifest = {
   sheets: [
-    { key: 'lapulapu', path: 'assets/sprites/lapulapu/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 273 },
+    { key: 'lapulapu', path: 'assets/sprites/lapulapu/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 1188 },
     { key: 'gabriela', path: 'assets/sprites/gabriela/sheet.png', frameWidth: 64, frameHeight: 64, frameCount: 273 },
     // aswang: ghost sprite (bluecarrot16 / LPC Monsters, CC-BY-SA 3.0 / GPL 3.0)
     // 384x256 → 64×64 frames, 6 cols × 4 rows = 24 frames; rows = down/up/left/right float cycle

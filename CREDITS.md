@@ -4,16 +4,15 @@ Art assets used in Bayani TD.
 
 ## Characters
 
-- **Lapu-Lapu sprite** — LPC universal spritesheet, composited from layers by
-  `scripts/build-lapulapu-sprite.mjs`: male body (tanned), short black hair, red
-  bandana, leather chest, robe skirt, and a dagger (bolo).
-  - Layers: `body/male/tanned2`, `hair/male/bangsshort/black`, `head/bandanas/male/red`,
-    `torso/leather/chest_male`, `legs/skirt/male/robe_skirt_male`, `weapons/right hand/male/dagger_male`
-  - Author(s): Stephen Challener (Redshrike), Johannes Sjölund (wulax), Marcel van de Steeg,
-    Matthew Krohn, Luke Mehl, Manuel Riecke, bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating),
-    Eliza Wyatt (ElizaWy), and contributors to the Universal LPC Spritesheet project
+- **Lapu-Lapu sprite** — dressed warrior (tanned body, red headband, topknot, red
+  garb, blade) assembled in the Universal LPC Spritesheet Character Generator
+  (modern 18-column layout) and exported as the character sheet.
+  - Author(s): Stephen Challener (Redshrike), Johannes Sjölund (wulax), JaidynReiman,
+    bluecarrot16, Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), and contributors
+    to the Universal LPC Spritesheet project. (Per-layer credits available from the
+    generator's "Credits (TXT)" export.)
   - License: CC-BY-SA 3.0 / GPL 3.0
-  - Source: https://github.com/makrohn/Universal-LPC-spritesheet
+  - Generator: https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/
   - Original LPC project: https://opengameart.org/content/lpc-character-bases
 
 - **Gabriela sprite** — LPC universal spritesheet, female body (light skin tone).

@@ -11,8 +11,7 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "gen:placeholders": "node scripts/gen-placeholders.mjs",
-    "gen:lapulapu": "node scripts/build-lapulapu-sprite.mjs"
+    "gen:placeholders": "node scripts/gen-placeholders.mjs"
   },
   "dependencies": {
     "phaser": "^3.80.1"

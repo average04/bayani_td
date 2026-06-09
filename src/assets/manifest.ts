@@ -45,7 +45,7 @@ export interface AssetManifest {
   sheets: SpriteSheetDef[];
   characters: CharacterAsset[];
   fx: { projectile: ImageAsset; hitPuff: SheetAsset };
-  map: { ground: ImageAsset; pathTile: ImageAsset; buildMarker: ImageAsset };
+  map: { ground: ImageAsset; pathTile: ImageAsset; buildMarker: ImageAsset; store: ImageAsset };
 }
 
 // Placeholder sheets are 32x32, 13 frames: idle 0-1 | walk 2-5 | attack 6-8 | death 9-12.
@@ -209,6 +209,7 @@ export const MANIFEST: AssetManifest = {
     ground: { key: 'ground', path: 'assets/map/ground.png' },
     pathTile: { key: 'path-tile', path: 'assets/map/path-tile.png' },
     buildMarker: { key: 'build-marker', path: 'assets/map/build-marker.png' },
+    store: { key: 'store-building', path: 'assets/map/store.png' },
   },
 };
 

@@ -27,6 +27,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(MANIFEST.map.ground.key, MANIFEST.map.ground.path);
     this.load.image(MANIFEST.map.pathTile.key, MANIFEST.map.pathTile.path);
     this.load.image(MANIFEST.map.buildMarker.key, MANIFEST.map.buildMarker.path);
+    this.load.image(MANIFEST.map.store.key, MANIFEST.map.store.path);
   }
 
   create(): void {

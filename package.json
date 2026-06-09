@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "gen:placeholders": "node scripts/gen-placeholders.mjs",
-    "gen:map": "node scripts/gen-map-art.mjs"
+    "gen:map": "node scripts/gen-map-art.mjs",
+    "gen:store": "node scripts/gen-store-art.mjs"
   },
   "dependencies": {
     "phaser": "^3.80.1"

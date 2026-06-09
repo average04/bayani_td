@@ -131,9 +131,6 @@ export class GameScene extends Phaser.Scene {
       if (this.selectedStore) this.world.upgradeStore(this.selectedStore, path);
     };
     ui.onCycleTarget = () => this.selectedTower?.cycleTarget();
-    ui.onStartWave = () => {
-      this.world.startNextWave();
-    };
     ui.onRestart = () => {
       if (this.world.status !== 'playing') this.scene.restart();
     };

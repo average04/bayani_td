@@ -13,7 +13,7 @@ const world = {
   waveNumber: 2,
   totalWaves: 6,
   status: 'playing' as const,
-  canStartNextWave: () => true,
+  nextWaveIn: 3,
 };
 
 describe('uiState', () => {
@@ -30,7 +30,7 @@ describe('uiState', () => {
     expect(vm.totalWaves).toBe(6);
     expect(vm.bestWave).toBe(3);
     expect(vm.status).toBe('playing');
-    expect(vm.canStartWave).toBe(true);
+    expect(vm.nextWaveIn).toBe(3);
     expect(vm.heroes).toEqual([
       { id: 'a', name: 'A', cost: 100, affordable: false, selected: false },
       { id: 'b', name: 'B', cost: 50, affordable: true, selected: true },

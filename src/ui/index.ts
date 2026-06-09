@@ -7,7 +7,6 @@ export interface UI {
   setUpgradePanel(vm: UpgradePanelVM | null): void;
   setStorePanel(vm: StorePanelVM | null): void;
   onSelectHero: (id: string) => void;
-  onStartWave: () => void;
   onRestart: () => void;
   onUpgrade: (path: number) => void;
   onSell: () => void;
@@ -67,8 +66,8 @@ export function createUI(mount: HTMLElement): UI {
   stage.id = 'stage';
   const overlay = el('div', 'ui-overlay', stage);
 
-  const startBtn = el<HTMLButtonElement>('button', 'ui-start', overlay);
-  startBtn.textContent = 'START WAVE';
+  const nextWave = el('div', 'ui-nextwave', overlay);
+  nextWave.style.display = 'none';
 
   const tooltip = el('div', 'ui-tooltip', overlay);
   tooltip.style.display = 'none';
@@ -188,7 +187,6 @@ export function createUI(mount: HTMLElement): UI {
 
   const ui: UI = {
     onSelectHero: () => {},
-    onStartWave: () => {},
     onRestart: () => {},
     onUpgrade: () => {},
     onSell: () => {},
@@ -255,7 +253,12 @@ export function createUI(mount: HTMLElement): UI {
       goldV.textContent = String(vm.gold);
       waveV.textContent = `${vm.wave} / ${vm.totalWaves}`;
       bestV.textContent = String(vm.bestWave);
-      startBtn.disabled = !vm.canStartWave;
+      if (vm.status === 'playing' && vm.nextWaveIn !== null) {
+        nextWave.style.display = 'block';
+        nextWave.textContent = `Next wave in ${Math.ceil(vm.nextWaveIn)}…`;
+      } else {
+        nextWave.style.display = 'none';
+      }
       for (const h of vm.heroes) {
         const tile = tiles[h.id];
         tile.classList.toggle('sel', h.selected);
@@ -282,7 +285,6 @@ export function createUI(mount: HTMLElement): UI {
       }
     },
   };
-  startBtn.addEventListener('click', () => ui.onStartWave());
   restartBtn.addEventListener('click', () => ui.onRestart());
 
   instance = ui;

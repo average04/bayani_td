@@ -82,4 +82,14 @@ describe('World', () => {
     expect(w.lives).toBe(0);
     expect(w.status).toBe('lost');
   });
+
+  it('auto-starts the next wave after a short delay', () => {
+    const w = new World(makeConfig());
+    expect(w.waveNumber).toBe(0);
+    expect(w.nextWaveIn).not.toBeNull();
+    w.update(2.5); // before the delay elapses
+    expect(w.waveNumber).toBe(0);
+    w.update(1); // delay crossed -> auto-start
+    expect(w.waveNumber).toBe(1);
+  });
 });

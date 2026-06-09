@@ -1,8 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { World, type WorldConfig } from '../../src/game/world';
 import type { LevelConfig } from '../../src/game/config/levels';
+import type { EnemyType } from '../../src/game/config/enemies';
 import { HERO_TYPES } from '../../src/game/config/heroes';
 import { STORE } from '../../src/game/config/store';
+import { Enemy } from '../../src/game/entities/enemy';
+
+// a never-moving, never-dying enemy used to keep a wave "in progress" (blocks auto-start/win)
+const blocker: EnemyType = { id: 'blocker', name: 'B', maxHp: 1e6, speed: 0, reward: 0, leakDamage: 1 };
 
 const level: LevelConfig = {
   id: 't', name: 'T', tileSize: 48, cols: 16, rows: 10, cellSize: 24,
@@ -29,6 +34,7 @@ describe('Sari-Sari store', () => {
   it('generates income on its interval while playing', () => {
     const w = new World(cfg());
     w.placeStore(4, 4); // gold 1000 - 150 = 850
+    w.enemies.push(new Enemy(blocker, level.path)); // keep a wave active so it doesn't auto-start/win
     w.update(STORE.incomeInterval - 0.1); // before a payout
     expect(w.gold).toBe(850);
     w.update(0.2); // crosses the interval

@@ -11,7 +11,7 @@ export interface WorldLike {
   waveNumber: number;
   totalWaves: number;
   status: GameStatus;
-  canStartNextWave(): boolean;
+  nextWaveIn: number | null;
 }
 
 export interface HeroVM {
@@ -29,7 +29,7 @@ export interface UiState {
   totalWaves: number;
   status: GameStatus;
   bestWave: number;
-  canStartWave: boolean;
+  nextWaveIn: number | null;
   selectedHeroId: string | null;
   heroes: HeroVM[];
 }
@@ -134,7 +134,7 @@ export function buildUiState(
     totalWaves: world.totalWaves,
     status: world.status,
     bestWave,
-    canStartWave: world.canStartNextWave(),
+    nextWaveIn: world.nextWaveIn,
     selectedHeroId,
     heroes: heroOrder.map((id) => {
       const h = heroTypes[id];

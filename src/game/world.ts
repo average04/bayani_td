@@ -14,6 +14,8 @@ import { WaveManager } from './systems/waveManager';
 import { selectTarget } from './systems/targeting';
 import { canUpgradePath, nextUpgrade, type TowerStats } from './config/upgrades';
 
+const AUTO_START_DELAY = 3; // seconds after a wave is cleared before the next auto-starts
+
 export interface ShotEvent {
   from: Vec2;
   to: Vec2;
@@ -56,6 +58,7 @@ export class World {
   readonly events: WorldEvents = { shots: [], deaths: [], gold: [] };
   private readonly blockedCells: Set<string>;
   private readonly occupiedCells = new Set<string>();
+  private nextWaveTimer = 0;
 
   constructor(cfg: WorldConfig) {
     this.level = cfg.level;
@@ -81,6 +84,10 @@ export class World {
   }
   get totalWaves(): number {
     return this.waveManager.totalWaves;
+  }
+  // seconds until the next wave auto-starts, or null when a wave is in progress / the game is over
+  get nextWaveIn(): number | null {
+    return this.canStartNextWave() ? Math.max(0, AUTO_START_DELAY - this.nextWaveTimer) : null;
   }
 
   canStartNextWave(): boolean {
@@ -288,6 +295,17 @@ export class World {
       }
     }
     this.enemies = survivors;
+
+    // auto-start the next wave after a short delay once the current one is cleared
+    if (this.canStartNextWave()) {
+      this.nextWaveTimer += dt;
+      if (this.nextWaveTimer >= AUTO_START_DELAY) {
+        this.startNextWave();
+        this.nextWaveTimer = 0;
+      }
+    } else {
+      this.nextWaveTimer = 0;
+    }
 
     // 5. win when the last wave is fully cleared
     if (this.state.status === 'playing' && this.waveManager.isComplete && this.enemies.length === 0) {

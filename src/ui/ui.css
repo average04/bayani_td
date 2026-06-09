@@ -40,13 +40,12 @@ body { display: flex; justify-content: center; padding: 16px 0; }
 /* z-index keeps the overlay above the Phaser canvas (injected after createUI runs) */
 .ui-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
 
-.ui-start {
-  position: absolute; right: 12px; bottom: 12px; pointer-events: auto;
-  padding: 10px 18px; color: #f8eccb; font-weight: 800; letter-spacing: .5px; cursor: pointer;
-  background: linear-gradient(#caa24a, #a9802f); border: 2px solid #3a2914; border-radius: 8px;
-  box-shadow: 0 3px 0 #5c4012, inset 0 1px 0 #f0d999;
+.ui-nextwave {
+  position: absolute; right: 12px; bottom: 12px; pointer-events: none;
+  padding: 9px 16px; color: #f8eccb; font-weight: 800; letter-spacing: .5px;
+  background: linear-gradient(#7d5d34, #5c4324); border: 2px solid #3a2914; border-radius: 8px;
+  box-shadow: 0 3px 0 #2c1f0f, inset 0 1px 0 #bd9358;
 }
-.ui-start:disabled { filter: grayscale(.6) brightness(.7); cursor: default; box-shadow: none; }
 
 .ui-tooltip {
   position: absolute; left: 12px; bottom: 12px; width: 180px; pointer-events: none;

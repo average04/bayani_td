@@ -13,6 +13,9 @@ import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
 import { spawnProjectile, spawnHitPuff, spawnDeath } from '../render/fx';
 
+const HERO_ORDER = ['lapulapu', 'gabriela', 'bernardo', 'diwata', 'mangkukulam'];
+const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
+
 export class GameScene extends Phaser.Scene {
   private world!: World;
   private hpBars!: Phaser.GameObjects.Graphics;
@@ -57,8 +60,9 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(10000);
 
-    this.input.keyboard?.on('keydown-ONE', () => (this.selectedHeroId = 'lapulapu'));
-    this.input.keyboard?.on('keydown-TWO', () => (this.selectedHeroId = 'gabriela'));
+    HERO_ORDER.forEach((id, i) => {
+      this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => (this.selectedHeroId = id));
+    });
     this.input.keyboard?.on('keydown-SPACE', () => this.world.startNextWave());
     this.input.keyboard?.on('keydown-R', () => {
       if (this.world.status !== 'playing') this.scene.restart();
@@ -145,10 +149,12 @@ export class GameScene extends Phaser.Scene {
   private updateHud(): void {
     const w = this.world;
     const hero = HERO_TYPES[this.selectedHeroId];
+    const roster = HERO_ORDER.map((id, i) => `[${i + 1}] ${HERO_TYPES[id].name}`).join('   ');
     this.hudText.setText(
       [
         `Gold: ${w.gold}   Lives: ${w.lives}   Wave: ${w.waveNumber}/${w.totalWaves}   Best: ${this.bestWave}`,
-        `Selected: ${hero.name} ($${hero.cost})   [1] Lapu-Lapu  [2] Gabriela   [SPACE] start wave`,
+        `Selected: ${hero.name} ($${hero.cost})   [SPACE] start wave`,
+        roster,
       ].join('\n'),
     );
   }

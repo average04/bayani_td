@@ -1,16 +1,14 @@
 import Phaser from 'phaser';
 import type { LevelConfig } from '../game/config/levels';
 import { MANIFEST } from '../assets/manifest';
+import { gridCols, gridRows } from '../game/grid';
 
-// Draws the ground, a tiled path strip along the waypoints, and build markers.
+// Draws the ground, a tiled path strip along the waypoints, and a subtle placement grid.
 export function renderMap(scene: Phaser.Scene, level: LevelConfig): void {
   const width = level.cols * level.tileSize;
   const height = level.rows * level.tileSize;
 
-  scene.add
-    .tileSprite(0, 0, width, height, MANIFEST.map.ground.key)
-    .setOrigin(0, 0)
-    .setDepth(-20);
+  scene.add.tileSprite(0, 0, width, height, MANIFEST.map.ground.key).setOrigin(0, 0).setDepth(-20);
 
   const step = level.tileSize / 2;
   for (let i = 1; i < level.path.length; i++) {
@@ -26,7 +24,10 @@ export function renderMap(scene: Phaser.Scene, level: LevelConfig): void {
     }
   }
 
-  for (const spot of level.buildSpots) {
-    scene.add.image(spot.x, spot.y, MANIFEST.map.buildMarker.key).setDepth(-10);
-  }
+  // subtle placement grid
+  const grid = scene.add.graphics().setDepth(-12);
+  grid.lineStyle(1, 0x000000, 0.08);
+  const cs = level.cellSize;
+  for (let c = 0; c <= gridCols(level); c++) grid.lineBetween(c * cs, 0, c * cs, height);
+  for (let r = 0; r <= gridRows(level); r++) grid.lineBetween(0, r * cs, width, r * cs);
 }

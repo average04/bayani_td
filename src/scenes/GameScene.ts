@@ -5,7 +5,7 @@ import { ENEMY_TYPES } from '../game/config/enemies';
 import { HERO_TYPES, HERO_ORDER } from '../game/config/heroes';
 import { WAVES } from '../game/config/waves';
 import { loadSave, saveBestWave } from '../services/localSave';
-import type { Vec2 } from '../game/geometry';
+import { footprintTopLeftAt } from '../game/grid';
 import type { Enemy } from '../game/entities/enemy';
 import type { Tower } from '../game/entities/tower';
 import { renderMap } from '../render/mapRenderer';
@@ -20,6 +20,7 @@ const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
 export class GameScene extends Phaser.Scene {
   private world!: World;
   private hpBars!: Phaser.GameObjects.Graphics;
+  private ghost!: Phaser.GameObjects.Graphics;
   private selectedHeroId = 'lapulapu';
   private bestWave = 0;
   private endHandled = false;
@@ -44,6 +45,7 @@ export class GameScene extends Phaser.Scene {
 
     renderMap(this, LEVEL_ONE);
     this.hpBars = this.add.graphics().setDepth(9000);
+    this.ghost = this.add.graphics().setDepth(8000);
 
     HERO_ORDER.forEach((id, i) => {
       this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => (this.selectedHeroId = id));
@@ -69,16 +71,24 @@ export class GameScene extends Phaser.Scene {
 
   private tryPlaceTower(x: number, y: number): void {
     if (this.world.status !== 'playing') return;
-    const spot = this.nearestBuildSpot({ x, y });
-    if (spot) this.world.placeTower(this.selectedHeroId, spot);
+    const { col, row } = footprintTopLeftAt(LEVEL_ONE, x, y);
+    this.world.placeTower(this.selectedHeroId, col, row);
   }
 
-  private nearestBuildSpot(p: Vec2): Vec2 | null {
-    const half = LEVEL_ONE.tileSize / 2;
-    for (const s of LEVEL_ONE.buildSpots) {
-      if (Math.abs(s.x - p.x) <= half && Math.abs(s.y - p.y) <= half) return s;
-    }
-    return null;
+  private drawGhost(): void {
+    const g = this.ghost;
+    g.clear();
+    if (this.world.status !== 'playing') return;
+    const p = this.input.activePointer;
+    if (p.x < 0 || p.y < 0 || p.x > this.scale.width || p.y > this.scale.height) return;
+    const { col, row } = footprintTopLeftAt(LEVEL_ONE, p.x, p.y);
+    const hero = HERO_TYPES[this.selectedHeroId];
+    const ok = this.world.canPlaceAt(col, row) && this.world.gold >= hero.cost;
+    const cs = LEVEL_ONE.cellSize;
+    g.fillStyle(ok ? 0x2ecc71 : 0xe74c3c, 0.35);
+    g.lineStyle(2, ok ? 0x2ecc71 : 0xe74c3c, 0.9);
+    g.fillRect(col * cs, row * cs, cs * 2, cs * 2);
+    g.strokeRect(col * cs, row * cs, cs * 2, cs * 2);
   }
 
   update(_time: number, delta: number): void {
@@ -88,6 +98,7 @@ export class GameScene extends Phaser.Scene {
     this.consumeEvents();
     this.syncViews();
     this.drawHpBars();
+    this.drawGhost();
     getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, HERO_ORDER, HERO_TYPES));
     this.handleEndState();
   }

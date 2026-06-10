@@ -141,9 +141,9 @@ export function generateWave(n: number): WaveConfig {
     { enemyTypeId: 'tiktik', count: grow(8, 0.5, 22), interval: tighten(0.35, 0.01, 0.2) },
     { enemyTypeId: 'tiyanak', count: grow(10, 0.6, 26), interval: tighten(0.25, 0.01, 0.15) },
   ];
-  // every 10th wave the Bakunawa returns, in growing numbers (2 from wave 30, 3 from wave 60)
+  // every 10th wave the Bakunawa returns, in growing numbers (2 from wave 40, 3 from wave 70)
   if (n % 10 === 0) {
-    spawns.unshift({ enemyTypeId: 'bakunawa', count: Math.min(3, Math.floor(n / 30) + 1), interval: 1.5 });
+    spawns.unshift({ enemyTypeId: 'bakunawa', count: Math.min(3, Math.floor(n / 35) + 1), interval: 1.5 });
   }
   return { spawns };
 }

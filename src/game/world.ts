@@ -11,7 +11,7 @@ import { STORE, nextStoreUpgrade } from './config/store';
 import { Economy } from './systems/economy';
 import { GameState, type GameStatus } from './state/gameState';
 import { WaveManager } from './systems/waveManager';
-import { selectTarget } from './systems/targeting';
+import { selectTarget, isFurtherAlong } from './systems/targeting';
 import { canUpgradePath, nextUpgrade, type TowerStats } from './config/upgrades';
 import { canSend, type SendOption } from './config/sends';
 
@@ -372,19 +372,14 @@ export class World {
     // 2. move enemies
     for (const e of this.enemies) e.update(dt);
 
-    // 2.5 roaming towers chase the nearest enemy (or walk back to camp when the field clears)
+    // 2.5 roaming towers intercept the FRONT-MOST enemy (or walk back to camp when clear)
     for (const t of this.towers) {
       const mob = t.type.mobile;
       if (!mob) continue;
       let target: Enemy | null = null;
-      let bestD = Infinity;
       for (const e of this.enemies) {
         if (e.isDead || e.reachedEnd) continue;
-        const d = distance(e.pos, t.pos);
-        if (d < bestD) {
-          bestD = d;
-          target = e;
-        }
+        if (!target || isFurtherAlong(e, target)) target = e;
       }
       const dest = target ? target.pos : t.anchor;
       const stop = target ? t.stats.range * 0.5 : 2; // close in, but don't stand on top of them

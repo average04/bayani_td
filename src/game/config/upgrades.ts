@@ -120,10 +120,10 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
       // path can pass L2, so Diwata ends up with splash OR root, never both.
       name: 'Deep Chill',
       levels: [
-        { name: 'Chilling Aura', cost: 60, desc: 'Slow 0.4x / 1.5s, +15 range', delta: { slow: { factor: 0.4, duration: 1.5 }, range: 15 } },
-        { name: 'Deep Freeze', cost: 130, desc: 'Slow 0.3x / 2s, +10 range', delta: { slow: { factor: 0.3, duration: 2 }, range: 10 } },
-        { name: 'Frost Nova', cost: 240, desc: 'Slow 0.22x / 2.5s, AoE splash r70', delta: { slow: { factor: 0.22, duration: 2.5 }, splashRadius: 70, range: 15 } },
-        { name: 'Eternal Winter', cost: 430, desc: 'Slow 0.12x / 3s, AoE splash r110', delta: { slow: { factor: 0.12, duration: 3 }, splashRadius: 40 } },
+        { name: 'Chilling Aura', cost: 60, desc: 'Slow 0.5x / 1.5s, +15 range', delta: { slow: { factor: 0.5, duration: 1.5 }, range: 15 } },
+        { name: 'Deep Freeze', cost: 130, desc: 'Slow 0.4x / 2s, +10 range', delta: { slow: { factor: 0.4, duration: 2 }, range: 10 } },
+        { name: 'Frost Nova', cost: 240, desc: 'Slow 0.3x / 2.5s, AoE splash r70', delta: { slow: { factor: 0.3, duration: 2.5 }, splashRadius: 70, range: 15 } },
+        { name: 'Eternal Winter', cost: 430, desc: 'Slow 0.22x / 3s, AoE splash r110', delta: { slow: { factor: 0.22, duration: 3 }, splashRadius: 40 } },
       ],
     },
     {

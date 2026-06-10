@@ -25,7 +25,7 @@ function preferred(e: Enemy, best: Enemy, tower: Tower, mode: TargetMode): boole
   }
 }
 
-function isFurtherAlong(a: Enemy, b: Enemy): boolean {
+export function isFurtherAlong(a: Enemy, b: Enemy): boolean {
   // A higher pathIndex means the enemy has passed more waypoints.
   if (a.pathIndex !== b.pathIndex) return a.pathIndex > b.pathIndex;
   // Same segment: whichever is closer to its next waypoint is further along.

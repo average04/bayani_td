@@ -44,7 +44,7 @@ export const HERO_TYPES: Record<string, HeroType> = {
     trait: { name: 'Aftershock', desc: 'Every 3rd boulder quakes again for 50% splash damage' },
   },
   diwata: {
-    id: 'diwata', name: 'Diwata', cost: 90, range: 130, damage: 12, fireRate: 1.4, slow: { factor: 0.5, duration: 1.5 },
+    id: 'diwata', name: 'Diwata', cost: 90, range: 130, damage: 12, fireRate: 1.4, slow: { factor: 0.6, duration: 1.5 },
     mark: { amp: 0.15 },
     trait: { name: 'Fey Mark', desc: 'Enemies she slows take +15% damage from all sources' },
   },
@@ -65,10 +65,10 @@ export const HERO_TYPES: Record<string, HeroType> = {
     trait: { name: 'Inspiration', desc: 'Heroes in his range deal +10% damage (strongest aura applies)' },
   },
   bonifacio: {
-    id: 'bonifacio', name: 'Andres Bonifacio', cost: 120, range: 50, damage: 16, fireRate: 1.5,
-    mobile: { speed: 75 },
+    id: 'bonifacio', name: 'Andres Bonifacio', cost: 120, range: 50, damage: 18, fireRate: 1.5,
+    mobile: { speed: 85 },
     burnAura: { radius: 60, dps: 6 },
-    trait: { name: "Revolution's Flame", desc: 'Roams after enemies; his burning aura sears foes around him' },
+    trait: { name: "Revolution's Flame", desc: 'Hunts the front-most enemy; his burning aura sears foes around him' },
   },
 };
 

@@ -1,6 +1,7 @@
 import { HERO_TYPES, type HeroType } from '../game/config/heroes';
 import { getLoadout } from '../game/config/loadout';
 import { STORE } from '../game/config/store';
+import { getSession } from '../net/session';
 import type { UiState, UpgradePanelVM, StorePanelVM } from './uiState';
 
 export interface UI {
@@ -47,8 +48,11 @@ function effectText(h: HeroType): string {
 export function createUI(mount: HTMLElement): UI {
   mount.innerHTML = '';
 
+  // main column (HUD / stage / build bar); the multiplayer send sidebar sits beside it
+  const col = el('div', 'ui-col', mount);
+
   // top HUD bar
-  const top = el('div', 'ui-top', mount);
+  const top = el('div', 'ui-top', col);
   const statValue = (icon: string, label: string): HTMLElement => {
     const s = el('div', 'ui-stat', top);
     el('span', `ui-ico ui-ico-${icon}`, s);
@@ -76,7 +80,7 @@ export function createUI(mount: HTMLElement): UI {
   const oppV = el('b', '', oppBox);
 
   // stage (Phaser mounts here) + overlay
-  const stage = el('div', 'ui-stage', mount);
+  const stage = el('div', 'ui-stage', col);
   stage.id = 'stage';
   const overlay = el('div', 'ui-overlay', stage);
 
@@ -88,9 +92,10 @@ export function createUI(mount: HTMLElement): UI {
   bossBanner.textContent = 'BAKUNAWA RISES';
   bossBanner.style.display = 'none';
 
-  // multiplayer send panel: spend gold to attack the rival
-  const sendPanel = el('div', 'ui-sends', overlay);
-  sendPanel.style.display = 'none';
+  // multiplayer send sidebar: sits BESIDE the map (never over it), Bloons-style.
+  // Shown at build time in MP so the fit-to-viewport scale measures the full width.
+  const sendPanel = el('div', 'ui-sends', mount);
+  sendPanel.style.display = getSession() ? 'flex' : 'none';
   el('div', 'ui-sends-title', sendPanel).textContent = 'SEND';
   const sendBtns = new Map<string, HTMLButtonElement>();
   const sendBox = el('div', 'ui-sends-list', sendPanel);
@@ -178,7 +183,7 @@ export function createUI(mount: HTMLElement): UI {
 
   // build menu: the player's hero-card loadout + the store
   const loadout = getLoadout();
-  const bottom = el('div', 'ui-bottom', mount);
+  const bottom = el('div', 'ui-bottom', col);
   const tiles: Record<string, HTMLElement> = {};
   loadout.forEach((id, i) => {
     const h = HERO_TYPES[id];

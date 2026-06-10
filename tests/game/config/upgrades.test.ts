@@ -30,7 +30,7 @@ describe('upgrades', () => {
     // Deep Chill tier 3+ grants AoE splash (and never root)
     const chill = effectiveStats(diwata, [4, 0]);
     expect(chill.splashRadius).toBe(70 + 40); // unlocked at L3, widened at L4
-    expect(chill.slow).toEqual({ factor: 0.12, duration: 3 });
+    expect(chill.slow).toEqual({ factor: 0.22, duration: 3 });
     expect(chill.root).toBeUndefined();
 
     // Nature's Wrath tier 3+ grants roots (and never splash)

@@ -14,14 +14,17 @@ body::after {
 
 #game {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  gap: 12px;
   font-family: 'Trebuchet MS', system-ui, sans-serif;
   user-select: none;
   position: relative; z-index: 2;
   transform-origin: center center;
   filter: drop-shadow(0 18px 40px rgba(0, 0, 0, .6));
 }
+/* the HUD / stage / build-bar column; the MP send sidebar sits beside it */
+.ui-col { display: flex; flex-direction: column; align-items: center; }
 
 /* ---- top HUD bar ---- */
 .ui-top {
@@ -73,11 +76,11 @@ body::after {
   background: rgba(120, 80, 30, .16); border-left: 3px solid #a9802f; border-radius: 3px; }
 .ui-ttrait b { color: #8a5a10; }
 
-/* "Deploying: <hero>" banner, shown only while a hero is armed for placement */
+/* "Deploying: <hero>" banner — hugs the bottom edge of the stage so it never hides the action */
 .ui-deploy {
-  position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
   pointer-events: none; align-items: center; gap: 8px; white-space: nowrap;
-  padding: 6px 14px; color: #2c1f0f; font-weight: 800; font-size: 13px;
+  padding: 5px 12px; color: #2c1f0f; font-weight: 800; font-size: 12px; opacity: .95;
   background: linear-gradient(#caa24a, #a9802f); border: 2px solid #3a2914; border-radius: 8px;
   box-shadow: 0 3px 0 #5c4012, inset 0 1px 0 #f0d999;
 }
@@ -347,14 +350,14 @@ body::after {
   color: #2c1f0f; background: #e7d4a4; border: 2px solid #3a2914; border-radius: 8px; outline: none;
 }
 
-/* ---- multiplayer: opponent strip + send panel ---- */
+/* ---- multiplayer: opponent strip + send sidebar (beside the map, never over it) ---- */
 .ui-opp .ui-statval b { color: #ffb09a; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
 .ui-sends {
-  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-  display: flex; flex-direction: column; gap: 6px; width: 138px; pointer-events: auto;
-  padding: 8px; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 6px; width: 150px;
+  align-self: center; flex-shrink: 0;
+  padding: 10px; box-sizing: border-box;
   background: linear-gradient(#7d5d34, #5c4324); border: 3px solid #3a2914; border-radius: 10px;
-  box-shadow: 0 6px 14px rgba(0,0,0,.45);
+  box-shadow: 0 5px 0 #2c1f0f, inset 0 1px 0 #bd9358;
 }
 .ui-sends-title { text-align: center; font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #f0d999; }
 .ui-sends-list { display: flex; flex-direction: column; gap: 5px; }

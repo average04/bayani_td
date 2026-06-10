@@ -64,7 +64,7 @@ describe('roaming tower (Bonifacio)', () => {
     id: 'roam', name: 'R', cost: 0, range: 50, damage: 5, fireRate: 0.0001, mobile: { speed: 100 },
   };
 
-  it('chases the nearest enemy, then returns to his camp when the field clears', () => {
+  it('chases the front-most enemy, then returns to his camp when the field clears', () => {
     const w = makeWorld({ roam: roamer });
     w.placeTower('roam', 2, 2); // anchor (72,72)
     const t = w.towers[0];
@@ -76,6 +76,16 @@ describe('roaming tower (Bonifacio)', () => {
     w.update(1);
     w.update(1);
     expect(t.pos.x).toBeCloseTo(74, 0); // walked back to the camp (stops within 2px)
+  });
+
+  it('intercepts the front-most enemy, not the nearest one', () => {
+    const w = makeWorld({ roam: roamer });
+    w.placeTower('roam', 2, 2); // anchor (72,72)
+    const t = w.towers[0];
+    addEnemy(w, 100, 72); // nearest, but trailing the pack
+    addEnemy(w, 472, 72); // front-most (closest to the base)
+    w.update(1);
+    expect(t.pos.x).toBeCloseTo(172, 1); // moved toward the leader, ignoring the nearby straggler
   });
 
   it('selling a roamer frees his camp cells even after he wandered off', () => {

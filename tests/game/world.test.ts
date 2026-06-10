@@ -59,7 +59,7 @@ describe('World', () => {
     // tick until the enemy spawns and is shot
     for (let i = 0; i < 5; i++) w.update(0.1);
     expect(w.enemies.length).toBe(0);
-    expect(w.gold).toBe(55); // 100 - 50 cost + 5 reward
+    expect(w.gold).toBe(67); // 100 - 50 cost + 5 reward + 12 wave-clear bonus (10 + 2*wave)
     expect(w.status).toBe('won');
   });
 

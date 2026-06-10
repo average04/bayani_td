@@ -9,6 +9,12 @@ export interface TowerStats {
   poison?: { dps: number; duration: number };
   root?: { chance: number; duration: number }; // chance (0-1) to immobilize a hit enemy for duration
   spin?: boolean;
+  // unique-trait fields, copied from the hero definition (see heroes.ts)
+  rhythm?: { every: number; damageMult?: number; echo?: { delay: number; frac: number } };
+  mark?: { amp: number };
+  contagion?: { radius: number; maxTargets: number; minDuration: number };
+  pierce?: boolean;
+  firstStrike?: number;
 }
 
 export interface StatDelta {
@@ -128,6 +134,28 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
+  // Apolaki — armor-piercing sniper (base: dmg 45, range 210, rate 0.45, Sunpierce trait).
+  apolaki: [
+    {
+      name: 'Solar Lance',
+      levels: [
+        { name: 'Focused Ray', cost: 70, desc: '+15 damage', delta: { damage: 15 } },
+        { name: 'Dawnfire', cost: 140, desc: '+25 damage, +20 range', delta: { damage: 25, range: 20 } },
+        { name: 'Noonday Wrath', cost: 260, desc: '+45 damage', delta: { damage: 45 } },
+        { name: "War God's Spear", cost: 480, desc: '+90 damage, +30 range', delta: { damage: 90, range: 30 } },
+      ],
+    },
+    {
+      name: 'Zenith',
+      levels: [
+        { name: 'Quick Draw', cost: 65, desc: '+0.2 attack speed', delta: { fireRate: 0.2 } },
+        { name: 'Blazing Pace', cost: 130, desc: '+0.25 attack speed', delta: { fireRate: 0.25 } },
+        { name: 'Sunburst', cost: 240, desc: 'Lances splash r40', delta: { splashRadius: 40 } },
+        { name: 'High Noon', cost: 430, desc: '+0.35 atk speed, +30 splash', delta: { fireRate: 0.35, splashRadius: 30 } },
+      ],
+    },
+  ],
+
   // Mangkukulam — poison caster (base: dmg 10, range 120, rate 0.8, poison 8/3s).
   mangkukulam: [
     {
@@ -160,6 +188,11 @@ export function baseStats(hero: HeroType): TowerStats {
     slow: hero.slow,
     poison: hero.poison,
     spin: hero.spin,
+    rhythm: hero.rhythm,
+    mark: hero.mark,
+    contagion: hero.contagion,
+    pierce: hero.pierce,
+    firstStrike: hero.firstStrike,
   };
 }
 

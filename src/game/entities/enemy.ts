@@ -13,6 +13,10 @@ export class Enemy {
   poisonDps = 0;
   poisonTimer = 0;
   rootTimer = 0; // while > 0 the enemy is rooted in place (speed 0), overriding any slow
+  ampMult = 1; // damage-taken multiplier while marked (Fey Mark)
+  ampTimer = 0;
+  // carried so the world can spread this enemy's poison when it dies (Contagion)
+  contagion: { radius: number; maxTargets: number; minDuration: number } | null = null;
   private readonly path: Vec2[];
 
   constructor(type: EnemyType, path: Vec2[], maxHp: number = type.maxHp) {
@@ -31,6 +35,11 @@ export class Enemy {
       this.hp -= this.poisonDps * dt;
       this.poisonTimer -= dt;
       if (this.poisonTimer <= 0) this.poisonDps = 0;
+    }
+    // fey mark wears off
+    if (this.ampTimer > 0) {
+      this.ampTimer = Math.max(0, this.ampTimer - dt);
+      if (this.ampTimer <= 0) this.ampMult = 1;
     }
     // regen
     const regen = this.type.regenPerSec ?? 0;
@@ -71,9 +80,17 @@ export class Enemy {
     }
   }
 
-  takeDamage(amount: number): void {
+  takeDamage(amount: number, pierce = false): void {
+    const amped = this.ampTimer > 0 ? amount * this.ampMult : amount;
+    const armor = pierce ? 0 : (this.type.armor ?? 0);
     // A hit always lands at least 1 damage — armor can blunt a shot but never fully negate it.
-    this.hp -= Math.max(1, amount - (this.type.armor ?? 0));
+    this.hp -= Math.max(1, amped - armor);
+  }
+
+  /** Fey Mark: amplify all damage this enemy takes for a duration. */
+  applyMark(mult: number, duration: number): void {
+    this.ampMult = Math.max(this.ampMult, mult);
+    this.ampTimer = Math.max(this.ampTimer, duration);
   }
 
   applySlow(factor: number, duration: number): void {
@@ -82,9 +99,10 @@ export class Enemy {
     this.slowTimer = Math.max(this.slowTimer, duration);
   }
 
-  applyPoison(dps: number, duration: number): void {
+  applyPoison(dps: number, duration: number, contagion: Enemy['contagion'] = null): void {
     this.poisonDps = Math.max(this.poisonDps, dps);
     this.poisonTimer = Math.max(this.poisonTimer, duration);
+    if (contagion) this.contagion = contagion;
   }
 
   applyRoot(duration: number): void {

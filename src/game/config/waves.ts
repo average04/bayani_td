@@ -66,12 +66,12 @@ export const WAVES: WaveConfig[] = [
       { enemyTypeId: 'tiyanak', count: 16, interval: 0.3 },
     ],
   },
-  // wave 10 — heavy mix
+  // wave 10 — first boss: Bakunawa leads, escort follows
   {
     spawns: [
-      { enemyTypeId: 'kapre', count: 3, interval: 1.4 },
-      { enemyTypeId: 'manananggal', count: 4, interval: 1.2 },
-      { enemyTypeId: 'tiktik', count: 12, interval: 0.4 },
+      { enemyTypeId: 'bakunawa', count: 1, interval: 1.5 },
+      { enemyTypeId: 'kapre', count: 2, interval: 1.4 },
+      { enemyTypeId: 'tiktik', count: 10, interval: 0.4 },
     ],
   },
   // wave 11 — huge swarm
@@ -134,13 +134,16 @@ export function generateWave(n: number): WaveConfig {
   const t = n - WAVES.length; // tiers past the last authored wave (1, 2, 3, …)
   const grow = (base: number, per: number, cap: number): number => Math.min(cap, base + Math.floor(per * t));
   const tighten = (base: number, per: number, min: number): number => Math.max(min, base - per * t);
-  return {
-    spawns: [
-      { enemyTypeId: 'kapre', count: grow(5, 0.4, 16), interval: tighten(0.9, 0.02, 0.5) },
-      { enemyTypeId: 'manananggal', count: grow(4, 0.4, 14), interval: tighten(0.8, 0.02, 0.5) },
-      { enemyTypeId: 'aswang', count: grow(7, 0.5, 20), interval: tighten(0.5, 0.01, 0.3) },
-      { enemyTypeId: 'tiktik', count: grow(8, 0.5, 22), interval: tighten(0.35, 0.01, 0.2) },
-      { enemyTypeId: 'tiyanak', count: grow(10, 0.6, 26), interval: tighten(0.25, 0.01, 0.15) },
-    ],
-  };
+  const spawns: WaveSpawn[] = [
+    { enemyTypeId: 'kapre', count: grow(5, 0.4, 16), interval: tighten(0.9, 0.02, 0.5) },
+    { enemyTypeId: 'manananggal', count: grow(4, 0.4, 14), interval: tighten(0.8, 0.02, 0.5) },
+    { enemyTypeId: 'aswang', count: grow(7, 0.5, 20), interval: tighten(0.5, 0.01, 0.3) },
+    { enemyTypeId: 'tiktik', count: grow(8, 0.5, 22), interval: tighten(0.35, 0.01, 0.2) },
+    { enemyTypeId: 'tiyanak', count: grow(10, 0.6, 26), interval: tighten(0.25, 0.01, 0.15) },
+  ];
+  // every 10th wave the Bakunawa returns, in growing numbers (2 from wave 30, 3 from wave 60)
+  if (n % 10 === 0) {
+    spawns.unshift({ enemyTypeId: 'bakunawa', count: Math.min(3, Math.floor(n / 30) + 1), interval: 1.5 });
+  }
+  return { spawns };
 }

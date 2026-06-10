@@ -1,3 +1,8 @@
+export interface HeroTrait {
+  name: string;
+  desc: string;
+}
+
 export interface HeroType {
   id: string;
   name: string;
@@ -9,15 +14,48 @@ export interface HeroType {
   slow?: { factor: number; duration: number }; // on-hit speed multiplier for a duration
   poison?: { dps: number; duration: number }; // on-hit damage-over-time (ignores armor)
   spin?: boolean; // melee spin: each swing hits ALL enemies within `range` of the hero itself (no single target)
+  trait?: HeroTrait; // unique signature passive, described in the UI
+  // every Nth shot is special: multiplies damage (crit) and/or echoes the hit a moment later
+  rhythm?: { every: number; damageMult?: number; echo?: { delay: number; frac: number } };
+  mark?: { amp: number }; // hits that slow also amplify ALL damage the enemy takes while slowed
+  contagion?: { radius: number; maxTargets: number; minDuration: number }; // poison jumps on death
+  pierce?: boolean; // shots ignore armor
+  firstStrike?: number; // damage multiplier vs enemies at >=90% HP
 }
 
 export const HERO_TYPES: Record<string, HeroType> = {
   // melee spin: short range, heavy slow swings, hits everything ~1 block around him
-  lapulapu: { id: 'lapulapu', name: 'Lapu-Lapu', cost: 100, range: 80, damage: 30, fireRate: 0.6, spin: true }, // 0.6/s = one swing every ~1.67s
-  gabriela: { id: 'gabriela', name: 'Gabriela Silang', cost: 75, range: 140, damage: 11, fireRate: 3.6 },
-  bernardo: { id: 'bernardo', name: 'Bernardo Carpio', cost: 120, range: 100, damage: 18, fireRate: 1.2, splashRadius: 50 },
-  diwata: { id: 'diwata', name: 'Diwata', cost: 90, range: 130, damage: 12, fireRate: 1.4, slow: { factor: 0.5, duration: 1.5 } },
-  mangkukulam: { id: 'mangkukulam', name: 'Mangkukulam', cost: 110, range: 120, damage: 10, fireRate: 0.8, poison: { dps: 8, duration: 3 } },
+  lapulapu: {
+    id: 'lapulapu', name: 'Lapu-Lapu', cost: 100, range: 80, damage: 28, fireRate: 0.6, spin: true, // 0.6/s = one swing every ~1.67s
+    rhythm: { every: 4, damageMult: 2 },
+    trait: { name: 'Rampage', desc: 'Every 4th spin strikes for double damage' },
+  },
+  gabriela: {
+    id: 'gabriela', name: 'Gabriela Silang', cost: 75, range: 140, damage: 10, fireRate: 3.6,
+    rhythm: { every: 5, damageMult: 3 },
+    trait: { name: 'Deadeye', desc: 'Every 5th shot crits for 3x damage' },
+  },
+  bernardo: {
+    id: 'bernardo', name: 'Bernardo Carpio', cost: 120, range: 100, damage: 18, fireRate: 1.2, splashRadius: 50,
+    rhythm: { every: 3, echo: { delay: 0.45, frac: 0.5 } },
+    trait: { name: 'Aftershock', desc: 'Every 3rd boulder quakes again for 50% splash damage' },
+  },
+  diwata: {
+    id: 'diwata', name: 'Diwata', cost: 90, range: 130, damage: 12, fireRate: 1.4, slow: { factor: 0.5, duration: 1.5 },
+    mark: { amp: 0.15 },
+    trait: { name: 'Fey Mark', desc: 'Enemies she slows take +15% damage from all sources' },
+  },
+  mangkukulam: {
+    id: 'mangkukulam', name: 'Mangkukulam', cost: 110, range: 120, damage: 10, fireRate: 0.8, poison: { dps: 8, duration: 3 },
+    contagion: { radius: 70, maxTargets: 2, minDuration: 1.5 },
+    trait: { name: 'Contagion', desc: 'Poisoned enemies spread their curse to nearby foes on death' },
+  },
+  apolaki: {
+    id: 'apolaki', name: 'Apolaki', cost: 130, range: 210, damage: 45, fireRate: 0.45,
+    pierce: true,
+    firstStrike: 1.5,
+    trait: { name: 'Sunpierce', desc: 'Sun lances ignore armor and deal +50% to unhurt enemies' },
+  },
 };
 
-export const HERO_ORDER = ['lapulapu', 'gabriela', 'bernardo', 'diwata', 'mangkukulam'];
+export const HERO_ORDER = ['lapulapu', 'gabriela', 'bernardo', 'diwata', 'mangkukulam', 'apolaki'];

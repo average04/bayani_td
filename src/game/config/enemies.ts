@@ -8,6 +8,7 @@ export interface EnemyType {
   armor?: number; // flat per-hit damage reduction (default 0)
   regenPerSec?: number; // hp healed per second (default 0)
   slowImmune?: boolean; // ignores slow effects entirely (default false)
+  boss?: boolean; // boss enemy: bigger HP bar, boss banner while on the field
 }
 
 export const ENEMY_TYPES: Record<string, EnemyType> = {
@@ -16,6 +17,9 @@ export const ENEMY_TYPES: Record<string, EnemyType> = {
   kapre: { id: 'kapre', name: 'Kapre', maxHp: 120, speed: 45, reward: 7, leakDamage: 1, armor: 8 },
   tiyanak: { id: 'tiyanak', name: 'Tiyanak', maxHp: 18, speed: 130, reward: 1, leakDamage: 1, slowImmune: true },
   manananggal: { id: 'manananggal', name: 'Manananggal', maxHp: 70, speed: 70, reward: 6, leakDamage: 1, regenPerSec: 6 },
+  // Bakunawa, the moon-eating serpent: every-10th-wave boss. Slow, heavily armored wall of
+  // HP that costs 10 lives if it reaches the base. HP scales with wave like everything else.
+  bakunawa: { id: 'bakunawa', name: 'Bakunawa', maxHp: 700, speed: 28, reward: 120, leakDamage: 10, armor: 12, boss: true },
 };
 
 // Enemies get tankier every wave (gold rewards stay fixed). A gentle linear ramp early

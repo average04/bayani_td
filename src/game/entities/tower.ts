@@ -13,6 +13,7 @@ export class Tower {
   stats: TowerStats;
   spent: number; // total gold invested (placement + upgrades), for sell refunds
   targetMode: TargetMode = 'first';
+  shotCount = 0; // lifetime shots fired; drives every-Nth-shot traits (Rampage/Deadeye/Aftershock)
 
   constructor(type: HeroType, pos: Vec2) {
     this.type = type;
@@ -42,6 +43,11 @@ export class Tower {
 
   resetCooldown(): void {
     this.cooldown = 1 / this.stats.fireRate;
+  }
+
+  /** Count a fired shot; returns the 1-based shot number. */
+  registerShot(): number {
+    return ++this.shotCount;
   }
 
   inRange(target: Vec2): boolean {

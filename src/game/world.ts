@@ -15,11 +15,16 @@ import { selectTarget } from './systems/targeting';
 import { canUpgradePath, nextUpgrade, type TowerStats } from './config/upgrades';
 
 const AUTO_START_DELAY = 3; // seconds after a wave is cleared before the next auto-starts
+// Gold awarded when a wave is fully cleared: base + per-wave. Keeps the deep-wave economy
+// alive now that per-kill bounties are intentionally small.
+const WAVE_BONUS_BASE = 10;
+const WAVE_BONUS_PER_WAVE = 2;
 
 export interface ShotEvent {
   from: Vec2;
   to: Vec2;
   heroId: string;
+  crit?: boolean; // a rhythm-trait power shot (Rampage/Deadeye) — FX sell it bigger
 }
 
 export interface DeathEvent {
@@ -32,10 +37,24 @@ export interface GoldEvent {
   amount: number;
 }
 
+export interface EchoEvent {
+  pos: Vec2;
+  radius: number;
+}
+
 export interface WorldEvents {
   shots: ShotEvent[];
   deaths: DeathEvent[];
   gold: GoldEvent[];
+  echoes: EchoEvent[]; // Aftershock ground-quakes resolving
+}
+
+// A delayed area hit (Bernardo's Aftershock): lands at pos after timer reaches 0.
+interface PendingEcho {
+  timer: number;
+  pos: Vec2;
+  radius: number;
+  damage: number;
 }
 
 export interface WorldConfig {
@@ -56,10 +75,12 @@ export class World {
   enemies: Enemy[] = [];
   towers: Tower[] = [];
   stores: Store[] = [];
-  readonly events: WorldEvents = { shots: [], deaths: [], gold: [] };
+  readonly events: WorldEvents = { shots: [], deaths: [], gold: [], echoes: [] };
   private readonly blockedCells: Set<string>;
   private readonly occupiedCells = new Set<string>();
   private nextWaveTimer = 0;
+  private pendingEchoes: PendingEcho[] = [];
+  private lastBonusWave = 0; // last wave number whose clear bonus has been paid
 
   constructor(cfg: WorldConfig) {
     this.level = cfg.level;
@@ -95,6 +116,10 @@ export class World {
     let g = 0;
     for (const s of this.stores) g += s.income.passivePerSec + s.income.tickAmount / s.income.tickInterval;
     return g;
+  }
+  // a boss is on the field (drives the boss banner + UI emphasis)
+  get bossActive(): boolean {
+    return this.enemies.some((e) => e.type.boss);
   }
 
   canStartNextWave(): boolean {
@@ -221,19 +246,61 @@ export class World {
     return true;
   }
 
-  private applyHit(affected: Enemy[], stats: TowerStats): void {
+  private applyHit(affected: Enemy[], stats: TowerStats, damage: number): void {
     for (const e of affected) {
-      e.takeDamage(stats.damage);
-      if (stats.slow) e.applySlow(stats.slow.factor, stats.slow.duration);
-      if (stats.poison) e.applyPoison(stats.poison.dps, stats.poison.duration);
+      let dmg = damage;
+      // Sunpierce: bonus vs near-full-HP targets
+      if (stats.firstStrike && e.hp >= e.maxHp * 0.9) dmg *= stats.firstStrike;
+      e.takeDamage(dmg, stats.pierce);
+      if (stats.slow) {
+        e.applySlow(stats.slow.factor, stats.slow.duration);
+        // Fey Mark rides on the slow: amplified damage for as long as the chill lasts
+        if (stats.mark) e.applyMark(1 + stats.mark.amp, stats.slow.duration);
+      }
+      if (stats.poison) e.applyPoison(stats.poison.dps, stats.poison.duration, stats.contagion ?? null);
       if (stats.root && Math.random() < stats.root.chance) e.applyRoot(stats.root.duration);
     }
+  }
+
+  // Resolve one tower firing: rhythm traits decide the damage of THIS shot and whether an
+  // aftershock echo gets queued. Returns whether the shot was a power shot (for FX).
+  private fireAt(tower: Tower, affected: Enemy[], epicenter: Vec2): boolean {
+    const s = tower.stats;
+    const shotNo = tower.registerShot();
+    const onBeat = s.rhythm !== undefined && shotNo % s.rhythm.every === 0;
+    let damage = s.damage;
+    if (onBeat && s.rhythm!.damageMult) damage *= s.rhythm!.damageMult;
+    this.applyHit(affected, s, damage);
+    if (onBeat && s.rhythm!.echo) {
+      const echo = s.rhythm!.echo;
+      this.pendingEchoes.push({
+        timer: echo.delay,
+        pos: { x: epicenter.x, y: epicenter.y },
+        radius: s.splashRadius ?? 50,
+        damage: s.damage * echo.frac,
+      });
+    }
+    tower.resetCooldown();
+    return onBeat;
+  }
+
+  // Contagion: a dying poisoned enemy passes its poison to the nearest enemies in range.
+  private spreadContagion(dead: Enemy): void {
+    if (!dead.contagion || dead.poisonTimer <= 0 || dead.poisonDps <= 0) return;
+    const c = dead.contagion;
+    const candidates = this.enemies
+      .filter((e) => e !== dead && !e.isDead && !e.reachedEnd && distance(e.pos, dead.pos) <= c.radius)
+      .sort((a, b) => distance(a.pos, dead.pos) - distance(b.pos, dead.pos))
+      .slice(0, c.maxTargets);
+    const duration = Math.max(dead.poisonTimer, c.minDuration);
+    for (const e of candidates) e.applyPoison(dead.poisonDps, duration, c);
   }
 
   update(dt: number): void {
     this.events.shots.length = 0;
     this.events.deaths.length = 0;
     this.events.gold.length = 0;
+    this.events.echoes.length = 0;
     if (this.state.status !== 'playing') return;
 
     // 1. spawn
@@ -255,12 +322,12 @@ export class World {
           (e) => !e.isDead && !e.reachedEnd && distance(e.pos, t.pos) <= s.range,
         );
         if (affected.length === 0) continue;
-        this.applyHit(affected, s);
-        t.resetCooldown();
+        const crit = this.fireAt(t, affected, t.pos);
         this.events.shots.push({
           from: { x: t.pos.x, y: t.pos.y },
           to: { x: t.pos.x, y: t.pos.y }, // self-centered: from === to marks a spin
           heroId: t.type.id,
+          crit,
         });
       } else {
         const target = selectTarget(t, this.enemies);
@@ -270,14 +337,33 @@ export class World {
               (e) => !e.isDead && !e.reachedEnd && distance(e.pos, target.pos) <= s.splashRadius!,
             )
           : [target];
-        this.applyHit(affected, s);
-        t.resetCooldown();
+        const crit = this.fireAt(t, affected, target.pos);
         this.events.shots.push({
           from: { x: t.pos.x, y: t.pos.y },
           to: { x: target.pos.x, y: target.pos.y },
           heroId: t.type.id,
+          crit,
         });
       }
+    }
+
+    // 3.2 aftershock echoes land (plain area damage, no statuses)
+    if (this.pendingEchoes.length > 0) {
+      const still: PendingEcho[] = [];
+      for (const echo of this.pendingEchoes) {
+        echo.timer -= dt;
+        if (echo.timer > 0) {
+          still.push(echo);
+          continue;
+        }
+        for (const e of this.enemies) {
+          if (!e.isDead && !e.reachedEnd && distance(e.pos, echo.pos) <= echo.radius) {
+            e.takeDamage(echo.damage);
+          }
+        }
+        this.events.echoes.push({ pos: echo.pos, radius: echo.radius });
+      }
+      this.pendingEchoes = still;
     }
 
     // 3.5 stores generate passive income
@@ -289,7 +375,7 @@ export class World {
       }
     }
 
-    // 4. resolve leaks (lose life) and deaths (reward)
+    // 4. resolve leaks (lose life) and deaths (reward + contagion)
     const survivors: Enemy[] = [];
     for (const e of this.enemies) {
       if (e.reachedEnd) {
@@ -298,11 +384,27 @@ export class World {
         this.economy.earn(e.type.reward);
         this.events.deaths.push({ pos: { x: e.pos.x, y: e.pos.y }, enemyTypeId: e.type.id });
         this.events.gold.push({ pos: { x: e.pos.x, y: e.pos.y }, amount: e.type.reward });
+        this.spreadContagion(e);
       } else {
         survivors.push(e);
       }
     }
     this.enemies = survivors;
+
+    // wave-clear bonus, paid once per cleared wave (all spawned, none left on the field)
+    const wave = this.waveManager.currentWaveNumber;
+    if (
+      wave > this.lastBonusWave &&
+      this.enemies.length === 0 &&
+      !this.waveManager.isSpawning &&
+      this.state.status === 'playing'
+    ) {
+      this.lastBonusWave = wave;
+      const bonus = WAVE_BONUS_BASE + WAVE_BONUS_PER_WAVE * wave;
+      this.economy.earn(bonus);
+      const base = this.level.path[this.level.path.length - 1];
+      this.events.gold.push({ pos: { x: base.x, y: base.y }, amount: bonus });
+    }
 
     // auto-start the next wave after a short delay once the current one is cleared
     if (this.canStartNextWave()) {

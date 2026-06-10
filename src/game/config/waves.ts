@@ -9,7 +9,8 @@ export interface WaveConfig {
 }
 
 export const WAVES: WaveConfig[] = [
-  { spawns: [{ enemyTypeId: 'aswang', count: 8, interval: 0.9 }] },
+  // wave 1 — gentle intro: a few slow, well-spaced aswang to learn placement
+  { spawns: [{ enemyTypeId: 'aswang', count: 5, interval: 1.2 }] },
   {
     spawns: [
       { enemyTypeId: 'aswang', count: 6, interval: 0.8 },

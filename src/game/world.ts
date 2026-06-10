@@ -13,6 +13,7 @@ import { GameState, type GameStatus } from './state/gameState';
 import { WaveManager } from './systems/waveManager';
 import { selectTarget } from './systems/targeting';
 import { canUpgradePath, nextUpgrade, type TowerStats } from './config/upgrades';
+import { canSend, type SendOption } from './config/sends';
 
 const AUTO_START_DELAY = 3; // seconds after a wave is cleared before the next auto-starts
 // Gold awarded when a wave is fully cleared: base + per-wave. Keeps the deep-wave economy
@@ -143,6 +144,12 @@ export class World {
     for (let i = 0; i < count; i++) {
       this.incomingSends.push({ enemyTypeId, timer: 0.4 * (i + 1) });
     }
+  }
+
+  /** Multiplayer: validate + pay for an outgoing send. The caller emits the network event. */
+  buySend(option: SendOption): boolean {
+    if (!canSend(option, this.gold, this.waveNumber)) return false;
+    return this.economy.spend(option.cost);
   }
 
   canPlaceAt(col: number, row: number): boolean {

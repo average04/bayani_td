@@ -125,19 +125,22 @@ export const WAVES: WaveConfig[] = [
   },
 ];
 
-// Endless mode: authored waves for 1..16, then ever-escalating procedural waves.
+// Endless mode: authored waves for 1..16, then procedural waves. Past the authored list, enemy
+// COUNTS grow slowly and cap out — the difficulty ramp comes from per-enemy HP scaling (see
+// scaledMaxHp), NOT from spawning ever more enemies. Fewer, tankier monsters keeps gold income
+// (which is per-kill) from ballooning in deep waves while the threat keeps rising.
 export function generateWave(n: number): WaveConfig {
   if (n <= WAVES.length) return WAVES[n - 1];
   const t = n - WAVES.length; // tiers past the last authored wave (1, 2, 3, …)
-  const grow = (base: number, per: number): number => base + per * t;
+  const grow = (base: number, per: number, cap: number): number => Math.min(cap, base + Math.floor(per * t));
   const tighten = (base: number, per: number, min: number): number => Math.max(min, base - per * t);
   return {
     spawns: [
-      { enemyTypeId: 'kapre', count: grow(6, 2), interval: tighten(0.9, 0.03, 0.4) },
-      { enemyTypeId: 'manananggal', count: grow(5, 2), interval: tighten(0.8, 0.03, 0.4) },
-      { enemyTypeId: 'aswang', count: grow(10, 3), interval: tighten(0.4, 0.02, 0.2) },
-      { enemyTypeId: 'tiktik', count: grow(12, 3), interval: tighten(0.3, 0.01, 0.15) },
-      { enemyTypeId: 'tiyanak', count: grow(18, 4), interval: tighten(0.2, 0.01, 0.1) },
+      { enemyTypeId: 'kapre', count: grow(5, 0.4, 16), interval: tighten(0.9, 0.02, 0.5) },
+      { enemyTypeId: 'manananggal', count: grow(4, 0.4, 14), interval: tighten(0.8, 0.02, 0.5) },
+      { enemyTypeId: 'aswang', count: grow(7, 0.5, 20), interval: tighten(0.5, 0.01, 0.3) },
+      { enemyTypeId: 'tiktik', count: grow(8, 0.5, 22), interval: tighten(0.35, 0.01, 0.2) },
+      { enemyTypeId: 'tiyanak', count: grow(10, 0.6, 26), interval: tighten(0.25, 0.01, 0.15) },
     ],
   };
 }

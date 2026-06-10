@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ENEMY_TYPES, scaledMaxHp, HP_GROWTH_PER_WAVE } from '../../src/game/config/enemies';
 import { HERO_TYPES } from '../../src/game/config/heroes';
-import { WAVES } from '../../src/game/config/waves';
+import { WAVES, generateWave } from '../../src/game/config/waves';
 
 describe('config data', () => {
   it('includes the new heroes and enemies', () => {
@@ -26,6 +26,13 @@ describe('config data', () => {
     const lateJump = scaledMaxHp(60, 31) - scaledMaxHp(60, 30);
     const earlyJump = scaledMaxHp(60, 11) - scaledMaxHp(60, 10);
     expect(lateJump).toBeGreaterThan(earlyJump);
+  });
+
+  it('endless wave counts grow slowly and cap (HP carries difficulty, not quantity)', () => {
+    const total = (n: number): number => generateWave(n).spawns.reduce((s, sp) => s + sp.count, 0);
+    expect(total(17)).toBeLessThan(total(30)); // still grows past the authored list
+    expect(total(30)).toBeLessThan(120); // but far fewer than the old runaway counts (was ~260)
+    expect(total(80)).toBe(total(200)); // counts plateau in deep waves
   });
 
   it('every wave spawn references a defined enemy type with a positive count', () => {

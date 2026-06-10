@@ -77,6 +77,7 @@ export class Enemy {
   }
 
   applySlow(factor: number, duration: number): void {
+    if (this.type.slowImmune) return; // some enemies shrug off slows entirely
     this.slowFactor = Math.min(this.slowFactor, factor);
     this.slowTimer = Math.max(this.slowTimer, duration);
   }

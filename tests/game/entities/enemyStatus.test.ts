@@ -27,6 +27,13 @@ describe('Enemy status effects', () => {
     expect(e.pos.x).toBeCloseTo(50);
   });
 
+  it('slow-immune enemies ignore slows entirely', () => {
+    const e = new Enemy(etype({ speed: 100, slowImmune: true }), path);
+    e.applySlow(0.5, 10);
+    e.update(1);
+    expect(e.pos.x).toBeCloseTo(100); // full speed, unaffected
+  });
+
   it('speed returns to normal after the slow expires', () => {
     const e = new Enemy(etype({ speed: 100 }), path);
     e.applySlow(0.5, 0.5);

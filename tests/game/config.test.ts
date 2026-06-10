@@ -13,8 +13,19 @@ describe('config data', () => {
     expect(scaledMaxHp(60, 1)).toBe(60); // no growth on the first wave
     expect(scaledMaxHp(60, 2)).toBe(Math.round(60 * (1 + HP_GROWTH_PER_WAVE)));
     expect(scaledMaxHp(60, 11)).toBe(Math.round(60 * (1 + HP_GROWTH_PER_WAVE * 10)));
+    // up to wave 20 it is the gentle linear ramp
+    expect(scaledMaxHp(60, 20)).toBe(Math.round(60 * (1 + HP_GROWTH_PER_WAVE * 19)));
     // monotonic, fixed base unchanged
     expect(scaledMaxHp(60, 30)).toBeGreaterThan(scaledMaxHp(60, 10));
+  });
+
+  it('ramps HP much faster past wave 20 (compounding)', () => {
+    const linearAt30 = Math.round(60 * (1 + HP_GROWTH_PER_WAVE * 29));
+    expect(scaledMaxHp(60, 30)).toBeGreaterThan(linearAt30); // late ramp adds on top of linear
+    // the per-wave HP jump is bigger in the late game than the early game
+    const lateJump = scaledMaxHp(60, 31) - scaledMaxHp(60, 30);
+    const earlyJump = scaledMaxHp(60, 11) - scaledMaxHp(60, 10);
+    expect(lateJump).toBeGreaterThan(earlyJump);
   });
 
   it('every wave spawn references a defined enemy type with a positive count', () => {

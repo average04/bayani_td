@@ -99,7 +99,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Diwata — slow support (base: dmg 12, range 130, rate 1, slow 0.5/1.5s).
+  // Diwata — slow support (base: dmg 12, range 130, rate 1.4, slow 0.5/1.5s).
   diwata: [
     {
       name: 'Deep Chill',

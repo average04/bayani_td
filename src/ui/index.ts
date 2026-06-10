@@ -188,14 +188,16 @@ export function createUI(mount: HTMLElement): UI {
   const storeTile = el('div', 'ui-tile ui-tile-store', bottom);
   el('span', 'ui-portrait ui-portrait-store', storeTile);
   el('div', 'ui-tname', storeTile).textContent = STORE.name;
-  el('small', 'ui-tcost', storeTile).textContent = `$${STORE.cost}`;
+  const storeCost = el('small', 'ui-tcost', storeTile);
+  storeCost.textContent = `$${STORE.cost}`;
   el('span', 'ui-tkey', storeTile).textContent = `[${loadout.length + 1}]`;
   storeTile.addEventListener('click', () => ui.onSelectHero(STORE.id));
   storeTile.addEventListener('mouseenter', () => {
     tooltip.innerHTML =
       `<h4>${STORE.name}</h4>` +
       `<div class="ui-trow"><span>Income</span><b>+${STORE.incomeAmount}g / ${STORE.incomeInterval}s</b></div>` +
-      `<div class="ui-trow"><span>Cost</span><b>$${STORE.cost}</b></div>`;
+      `<div class="ui-trow"><span>Cost</span><b>$${STORE.cost}</b></div>` +
+      `<div class="ui-trow"><span>Limit</span><b>${STORE.maxCount} per game</b></div>`;
     tooltip.style.display = 'block';
   });
   storeTile.addEventListener('mouseleave', () => {
@@ -287,7 +289,8 @@ export function createUI(mount: HTMLElement): UI {
         tile.classList.toggle('poor', !h.affordable);
       }
       storeTile.classList.toggle('sel', vm.selectedHeroId === STORE.id);
-      storeTile.classList.toggle('poor', vm.gold < STORE.cost);
+      storeTile.classList.toggle('poor', vm.gold < STORE.cost || vm.storeMaxed);
+      storeCost.textContent = vm.storeMaxed ? 'MAX' : `$${STORE.cost}`;
       if (vm.status === 'playing' && vm.selectedHeroId) {
         const name = vm.selectedHeroId === STORE.id ? STORE.name : HERO_TYPES[vm.selectedHeroId].name;
         deploy.innerHTML =

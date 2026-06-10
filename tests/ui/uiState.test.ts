@@ -16,6 +16,7 @@ const world = {
   nextWaveIn: 3,
   passiveIncome: 0,
   bossActive: false,
+  storeMaxed: false,
 };
 
 describe('uiState', () => {

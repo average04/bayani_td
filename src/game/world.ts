@@ -193,11 +193,21 @@ export class World {
     return refund;
   }
 
+  // stores are capped per game (selling one frees the slot)
+  canBuildStore(): boolean {
+    return this.stores.length < STORE.maxCount;
+  }
+
+  get storeMaxed(): boolean {
+    return !this.canBuildStore();
+  }
+
   canPlaceStoreAt(col: number, row: number): boolean {
     return canPlace(this.level, this.blockedCells, this.occupiedCells, col, row, STORE.width, STORE.height);
   }
 
   placeStore(col: number, row: number): boolean {
+    if (!this.canBuildStore()) return false;
     if (!this.canPlaceStoreAt(col, row)) return false;
     if (!this.economy.spend(STORE.cost)) return false;
     const pos = footprintCenter(this.level, col, row, STORE.width, STORE.height);

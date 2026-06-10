@@ -73,6 +73,18 @@ describe('Sari-Sari store', () => {
     expect(w.gold).toBe(before + 1);
   });
 
+  it('caps stores per game, freeing a slot when one is sold', () => {
+    const w = new World(cfg(5000));
+    expect(w.placeStore(0, 2)).toBe(true);
+    expect(w.placeStore(6, 2)).toBe(true);
+    expect(w.canBuildStore()).toBe(false);
+    expect(w.placeStore(0, 6)).toBe(false); // cap of 2 reached
+    expect(w.stores).toHaveLength(STORE.maxCount);
+    w.sellStore(w.stores[0]);
+    expect(w.canBuildStore()).toBe(true);
+    expect(w.placeStore(0, 6)).toBe(true);
+  });
+
   it('enforces the cross-path lock on store upgrades', () => {
     const w = new World(cfg(5000));
     w.placeStore(4, 4);

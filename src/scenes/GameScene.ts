@@ -83,6 +83,7 @@ export class GameScene extends Phaser.Scene {
       });
     });
     this.input.keyboard?.on(`keydown-${STORE_KEY}`, () => {
+      if (!this.world.canBuildStore()) return; // store cap reached
       this.selectedHeroId = STORE.id;
       this.selectedTower = null;
       this.selectedStore = null;
@@ -124,6 +125,8 @@ export class GameScene extends Phaser.Scene {
     const ui = getUI();
     // clicking the armed hero again cancels deployment
     ui.onSelectHero = (id) => {
+      // can't arm the store once the cap is hit (cancelling an armed store still works)
+      if (id === STORE.id && this.selectedHeroId !== id && !this.world.canBuildStore()) return;
       this.selectedHeroId = this.selectedHeroId === id ? null : id;
       this.selectedTower = null;
       this.selectedStore = null;
@@ -175,7 +178,7 @@ export class GameScene extends Phaser.Scene {
     const cs = LEVEL_ONE.cellSize;
     if (this.selectedHeroId === STORE.id) {
       const { col, row } = footprintTopLeftAt(LEVEL_ONE, p.x, p.y, STORE.width, STORE.height);
-      const ok = this.world.canPlaceStoreAt(col, row) && this.world.gold >= STORE.cost;
+      const ok = this.world.canBuildStore() && this.world.canPlaceStoreAt(col, row) && this.world.gold >= STORE.cost;
       g.fillStyle(ok ? 0x2ecc71 : 0xe74c3c, 0.35);
       g.lineStyle(2, ok ? 0x2ecc71 : 0xe74c3c, 0.9);
       g.fillRect(col * cs, row * cs, cs * STORE.width, cs * STORE.height);

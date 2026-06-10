@@ -14,6 +14,7 @@ export interface WorldLike {
   nextWaveIn: number | null;
   passiveIncome: number;
   bossActive: boolean;
+  storeMaxed: boolean;
 }
 
 export interface HeroVM {
@@ -34,6 +35,7 @@ export interface UiState {
   nextWaveIn: number | null;
   passiveIncome: number;
   bossActive: boolean;
+  storeMaxed: boolean;
   selectedHeroId: string | null;
   heroes: HeroVM[];
 }
@@ -143,6 +145,7 @@ export function buildUiState(
     nextWaveIn: world.nextWaveIn,
     passiveIncome: world.passiveIncome,
     bossActive: world.bossActive,
+    storeMaxed: world.storeMaxed,
     selectedHeroId,
     heroes: heroOrder.map((id) => {
       const h = heroTypes[id];

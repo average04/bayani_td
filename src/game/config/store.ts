@@ -4,6 +4,7 @@ export const STORE = {
   id: 'store',
   name: 'Sari-Sari Store',
   cost: 150,
+  maxCount: 2, // hard cap on stores per game
   width: 4, // cells (a 4x2 = "2x4 block" footprint)
   height: 2, // cells
   incomeInterval: 5, // seconds between payouts (base tick income)

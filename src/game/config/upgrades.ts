@@ -55,7 +55,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Gabriela — fast single-target shooter (base: dmg 13, range 140, rate 3.4).
+  // Gabriela — fast single-target shooter (base: dmg 11, range 140, rate 3.6).
   gabriela: [
     {
       name: 'Sharpshooter',

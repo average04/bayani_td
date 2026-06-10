@@ -1,7 +1,7 @@
-import { supabaseConfigured, getSupabase } from '../net/supabaseClient';
+import { supabaseConfigured } from '../net/supabaseClient';
 import {
   ensureSession, getNickname, saveNickname, createRoom, joinRoom, quickMatch,
-  cancelMatch, markActive, fetchNicknameOf, type MatchRow,
+  cancelMatch, markActive, type MatchRow,
 } from '../net/matchService';
 import { MatchChannel } from '../net/matchChannel';
 import type { MatchSession } from '../net/session';
@@ -134,10 +134,8 @@ export function showLobby(cb: LobbyCallbacks): void {
       swap(v);
       transport.on('peerJoin', (oppNick) => {
         if (leaving) return;
-        void markActive(row.id).then(async () => {
-          // guest id lands on the row when they claim it
-          const oppId = (await refreshGuestId(row.id)) ?? '';
-          done({ matchId: row.id, myId, opponentId: oppId, isHost: true, myNickname, opponentNickname: oppNick, transport });
+        void markActive(row.id).then(() => {
+          done({ matchId: row.id, myId, isHost: true, myNickname, opponentNickname: oppNick, transport });
         });
       });
       await transport.join(myNickname);
@@ -146,26 +144,21 @@ export function showLobby(cb: LobbyCallbacks): void {
     }
   }
 
-  async function refreshGuestId(matchId: string): Promise<string | null> {
-    const { data } = await getSupabase().from('matches').select('guest_id').eq('id', matchId).maybeSingle();
-    return data?.guest_id ?? null;
-  }
-
   /** Guest path: claimed a row, join the channel; host is (or will be) present. */
   async function guest(myId: string, myNickname: string, row: MatchRow): Promise<void> {
     swap(el(`<p class="ui-lobby-note">Joining…</p>`));
     const transport = new MatchChannel(row.id);
     transport.on('peerJoin', (oppNick) => {
-      done({ matchId: row.id, myId, opponentId: row.host_id, isHost: false, myNickname, opponentNickname: oppNick, transport });
+      done({ matchId: row.id, myId, isHost: false, myNickname, opponentNickname: oppNick, transport });
     });
     try {
       await transport.join(myNickname);
-      // fallback if presence raced: fetch the host nickname directly
+      // presence never showed the host: the room is dead (host left mid-join) — bail out
       setTimeout(() => {
-        void fetchNicknameOf(row.host_id).then((n) => {
-          done({ matchId: row.id, myId, opponentId: row.host_id, isHost: false, myNickname, opponentNickname: n, transport });
-        });
-      }, 4000);
+        if (finished) return;
+        transport.leave();
+        fail('The host is not responding. Try another room or quick match.', () => menu(myId, myNickname));
+      }, 10_000);
     } catch (e) {
       fail(`Could not join: ${(e as Error).message}`, () => menu(myId, myNickname));
     }

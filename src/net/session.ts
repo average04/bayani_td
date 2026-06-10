@@ -5,7 +5,6 @@ import type { MatchTransport } from './types';
 export interface MatchSession {
   matchId: string;
   myId: string;
-  opponentId: string;
   isHost: boolean;
   myNickname: string;
   opponentNickname: string;

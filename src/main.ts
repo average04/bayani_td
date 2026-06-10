@@ -33,7 +33,10 @@ function fitToViewport(): void {
   if (!w || !h) return;
   const k = Math.min((window.innerWidth - 16) / w, (window.innerHeight - 12) / h);
   el.style.transform = `scale(${k.toFixed(4)})`;
-  game?.scale.refresh();
+  // Phaser maps pointer coordinates off the canvas' rendered bounds; refresh them so
+  // clicks stay accurate under the new transform (only once the canvas exists).
+  if (game?.isBooted) game.scale.refresh();
+  else game?.events.once(Phaser.Core.Events.READY, () => game?.scale.refresh());
 }
 window.addEventListener('resize', fitToViewport);
 

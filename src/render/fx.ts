@@ -9,6 +9,46 @@ export function spawnProjectile(scene: Phaser.Scene, from: Vec2, to: Vec2): void
   scene.tweens.add({ targets: p, x: to.x, y: to.y, duration: 120, onComplete: () => p.destroy() });
 }
 
+// A crescent "sword wave" that flies to the target (Gabriela's itak/bolo slash). The blade
+// is a curved sliver — thickest in the middle, tapering to sharp points — drawn as a faint
+// wide glow under a bright steel core, oriented along its flight path.
+export function spawnSwordWave(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
+  const angle = Math.atan2(to.y - from.y, to.x - from.x);
+  const g = scene.add.graphics({ x: from.x, y: from.y }).setDepth(FX_DEPTH);
+  g.rotation = angle; // the crescent bulges toward +x, i.e. toward the target
+
+  const L = 13; // half-height (tip to tip = 2L)
+  const crescent = (outer: number, inner: number): Phaser.Types.Math.Vector2Like[] => {
+    const steps = 10;
+    const lead: Phaser.Types.Math.Vector2Like[] = [];
+    const trail: Phaser.Types.Math.Vector2Like[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const y = -L + (2 * L * i) / steps;
+      const k = 1 - (y / L) ** 2; // 0 at the tips, 1 in the middle
+      lead.push({ x: outer * k, y });
+      trail.push({ x: inner * k, y });
+    }
+    return lead.concat(trail.reverse());
+  };
+
+  g.fillStyle(0xfff2b0, 0.3);
+  g.fillPoints(crescent(20, 4), true); // soft golden glow
+  g.fillStyle(0xeef4ff, 0.95);
+  g.fillPoints(crescent(15, 7), true); // bright steel core
+  g.lineStyle(2, 0xffffff, 0.9);
+  g.beginPath();
+  for (let i = 0; i <= 10; i++) {
+    const y = -L + (2 * L * i) / 10;
+    const k = 1 - (y / L) ** 2;
+    if (i === 0) g.moveTo(15 * k, y);
+    else g.lineTo(15 * k, y);
+  }
+  g.strokePath(); // crisp leading edge
+
+  scene.tweens.add({ targets: g, x: to.x, y: to.y, duration: 130, ease: 'Quad.Out', onComplete: () => g.destroy() });
+  scene.tweens.add({ targets: g, alpha: 0, duration: 55, delay: 80 });
+}
+
 export function spawnHitPuff(scene: Phaser.Scene, at: Vec2): void {
   const s = scene.add.sprite(at.x, at.y, MANIFEST.fx.hitPuff.key).setDepth(FX_DEPTH);
   s.play(MANIFEST.fx.hitPuff.key);

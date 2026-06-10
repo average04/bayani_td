@@ -14,7 +14,7 @@ import { renderMap } from '../render/mapRenderer';
 import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
 import { StoreView } from '../render/storeView';
-import { spawnProjectile, spawnHitPuff, spawnDeath, spawnSpin, spawnGoldPopup } from '../render/fx';
+import { spawnProjectile, spawnSwordWave, spawnHitPuff, spawnDeath, spawnSpin, spawnGoldPopup } from '../render/fx';
 import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel, buildStorePanel } from '../ui/uiState';
 
@@ -230,6 +230,9 @@ export class GameScene extends Phaser.Scene {
       const hero = HERO_TYPES[shot.heroId];
       if (hero?.spin) {
         spawnSpin(this, shot.from, hero.range);
+      } else if (shot.heroId === 'gabriela') {
+        spawnSwordWave(this, shot.from, shot.to);
+        spawnHitPuff(this, shot.to);
       } else {
         spawnProjectile(this, shot.from, shot.to);
         spawnHitPuff(this, shot.to);

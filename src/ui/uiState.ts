@@ -43,7 +43,7 @@ export function canAfford(gold: number, cost: number): boolean {
 export interface UpgradePathVM {
   name: string;
   level: number; // 0-4
-  next: { name: string; cost: number } | null;
+  next: { name: string; cost: number; desc: string } | null;
   locked: boolean; // has a next level but the cross-path rule blocks it
   canBuy: boolean; // rule-allowed AND affordable
 }
@@ -82,7 +82,7 @@ export function buildUpgradePanel(
     return {
       name: paths[p].name,
       level: levels[p],
-      next: up ? { name: up.name, cost: up.cost } : null,
+      next: up ? { name: up.name, cost: up.cost, desc: up.desc } : null,
       locked: up !== null && !ruleOk,
       canBuy: up !== null && ruleOk && gold >= up.cost,
     };
@@ -114,7 +114,7 @@ export function buildStorePanel(levels: readonly [number, number], gold: number,
     return {
       name: STORE_UPGRADES[p].name,
       level: levels[p],
-      next: up ? { name: up.name, cost: up.cost } : null,
+      next: up ? { name: up.name, cost: up.cost, desc: up.desc } : null,
       locked: up !== null && !ruleOk,
       canBuy: up !== null && ruleOk && gold >= up.cost,
     };

@@ -21,7 +21,7 @@ describe('buildUpgradePanel', () => {
     expect(vm.heroName).toBe('Lapu-Lapu');
     expect(vm.paths[0].name).toBe('Conqueror');
     expect(vm.paths[0].level).toBe(0);
-    expect(vm.paths[0].next).toEqual({ name: 'Sharpened Bolo', cost: 60 });
+    expect(vm.paths[0].next).toEqual({ name: 'Sharpened Bolo', cost: 60, desc: '+12 damage' });
     expect(vm.paths[0].canBuy).toBe(true);
   });
 

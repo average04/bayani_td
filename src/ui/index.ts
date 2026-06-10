@@ -96,6 +96,7 @@ export function createUI(mount: HTMLElement): UI {
   const upgPathName: HTMLElement[] = [];
   const upgPips: HTMLElement[][] = [];
   const upgBtns: HTMLButtonElement[] = [];
+  const upgDesc: HTMLElement[] = [];
   for (let p = 0; p < 2; p++) {
     const row = el('div', 'ui-upg-path', upg);
     const head = el('div', 'ui-upg-head', row);
@@ -107,6 +108,7 @@ export function createUI(mount: HTMLElement): UI {
     const path = p;
     btn.addEventListener('click', () => ui.onUpgrade(path));
     upgBtns[p] = btn;
+    upgDesc[p] = el('div', 'ui-upg-desc', row);
   }
   const upgSell = el<HTMLButtonElement>('button', 'ui-upg-sell', upg);
   upgSell.addEventListener('click', () => ui.onSell());
@@ -119,6 +121,7 @@ export function createUI(mount: HTMLElement): UI {
   const storePathName: HTMLElement[] = [];
   const storePips: HTMLElement[][] = [];
   const storeBtns: HTMLButtonElement[] = [];
+  const storeDesc: HTMLElement[] = [];
   for (let p = 0; p < 2; p++) {
     const row = el('div', 'ui-upg-path', storePanel);
     const head = el('div', 'ui-upg-head', row);
@@ -130,6 +133,7 @@ export function createUI(mount: HTMLElement): UI {
     const path = p;
     btn.addEventListener('click', () => ui.onUpgradeStore(path));
     storeBtns[p] = btn;
+    storeDesc[p] = el('div', 'ui-upg-desc', row);
   }
   const storeSell = el<HTMLButtonElement>('button', 'ui-upg-sell', storePanel);
   storeSell.addEventListener('click', () => ui.onSellStore());
@@ -215,6 +219,7 @@ export function createUI(mount: HTMLElement): UI {
           btn.disabled = !pv.canBuy;
         }
         btn.classList.toggle('locked', pv.locked);
+        storeDesc[p].textContent = pv.next ? pv.next.desc : '';
       });
     },
     setUpgradePanel(vm: UpgradePanelVM | null): void {
@@ -247,6 +252,7 @@ export function createUI(mount: HTMLElement): UI {
           btn.disabled = !pv.canBuy;
         }
         btn.classList.toggle('locked', pv.locked);
+        upgDesc[p].textContent = pv.next ? pv.next.desc : '';
       });
     },
     update(vm: UiState): void {

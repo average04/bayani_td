@@ -4,6 +4,8 @@ import { UPGRADES, nextUpgrade, canUpgradePath, effectiveStats, type TowerStats 
 import { HERO_TYPES } from '../game/config/heroes';
 import { STORE, STORE_UPGRADES, nextStoreUpgrade, effectiveStoreIncome } from '../game/config/store';
 import type { TargetMode } from '../game/entities/tower';
+import { SEND_TABLE } from '../game/config/sends';
+import { ENEMY_TYPES } from '../game/config/enemies';
 
 export interface WorldLike {
   lives: number;
@@ -25,6 +27,21 @@ export interface HeroVM {
   selected: boolean;
 }
 
+export interface OpponentVM {
+  nickname: string;
+  lives: number;
+  wave: number;
+}
+
+export interface SendVM {
+  id: string;
+  name: string;
+  cost: number;
+  unlockWave: number;
+  unlocked: boolean;
+  affordable: boolean;
+}
+
 export interface UiState {
   lives: number;
   gold: number;
@@ -38,6 +55,8 @@ export interface UiState {
   storeMaxed: boolean;
   selectedHeroId: string | null;
   heroes: HeroVM[];
+  opponent?: OpponentVM | null;
+  sends?: SendVM[];
 }
 
 export function canAfford(gold: number, cost: number): boolean {
@@ -136,6 +155,7 @@ export function buildUiState(
   bestWave: number,
   heroOrder: string[],
   heroTypes: Record<string, HeroType>,
+  mp?: { opponent: OpponentVM | null },
 ): UiState {
   return {
     lives: world.lives,
@@ -159,5 +179,16 @@ export function buildUiState(
         selected: id === selectedHeroId,
       };
     }),
+    opponent: mp ? mp.opponent : undefined,
+    sends: mp
+      ? SEND_TABLE.map((o) => ({
+          id: o.enemyTypeId,
+          name: ENEMY_TYPES[o.enemyTypeId]?.name ?? o.enemyTypeId,
+          cost: o.cost,
+          unlockWave: o.unlockWave,
+          unlocked: world.waveNumber >= o.unlockWave,
+          affordable: world.gold >= o.cost,
+        }))
+      : undefined,
   };
 }

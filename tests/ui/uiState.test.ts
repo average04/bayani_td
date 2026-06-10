@@ -38,5 +38,19 @@ describe('uiState', () => {
       { id: 'a', name: 'A', cost: 100, affordable: false, selected: false },
       { id: 'b', name: 'B', cost: 50, affordable: true, selected: true },
     ]);
+    expect(vm.opponent).toBeUndefined();
+    expect(vm.sends).toBeUndefined();
+  });
+
+  it('includes opponent + send VMs when multiplayer context is given', () => {
+    const vm = buildUiState(world, null, 0, order, heroTypes, {
+      opponent: { nickname: 'Rival', lives: 12, wave: 4 },
+    });
+    expect(vm.opponent).toEqual({ nickname: 'Rival', lives: 12, wave: 4 });
+    expect(vm.sends!.length).toBeGreaterThan(0);
+    const tiyanak = vm.sends!.find((s) => s.id === 'tiyanak')!;
+    const kapre = vm.sends!.find((s) => s.id === 'kapre')!;
+    expect(tiyanak).toMatchObject({ cost: 25, unlocked: true, affordable: true });
+    expect(kapre).toMatchObject({ unlocked: false });
   });
 });

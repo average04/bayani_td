@@ -15,6 +15,8 @@ export interface UI {
   onSellStore: () => void;
   onUpgradeStore: (path: number) => void;
   onCycleTarget: () => void;
+  onSend: (enemyTypeId: string) => void;
+  onConcede: () => void;
 }
 
 let instance: UI | null = null;
@@ -67,6 +69,12 @@ export function createUI(mount: HTMLElement): UI {
   el('span', 'ui-lab', bestBox).textContent = 'Best';
   const bestV = el('b', '', bestBox);
 
+  const oppStat = el('div', 'ui-stat ui-opp', top);
+  oppStat.style.display = 'none';
+  const oppBox = el('div', 'ui-statval', oppStat);
+  el('span', 'ui-lab', oppBox).textContent = 'Rival';
+  const oppV = el('b', '', oppBox);
+
   // stage (Phaser mounts here) + overlay
   const stage = el('div', 'ui-stage', mount);
   stage.id = 'stage';
@@ -79,6 +87,16 @@ export function createUI(mount: HTMLElement): UI {
   const bossBanner = el('div', 'ui-boss', overlay);
   bossBanner.textContent = 'BAKUNAWA RISES';
   bossBanner.style.display = 'none';
+
+  // multiplayer send panel: spend gold to attack the rival
+  const sendPanel = el('div', 'ui-sends', overlay);
+  sendPanel.style.display = 'none';
+  el('div', 'ui-sends-title', sendPanel).textContent = 'SEND';
+  const sendBtns = new Map<string, HTMLButtonElement>();
+  const sendBox = el('div', 'ui-sends-list', sendPanel);
+  const concedeBtn = el<HTMLButtonElement>('button', 'ui-sends-concede', sendPanel);
+  concedeBtn.textContent = 'CONCEDE';
+  concedeBtn.addEventListener('click', () => ui.onConcede());
 
   const tooltip = el('div', 'ui-tooltip', overlay);
   tooltip.style.display = 'none';
@@ -216,6 +234,8 @@ export function createUI(mount: HTMLElement): UI {
     onSellStore: () => {},
     onUpgradeStore: () => {},
     onCycleTarget: () => {},
+    onSend: () => {},
+    onConcede: () => {},
     setStorePanel(vm: StorePanelVM | null): void {
       if (!vm) {
         storePanel.style.display = 'none';
@@ -312,6 +332,28 @@ export function createUI(mount: HTMLElement): UI {
         endSub.textContent = Number.isFinite(vm.totalWaves)
           ? `Reached wave ${vm.wave} / ${vm.totalWaves}`
           : `Reached wave ${vm.wave} · Best ${Math.max(vm.bestWave, vm.wave)}`;
+      }
+      if (vm.opponent) {
+        oppStat.style.display = 'flex';
+        oppV.textContent = `${vm.opponent.nickname} · ♥${vm.opponent.lives} · W${vm.opponent.wave}`;
+      } else {
+        oppStat.style.display = 'none';
+      }
+      if (vm.sends) {
+        sendPanel.style.display = 'flex';
+        for (const s of vm.sends) {
+          let btn = sendBtns.get(s.id);
+          if (!btn) {
+            btn = el<HTMLButtonElement>('button', 'ui-send-btn', sendBox);
+            const id = s.id;
+            btn.addEventListener('click', () => ui.onSend(id));
+            sendBtns.set(s.id, btn);
+          }
+          btn.textContent = s.unlocked ? `${s.name} $${s.cost}` : `${s.name} — wave ${s.unlockWave}`;
+          btn.disabled = !s.unlocked || !s.affordable;
+        }
+      } else {
+        sendPanel.style.display = 'none';
       }
     },
   };

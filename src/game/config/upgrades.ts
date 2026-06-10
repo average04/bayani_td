@@ -77,7 +77,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Bernardo — splash strongman (base: dmg 15, range 100, rate 1.2, splash 50).
+  // Bernardo — splash strongman (base: dmg 18, range 100, rate 1.2, splash 50).
   bernardo: [
     {
       name: 'Earthshaker',

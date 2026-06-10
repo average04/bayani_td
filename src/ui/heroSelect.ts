@@ -24,13 +24,17 @@ export function showHeroSelect(cb: HeroSelectCallbacks): void {
 
   const root = document.createElement('div');
   root.className = 'ui-select';
+  // the inner wrapper centers via margin:auto, which degrades to scrolling (not clipping)
+  // when the viewport is shorter than the content
   root.innerHTML = `
-    <h1 class="ui-select-title">Choose your Bayani</h1>
-    <p class="ui-select-sub">Bring <b>${LOADOUT_SIZE}</b> hero cards into battle</p>
-    <div class="ui-select-grid"></div>
-    <div class="ui-select-foot">
-      <span class="ui-select-count"></span>
-      <button class="ui-select-start">TO BATTLE</button>
+    <div class="ui-select-inner">
+      <h1 class="ui-select-title">Choose your Bayani</h1>
+      <p class="ui-select-sub">Bring <b>${LOADOUT_SIZE}</b> hero cards into battle</p>
+      <div class="ui-select-grid"></div>
+      <div class="ui-select-foot">
+        <span class="ui-select-count"></span>
+        <button class="ui-select-start">TO BATTLE</button>
+      </div>
     </div>
   `;
   const grid = root.querySelector<HTMLElement>('.ui-select-grid')!;

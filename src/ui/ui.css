@@ -251,16 +251,20 @@ body::after {
 /* ---- hero card select screen ---- */
 .ui-select {
   position: fixed; inset: 0; z-index: 100; user-select: none; overflow: auto;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  display: flex;
   font-family: 'Trebuchet MS', system-ui, sans-serif;
   background: radial-gradient(circle at 50% 28%, #2c4030, #0d140e 75%);
-  color: #f6e6bd; padding: 24px 12px; box-sizing: border-box;
+  color: #f6e6bd;
 }
-.ui-select-title { margin: 0; font-size: 40px; letter-spacing: 2px; color: #f0d999; text-shadow: 0 3px 0 #2c1f0f, 0 0 18px rgba(240,217,153,.3); }
-.ui-select-sub { margin: 2px 0 20px; color: #cdb98a; letter-spacing: .5px; }
+.ui-select-inner {
+  margin: auto; padding: 18px 12px; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.ui-select-title { margin: 0; font-size: 34px; letter-spacing: 2px; color: #f0d999; text-shadow: 0 3px 0 #2c1f0f, 0 0 18px rgba(240,217,153,.3); }
+.ui-select-sub { margin: 2px 0 14px; color: #cdb98a; letter-spacing: .5px; }
 .ui-select-sub b { color: #ffd76a; }
 .ui-select-grid {
-  display: grid; grid-template-columns: repeat(3, 188px); gap: 16px; justify-content: center;
+  display: grid; grid-template-columns: repeat(4, 176px); gap: 14px; justify-content: center;
 }
 .ui-card {
   position: relative; display: flex; flex-direction: column; gap: 0; overflow: hidden;
@@ -277,7 +281,7 @@ body::after {
 .ui-card.dim { filter: grayscale(.6) brightness(.6); }
 .ui-card.dim:hover { transform: none; }
 .ui-card-art {
-  display: block; height: 118px;
+  display: block; height: 104px;
   background-size: cover; background-position: center 20%; background-color: #caa24a22;
   border-bottom: 2px solid #3a2914;
 }
@@ -300,7 +304,7 @@ body::after {
   border: solid #2c1f0f; border-width: 0 3px 3px 0; transform: rotate(45deg);
 }
 .ui-card.sel .ui-card-check { opacity: 1; transform: scale(1); }
-.ui-select-foot { display: flex; align-items: center; gap: 18px; margin-top: 22px; }
+.ui-select-foot { display: flex; align-items: center; gap: 18px; margin-top: 16px; }
 .ui-select-count { font-weight: 800; letter-spacing: 1px; color: #cdb98a; }
 .ui-select-start {
   padding: 12px 34px; cursor: pointer; color: #2c1f0f; font-weight: 800; font-size: 16px; letter-spacing: 1px;

@@ -77,6 +77,8 @@ export class GameScene extends Phaser.Scene {
     });
     this.bestWave = loadSave().bestWave;
     this.endHandled = false;
+    this.statusTimer = 0;
+    this.forfeitTimer = null;
     this.enemyViews.clear();
     this.towerViews.clear();
     this.storeViews.clear();
@@ -104,7 +106,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.input.keyboard?.on('keydown-SPACE', () => this.world.startNextWave());
     this.input.keyboard?.on('keydown-R', () => {
-      if (this.world.status !== 'playing') this.scene.restart();
+      this.requestRestart();
     });
     // Esc / right-click cancel the in-progress deployment
     this.input.keyboard?.on('keydown-ESC', () => {
@@ -164,22 +166,25 @@ export class GameScene extends Phaser.Scene {
       if (this.selectedStore) this.world.upgradeStore(this.selectedStore, path);
     };
     ui.onCycleTarget = () => this.selectedTower?.cycleTarget();
-    ui.onRestart = () => {
-      if (this.world.status === 'playing') return;
-      if (this.mp) {
-        this.wantRematch = true;
-        this.mp.transport.emit('rematch');
-        this.maybeRematch();
-      } else {
-        this.scene.restart();
-      }
-    };
+    ui.onRestart = () => this.requestRestart();
     ui.onHome = () => {
       if (this.world.status !== 'playing') location.reload();
     };
 
     this.mp = getSession();
     if (this.mp) this.initMultiplayer(this.mp);
+  }
+
+  /** Restart for solo; rematch request (both players must agree) for multiplayer. */
+  private requestRestart(): void {
+    if (this.world.status === 'playing') return;
+    if (this.mp) {
+      this.wantRematch = true;
+      this.mp.transport.emit('rematch');
+      this.maybeRematch();
+    } else {
+      this.scene.restart();
+    }
   }
 
   private initMultiplayer(mp: MatchSession): void {
@@ -206,6 +211,7 @@ export class GameScene extends Phaser.Scene {
     });
     const ui = getUI();
     ui.onSend = (enemyTypeId) => {
+      if (this.world.status !== 'playing') return;
       const option = SEND_TABLE.find((o) => o.enemyTypeId === enemyTypeId);
       if (option && this.world.buySend(option)) {
         mp.transport.emit('send', { enemyTypeId, count: 1 });

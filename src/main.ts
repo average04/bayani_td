@@ -75,10 +75,10 @@ function readyThenStart(
   };
   readyState.onPeerReady = maybeStart;
   session.transport.on('peerLeave', () => {
-    if (!started) {
-      overlay.textContent = 'Rival left. Returning home…';
-      setTimeout(() => location.reload(), 1500);
-    }
+    // active until GameScene takes over the handler; a leave during card-select
+    // or the countdown aborts the match outright
+    overlay.textContent = 'Rival left. Returning home…';
+    setTimeout(() => location.reload(), 1500);
   });
   session.transport.emit('ready');
   maybeStart();

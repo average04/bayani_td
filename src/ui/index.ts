@@ -335,7 +335,7 @@ export function createUI(mount: HTMLElement): UI {
       }
       if (vm.opponent) {
         oppStat.style.display = 'flex';
-        oppV.textContent = `${vm.opponent.nickname} · ♥${vm.opponent.lives} · W${vm.opponent.wave}`;
+        oppV.textContent = `${vm.opponent.nickname} · ${vm.opponent.lives} HP · W${vm.opponent.wave}`;
       } else {
         oppStat.style.display = 'none';
       }
@@ -350,8 +350,9 @@ export function createUI(mount: HTMLElement): UI {
             sendBtns.set(s.id, btn);
           }
           btn.textContent = s.unlocked ? `${s.name} $${s.cost}` : `${s.name} — wave ${s.unlockWave}`;
-          btn.disabled = !s.unlocked || !s.affordable;
+          btn.disabled = vm.status !== 'playing' || !s.unlocked || !s.affordable;
         }
+        concedeBtn.disabled = vm.status !== 'playing';
       } else {
         sendPanel.style.display = 'none';
       }

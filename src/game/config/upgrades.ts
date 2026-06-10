@@ -106,19 +106,22 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
   // (base: dmg 12, range 130, rate 1.4, slow 0.5/1.5s, single target).
   diwata: [
     {
+      // L1-2: pure slow. L3 unlocks the AoE frost (splash). Cross-path rule means only one
+      // path can pass L2, so Diwata ends up with splash OR root, never both.
       name: 'Deep Chill',
       levels: [
-        { name: 'Frost Touch', cost: 60, desc: 'Slow 0.4x / 1.5s, splash r45', delta: { slow: { factor: 0.4, duration: 1.5 }, splashRadius: 45, range: 10 } },
-        { name: 'Frost Nova', cost: 130, desc: 'Slow 0.32x / 2s, splash r65', delta: { slow: { factor: 0.32, duration: 2 }, splashRadius: 20 } },
-        { name: 'Bitter Cold', cost: 240, desc: 'Slow 0.22x / 2.5s, splash r85, +15 range', delta: { slow: { factor: 0.22, duration: 2.5 }, splashRadius: 20, range: 15 } },
-        { name: 'Eternal Winter', cost: 430, desc: 'Slow 0.12x / 3s, splash r110', delta: { slow: { factor: 0.12, duration: 3 }, splashRadius: 25 } },
+        { name: 'Chilling Aura', cost: 60, desc: 'Slow 0.4x / 1.5s, +15 range', delta: { slow: { factor: 0.4, duration: 1.5 }, range: 15 } },
+        { name: 'Deep Freeze', cost: 130, desc: 'Slow 0.3x / 2s, +10 range', delta: { slow: { factor: 0.3, duration: 2 }, range: 10 } },
+        { name: 'Frost Nova', cost: 240, desc: 'Slow 0.22x / 2.5s, AoE splash r70', delta: { slow: { factor: 0.22, duration: 2.5 }, splashRadius: 70, range: 15 } },
+        { name: 'Eternal Winter', cost: 430, desc: 'Slow 0.12x / 3s, AoE splash r110', delta: { slow: { factor: 0.12, duration: 3 }, splashRadius: 40 } },
       ],
     },
     {
+      // L1-2: pure damage/speed. L3 unlocks roots (chance to immobilize).
       name: "Nature's Wrath",
       levels: [
-        { name: 'Tangling Vines', cost: 55, desc: '+5 dmg, 15% root 0.6s', delta: { damage: 5, root: { chance: 0.15, duration: 0.6 } } },
-        { name: 'Snare', cost: 120, desc: '+1.0 atk speed, 25% root 0.8s', delta: { fireRate: 1.0, root: { chance: 0.25, duration: 0.8 } } },
+        { name: 'Thorn Lash', cost: 55, desc: '+5 damage', delta: { damage: 5 } },
+        { name: 'Quick Spirits', cost: 120, desc: '+1.0 attack speed', delta: { fireRate: 1.0 } },
         { name: 'Gnarled Roots', cost: 220, desc: '+10 dmg, 40% root 1.0s', delta: { damage: 10, root: { chance: 0.4, duration: 1.0 } } },
         { name: "Forest's Grasp", cost: 400, desc: '+22 dmg, 60% root 1.2s', delta: { damage: 22, root: { chance: 0.6, duration: 1.2 } } },
       ],

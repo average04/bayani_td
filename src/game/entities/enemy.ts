@@ -3,6 +3,7 @@ import type { Vec2 } from '../geometry';
 
 export class Enemy {
   readonly type: EnemyType;
+  readonly maxHp: number; // effective max HP (base scaled by wave); used for the health bar & regen cap
   hp: number;
   pos: Vec2;
   pathIndex: number;
@@ -13,9 +14,10 @@ export class Enemy {
   poisonTimer = 0;
   private readonly path: Vec2[];
 
-  constructor(type: EnemyType, path: Vec2[]) {
+  constructor(type: EnemyType, path: Vec2[], maxHp: number = type.maxHp) {
     this.type = type;
-    this.hp = type.maxHp;
+    this.maxHp = maxHp;
+    this.hp = maxHp;
     this.path = path;
     this.pos = { x: path[0].x, y: path[0].y };
     this.pathIndex = 1;
@@ -32,7 +34,7 @@ export class Enemy {
     // regen
     const regen = this.type.regenPerSec ?? 0;
     if (regen > 0 && this.hp > 0 && !this.reachedEnd) {
-      this.hp = Math.min(this.type.maxHp, this.hp + regen * dt);
+      this.hp = Math.min(this.maxHp, this.hp + regen * dt);
     }
 
     if (this.reachedEnd) return;

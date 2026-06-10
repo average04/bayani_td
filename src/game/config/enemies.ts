@@ -16,3 +16,12 @@ export const ENEMY_TYPES: Record<string, EnemyType> = {
   tiyanak: { id: 'tiyanak', name: 'Tiyanak', maxHp: 18, speed: 130, reward: 4, leakDamage: 1 },
   manananggal: { id: 'manananggal', name: 'Manananggal', maxHp: 70, speed: 70, reward: 16, leakDamage: 1, regenPerSec: 6 },
 };
+
+// Enemies get tankier every wave (gold rewards stay fixed). Linear ramp: wave 1 = base HP,
+// and each wave thereafter adds HP_GROWTH_PER_WAVE of the base. e.g. at +10%/wave a 60-HP
+// Aswang is 60 at wave 1, 114 at wave 10, 234 at wave 30.
+export const HP_GROWTH_PER_WAVE = 0.1;
+
+export function scaledMaxHp(baseMaxHp: number, waveNumber: number): number {
+  return Math.round(baseMaxHp * (1 + HP_GROWTH_PER_WAVE * Math.max(0, waveNumber - 1)));
+}

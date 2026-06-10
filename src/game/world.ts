@@ -1,5 +1,5 @@
 import type { LevelConfig } from './config/levels';
-import type { EnemyType } from './config/enemies';
+import { scaledMaxHp, type EnemyType } from './config/enemies';
 import type { HeroType } from './config/heroes';
 import type { WaveConfig } from './config/waves';
 import { distance, type Vec2 } from './geometry';
@@ -238,7 +238,7 @@ export class World {
     // 1. spawn
     for (const id of this.waveManager.update(dt)) {
       const type = this.enemyTypes[id];
-      if (type) this.enemies.push(new Enemy(type, this.level.path));
+      if (type) this.enemies.push(new Enemy(type, this.level.path, scaledMaxHp(type.maxHp, this.waveNumber)));
     }
 
     // 2. move enemies

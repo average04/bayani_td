@@ -287,7 +287,7 @@ export class GameScene extends Phaser.Scene {
     const g = this.hpBars;
     g.clear();
     for (const e of this.world.enemies) {
-      const frac = Math.max(0, e.hp / e.type.maxHp);
+      const frac = Math.max(0, e.hp / e.maxHp);
       g.fillStyle(0x000000, 0.6);
       g.fillRect(e.pos.x - 11, e.pos.y - 22, 22, 4);
       g.fillStyle(0x2ecc71, 1);

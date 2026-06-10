@@ -80,6 +80,7 @@ export class World {
   private readonly occupiedCells = new Set<string>();
   private nextWaveTimer = 0;
   private pendingEchoes: PendingEcho[] = [];
+  private incomingSends: { enemyTypeId: string; timer: number }[] = [];
   private lastBonusWave = 0; // last wave number whose clear bonus has been paid
 
   constructor(cfg: WorldConfig) {
@@ -134,6 +135,14 @@ export class World {
     if (!this.canStartNextWave()) return false;
     this.waveManager.startNextWave();
     return true;
+  }
+
+  /** Multiplayer: opponent sent extra monsters. They enter staggered, scaled to OUR wave. */
+  queueIncomingSend(enemyTypeId: string, count: number): void {
+    if (!this.enemyTypes[enemyTypeId]) return;
+    for (let i = 0; i < count; i++) {
+      this.incomingSends.push({ enemyTypeId, timer: 0.4 * (i + 1) });
+    }
   }
 
   canPlaceAt(col: number, row: number): boolean {
@@ -330,6 +339,23 @@ export class World {
     for (const id of this.waveManager.update(dt)) {
       const type = this.enemyTypes[id];
       if (type) this.enemies.push(new Enemy(type, this.level.path, scaledMaxHp(type.maxHp, this.waveNumber)));
+    }
+
+    // 1.5 sent monsters arrive (multiplayer)
+    if (this.incomingSends.length > 0) {
+      const still: { enemyTypeId: string; timer: number }[] = [];
+      for (const s of this.incomingSends) {
+        s.timer -= dt;
+        if (s.timer > 0) {
+          still.push(s);
+          continue;
+        }
+        const type = this.enemyTypes[s.enemyTypeId];
+        const e = new Enemy(type, this.level.path, scaledMaxHp(type.maxHp, Math.max(1, this.waveNumber)));
+        e.sent = true;
+        this.enemies.push(e);
+      }
+      this.incomingSends = still;
     }
 
     // 2. move enemies

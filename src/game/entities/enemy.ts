@@ -17,6 +17,7 @@ export class Enemy {
   ampTimer = 0;
   // carried so the world can spread this enemy's poison when it dies (Contagion)
   contagion: { radius: number; maxTargets: number; minDuration: number } | null = null;
+  sent = false; // arrived via an opponent's send (multiplayer) — gets a visual marker
   private readonly path: Vec2[];
 
   constructor(type: EnemyType, path: Vec2[], maxHp: number = type.maxHp) {

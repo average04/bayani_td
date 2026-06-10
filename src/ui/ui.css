@@ -178,7 +178,7 @@ body { display: flex; justify-content: center; padding: 16px 0; }
   box-shadow: 0 6px 14px rgba(0,0,0,.45);
 }
 .ui-store-income { font-size: 12px; margin: 6px 0 10px; color: #f0d999; font-weight: 700; }
-.ui-portrait-store { background: linear-gradient(#a83f2c 0 30%, #caa24a 30% 44%, #e9d6a3 44% 100%); }
+.ui-portrait-store { background-image: url(/assets/ui/portrait-store.png); background-size: contain; background-repeat: no-repeat; background-position: center 42%; }
 
 /* ---- home / title screen ---- */
 .ui-home {

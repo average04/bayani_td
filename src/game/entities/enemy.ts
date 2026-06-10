@@ -2,6 +2,8 @@ import type { EnemyType } from '../config/enemies';
 import type { Vec2 } from '../geometry';
 
 export class Enemy {
+  private static nextSeq = 1;
+  readonly seq = Enemy.nextSeq++; // stable id for view-layer matching (e.g. rival board snapshots)
   readonly type: EnemyType;
   readonly maxHp: number; // effective max HP (base scaled by wave); used for the health bar & regen cap
   hp: number;

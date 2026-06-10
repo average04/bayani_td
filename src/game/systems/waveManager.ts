@@ -45,6 +45,12 @@ export class WaveManager {
     return this.hasMoreWaves && !this.isSpawning;
   }
 
+  /** Seconds the given (1-based) wave spends spawning; groups spawn sequentially. */
+  spawnDuration(waveNumber: number): number {
+    const w = this.waveAt(waveNumber - 1);
+    return w.spawns.reduce((s, sp) => s + sp.count * sp.interval, 0);
+  }
+
   private waveAt(index: number): WaveConfig {
     if (index < this.waves.length) return this.waves[index];
     return this.generate!(index + 1); // generator takes a 1-based wave number

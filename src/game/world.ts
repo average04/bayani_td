@@ -16,6 +16,10 @@ import { canUpgradePath, nextUpgrade, type TowerStats } from './config/upgrades'
 import { canSend, type SendOption } from './config/sends';
 
 const AUTO_START_DELAY = 3; // seconds after a wave is cleared before the next auto-starts
+// Multiplayer timed waves: pause between one wave's last spawn and the next wave's start.
+// Waves NEVER wait for the field to clear, so both players' schedules stay in lockstep.
+const MP_WAVE_GAP = 8;
+const MP_FIRST_WAVE_AT = 3; // seconds after the match clock starts
 // Gold awarded when a wave is fully cleared: base + per-wave. Keeps the deep-wave economy
 // alive now that per-kill bounties are intentionally small.
 const WAVE_BONUS_BASE = 10;
@@ -64,6 +68,9 @@ export interface WorldConfig {
   heroTypes: Record<string, HeroType>;
   waves: WaveConfig[];
   generateWave?: (waveNumber: number) => WaveConfig; // endless mode when provided
+  // multiplayer: waves start on a wall-clock schedule anchored at epochMs (shared by both
+  // players), regardless of whether the field is clear. `now` is injectable for tests.
+  timedWaves?: { epochMs: number; now?: () => number };
 }
 
 export class World {
@@ -83,6 +90,8 @@ export class World {
   private pendingEchoes: PendingEcho[] = [];
   private incomingSends: { enemyTypeId: string; timer: number }[] = [];
   private lastBonusWave = 0; // last wave number whose clear bonus has been paid
+  private readonly timedWaves?: { epochMs: number; now: () => number };
+  private nextTimedStartS = MP_FIRST_WAVE_AT; // match-clock second the next wave starts at
 
   constructor(cfg: WorldConfig) {
     this.level = cfg.level;
@@ -92,6 +101,9 @@ export class World {
     this.state = new GameState(cfg.level.startingLives);
     this.waveManager = new WaveManager(cfg.waves, cfg.generateWave);
     this.blockedCells = pathCells(cfg.level);
+    if (cfg.timedWaves) {
+      this.timedWaves = { epochMs: cfg.timedWaves.epochMs, now: cfg.timedWaves.now ?? Date.now };
+    }
   }
 
   get gold(): number {
@@ -111,6 +123,11 @@ export class World {
   }
   // seconds until the next wave auto-starts, or null when a wave is in progress / the game is over
   get nextWaveIn(): number | null {
+    if (this.timedWaves) {
+      if (this.state.status !== 'playing' || this.waveManager.isSpawning) return null;
+      const elapsed = (this.timedWaves.now() - this.timedWaves.epochMs) / 1000;
+      return Math.max(0, this.nextTimedStartS - elapsed);
+    }
     return this.canStartNextWave() ? Math.max(0, AUTO_START_DELAY - this.nextWaveTimer) : null;
   }
   // total gold/sec the stores generate (per-second passive drip + averaged tick payouts)
@@ -133,6 +150,7 @@ export class World {
   }
 
   startNextWave(): boolean {
+    if (this.timedWaves) return false; // multiplayer waves run on the shared clock only
     if (!this.canStartNextWave()) return false;
     this.waveManager.startNextWave();
     return true;
@@ -486,13 +504,11 @@ export class World {
     // wave-clear bonus, paid once per cleared wave (all spawned, none left on the field).
     // Queued multiplayer sends intentionally do NOT delay this (or the auto-start below):
     // sends are additive pressure, not part of the wave.
+    // Timed (multiplayer) mode pays when the wave finishes SPAWNING — waves overlap there,
+    // so "field fully clear" would almost never trigger.
     const wave = this.waveManager.currentWaveNumber;
-    if (
-      wave > this.lastBonusWave &&
-      this.enemies.length === 0 &&
-      !this.waveManager.isSpawning &&
-      this.state.status === 'playing'
-    ) {
+    const waveDone = this.timedWaves ? !this.waveManager.isSpawning : this.enemies.length === 0 && !this.waveManager.isSpawning;
+    if (wave > this.lastBonusWave && waveDone && this.state.status === 'playing') {
       this.lastBonusWave = wave;
       const bonus = WAVE_BONUS_BASE + WAVE_BONUS_PER_WAVE * wave;
       this.economy.earn(bonus);
@@ -500,11 +516,22 @@ export class World {
       this.events.gold.push({ pos: { x: base.x, y: base.y }, amount: bonus });
     }
 
-    // auto-start the next wave after a short delay once the current one is cleared
-    if (this.canStartNextWave()) {
+    if (this.timedWaves) {
+      // multiplayer: waves start on the shared match clock, clear or not — both boards stay in step
+      const elapsed = (this.timedWaves.now() - this.timedWaves.epochMs) / 1000;
+      while (
+        elapsed >= this.nextTimedStartS &&
+        this.waveManager.hasMoreWaves &&
+        !this.waveManager.isSpawning
+      ) {
+        this.waveManager.startNextWave();
+        this.nextTimedStartS += this.waveManager.spawnDuration(this.waveNumber) + MP_WAVE_GAP;
+      }
+    } else if (this.canStartNextWave()) {
+      // solo: auto-start a short delay after the field is cleared
       this.nextWaveTimer += dt;
       if (this.nextWaveTimer >= AUTO_START_DELAY) {
-        this.startNextWave();
+        this.waveManager.startNextWave();
         this.nextWaveTimer = 0;
       }
     } else {

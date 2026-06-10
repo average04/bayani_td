@@ -34,12 +34,20 @@ import {
 import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel, buildStorePanel } from '../ui/uiState';
 import { getSession, type MatchSession } from '../net/session';
+import type { TowerSnap, EnemySnap } from '../net/types';
 import { finishMatch } from '../net/matchService';
 import { SEND_TABLE } from '../game/config/sends';
 import type { OpponentVM } from '../ui/uiState';
 
 const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR'];
 const STORE_KEY = 'FIVE';
+
+// a received rival-board snapshot, timestamped on arrival for interpolation
+interface RivalSnap {
+  at: number;
+  towers: TowerSnap[];
+  enemies: EnemySnap[];
+}
 
 export class GameScene extends Phaser.Scene {
   private world!: World;
@@ -59,6 +67,8 @@ export class GameScene extends Phaser.Scene {
   private forfeitTimer: number | null = null; // seconds until opponent forfeits, when absent
   private wantRematch = false;
   private peerWantsRematch = false;
+  private rivalPrev: RivalSnap | null = null;
+  private rivalCur: RivalSnap | null = null;
   private enemyViews = new Map<Enemy, EnemyView>();
   private towerViews = new Map<Tower, TowerView>();
   private storeViews = new Map<Store, StoreView>();
@@ -68,12 +78,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.mp = getSession();
     this.world = new World({
       level: LEVEL_ONE,
       enemyTypes: ENEMY_TYPES,
       heroTypes: HERO_TYPES,
       waves: WAVES,
       generateWave, // endless: keep escalating past the authored waves
+      // multiplayer: waves run on the match clock (both clients boot ~simultaneously
+      // after the synced countdown, and again together on rematch)
+      timedWaves: getSession() ? { epochMs: Date.now() } : undefined,
     });
     this.bestWave = loadSave().bestWave;
     this.endHandled = false;
@@ -171,7 +185,6 @@ export class GameScene extends Phaser.Scene {
       if (this.world.status !== 'playing') location.reload();
     };
 
-    this.mp = getSession();
     if (this.mp) this.initMultiplayer(this.mp);
   }
 
@@ -191,11 +204,18 @@ export class GameScene extends Phaser.Scene {
     this.opponent = { nickname: mp.opponentNickname, lives: 20, wave: 0 };
     this.wantRematch = false;
     this.peerWantsRematch = false;
+    this.rivalPrev = null;
+    this.rivalCur = null;
     mp.transport.on('send', (e) => this.world.queueIncomingSend(e.enemyTypeId, e.count));
     mp.transport.on('status', (e) => {
       if (this.opponent) {
         this.opponent.lives = e.lives;
         this.opponent.wave = e.wave;
+      }
+      // keep the last two board snapshots so the mini-view can interpolate between them
+      if (e.towers && e.enemies) {
+        this.rivalPrev = this.rivalCur;
+        this.rivalCur = { at: performance.now(), towers: e.towers, enemies: e.enemies };
       }
     });
     mp.transport.on('defeat', () => this.winMatch());
@@ -226,6 +246,23 @@ export class GameScene extends Phaser.Scene {
     if (!this.mp || this.world.status !== 'playing') return;
     this.world.state.win();
     void finishMatch(this.mp.matchId, this.mp.myId);
+  }
+
+  // Blend the last two rival snapshots (~0.5s apart) so the mini-view moves smoothly.
+  private interpolatedRivalBoard(): { towers: TowerSnap[]; enemies: EnemySnap[] } | null {
+    const cur = this.rivalCur;
+    if (!cur) return null;
+    const prev = this.rivalPrev;
+    if (!prev) return { towers: cur.towers, enemies: cur.enemies };
+    const span = Math.max(1, cur.at - prev.at);
+    const a = Math.min(1, (performance.now() - cur.at) / span);
+    const prevById = new Map(prev.enemies.map((e) => [e.id, e]));
+    const enemies = cur.enemies.map((e) => {
+      const p = prevById.get(e.id);
+      if (!p) return e;
+      return { ...e, x: p.x + (e.x - p.x) * a, y: p.y + (e.y - p.y) * a };
+    });
+    return { towers: cur.towers, enemies };
   }
 
   private maybeRematch(): void {
@@ -300,6 +337,19 @@ export class GameScene extends Phaser.Scene {
           wave: this.world.waveNumber,
           lives: this.world.lives,
           gold: this.world.gold,
+          // compact board snapshot for the rival mini-view
+          towers: this.world.towers.map((t) => ({
+            heroId: t.type.id,
+            x: Math.round(t.pos.x),
+            y: Math.round(t.pos.y),
+          })),
+          enemies: this.world.enemies.map((e) => ({
+            id: e.seq,
+            typeId: e.type.id,
+            x: Math.round(e.pos.x),
+            y: Math.round(e.pos.y),
+            hp: Math.max(0, Math.round((e.hp / e.maxHp) * 100) / 100),
+          })),
         });
       }
       if (this.forfeitTimer !== null) {
@@ -310,6 +360,7 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
+    if (this.mp) getUI().setRivalBoard(this.interpolatedRivalBoard());
     this.consumeEvents();
     this.syncViews();
     this.drawAuras();

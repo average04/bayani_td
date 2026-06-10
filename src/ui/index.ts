@@ -1,13 +1,16 @@
 import { HERO_TYPES, type HeroType } from '../game/config/heroes';
 import { getLoadout } from '../game/config/loadout';
 import { STORE } from '../game/config/store';
+import { LEVEL_ONE } from '../game/config/levels';
 import { getSession } from '../net/session';
+import type { TowerSnap, EnemySnap } from '../net/types';
 import type { UiState, UpgradePanelVM, StorePanelVM } from './uiState';
 
 export interface UI {
   update(vm: UiState): void;
   setUpgradePanel(vm: UpgradePanelVM | null): void;
   setStorePanel(vm: StorePanelVM | null): void;
+  setRivalBoard(board: { towers: TowerSnap[]; enemies: EnemySnap[] } | null): void;
   onSelectHero: (id: string) => void;
   onRestart: () => void;
   onHome: () => void;
@@ -48,7 +51,9 @@ function effectText(h: HeroType): string {
 export function createUI(mount: HTMLElement): UI {
   mount.innerHTML = '';
 
-  // main column (HUD / stage / build bar); the multiplayer send sidebar sits beside it
+  // layout: [details sidebar] [HUD / stage / build bar] [rival + send sidebar (MP)]
+  // — panels live BESIDE the map, never over it
+  const left = el('div', 'ui-left', mount);
   const col = el('div', 'ui-col', mount);
 
   // top HUD bar
@@ -92,10 +97,15 @@ export function createUI(mount: HTMLElement): UI {
   bossBanner.textContent = 'BAKUNAWA RISES';
   bossBanner.style.display = 'none';
 
-  // multiplayer send sidebar: sits BESIDE the map (never over it), Bloons-style.
+  // multiplayer sidebar: rival mini-view + send menu, BESIDE the map (never over it).
   // Shown at build time in MP so the fit-to-viewport scale measures the full width.
   const sendPanel = el('div', 'ui-sends', mount);
   sendPanel.style.display = getSession() ? 'flex' : 'none';
+  const rivalTitle = el('div', 'ui-sends-title ui-rival-title', sendPanel);
+  rivalTitle.textContent = 'RIVAL';
+  const rivalCanvas = el<HTMLCanvasElement>('canvas', 'ui-rival-canvas', sendPanel);
+  rivalCanvas.width = 256;
+  rivalCanvas.height = 160;
   el('div', 'ui-sends-title', sendPanel).textContent = 'SEND';
   const sendBtns = new Map<string, HTMLButtonElement>();
   const sendBox = el('div', 'ui-sends-list', sendPanel);
@@ -103,7 +113,7 @@ export function createUI(mount: HTMLElement): UI {
   concedeBtn.textContent = 'CONCEDE';
   concedeBtn.addEventListener('click', () => ui.onConcede());
 
-  const tooltip = el('div', 'ui-tooltip', overlay);
+  const tooltip = el('div', 'ui-tooltip', left);
   tooltip.style.display = 'none';
 
   // banner shown while a hero is armed for deployment
@@ -111,7 +121,7 @@ export function createUI(mount: HTMLElement): UI {
   deploy.style.display = 'none';
 
   // upgrade panel (shown when a placed tower is selected)
-  const upg = el('div', 'ui-upg', overlay);
+  const upg = el('div', 'ui-upg', left);
   upg.style.display = 'none';
   const upgName = el('div', 'ui-upg-name', upg);
   const upgStat: Record<string, HTMLElement> = {};
@@ -147,7 +157,7 @@ export function createUI(mount: HTMLElement): UI {
   upgSell.addEventListener('click', () => ui.onSell());
 
   // store info + upgrade panel (shown when a placed store is selected)
-  const storePanel = el('div', 'ui-store', overlay);
+  const storePanel = el('div', 'ui-store', left);
   storePanel.style.display = 'none';
   const storeName = el('div', 'ui-upg-name', storePanel);
   const storeIncome = el('div', 'ui-store-income', storePanel);
@@ -230,6 +240,51 @@ export function createUI(mount: HTMLElement): UI {
     tooltip.style.display = 'none';
   });
 
+  // rival mini-view: simple 2D-canvas rendering of the opponent's board snapshots
+  const ENEMY_COLORS: Record<string, string> = {
+    aswang: '#7fc97f',
+    tiktik: '#b8c4d0',
+    kapre: '#8a5a2b',
+    tiyanak: '#ff6b6b',
+    manananggal: '#c0392b',
+    bakunawa: '#9a6df0',
+  };
+  const rivalScale = rivalCanvas.width / (LEVEL_ONE.cols * LEVEL_ONE.tileSize);
+  const drawRivalBoard = (board: { towers: TowerSnap[]; enemies: EnemySnap[] } | null): void => {
+    const ctx = rivalCanvas.getContext('2d');
+    if (!ctx) return;
+    const k = rivalScale;
+    ctx.fillStyle = '#22321f';
+    ctx.fillRect(0, 0, rivalCanvas.width, rivalCanvas.height);
+    // the path
+    ctx.strokeStyle = '#6e5435';
+    ctx.lineWidth = 9;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    LEVEL_ONE.path.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x * k, p.y * k) : ctx.lineTo(p.x * k, p.y * k)));
+    ctx.stroke();
+    if (!board) return;
+    // towers as gold blocks
+    for (const t of board.towers) {
+      ctx.fillStyle = '#e9c46a';
+      ctx.fillRect(t.x * k - 3, t.y * k - 3, 6, 6);
+      ctx.strokeStyle = '#3a2914';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(t.x * k - 3, t.y * k - 3, 6, 6);
+    }
+    // enemies as colored dots (bosses bigger), dimmed as they lose HP
+    for (const e of board.enemies) {
+      ctx.globalAlpha = 0.45 + 0.55 * Math.max(0, Math.min(1, e.hp));
+      ctx.fillStyle = ENEMY_COLORS[e.typeId] ?? '#f2e8cf';
+      ctx.beginPath();
+      ctx.arc(e.x * k, e.y * k, e.typeId === 'bakunawa' ? 5 : 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  };
+  drawRivalBoard(null);
+
   const ui: UI = {
     onSelectHero: () => {},
     onRestart: () => {},
@@ -241,6 +296,9 @@ export function createUI(mount: HTMLElement): UI {
     onCycleTarget: () => {},
     onSend: () => {},
     onConcede: () => {},
+    setRivalBoard(board): void {
+      drawRivalBoard(board);
+    },
     setStorePanel(vm: StorePanelVM | null): void {
       if (!vm) {
         storePanel.style.display = 'none';
@@ -341,6 +399,7 @@ export function createUI(mount: HTMLElement): UI {
       if (vm.opponent) {
         oppStat.style.display = 'flex';
         oppV.textContent = `${vm.opponent.nickname} · ${vm.opponent.lives} HP · W${vm.opponent.wave}`;
+        rivalTitle.textContent = vm.opponent.nickname.toUpperCase();
       } else {
         oppStat.style.display = 'none';
       }

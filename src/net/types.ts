@@ -3,10 +3,27 @@ export interface SendEvent {
   count: number;
 }
 
+// compact rival-board snapshot, piggybacked on the status ping (drives the mini-view)
+export interface TowerSnap {
+  heroId: string;
+  x: number;
+  y: number;
+}
+
+export interface EnemySnap {
+  id: number; // Enemy.seq — stable across snapshots so the view can interpolate
+  typeId: string;
+  x: number;
+  y: number;
+  hp: number; // 0..1 fraction
+}
+
 export interface StatusEvent {
   wave: number;
   lives: number;
   gold: number; // intentionally shared in v1 (trusted clients); revisit if sends become rank-based
+  towers?: TowerSnap[];
+  enemies?: EnemySnap[];
 }
 
 export interface MatchEvents {

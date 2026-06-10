@@ -313,3 +313,36 @@ body::after {
   box-shadow: 0 4px 0 #5c4012, inset 0 1px 0 #f0d999;
 }
 .ui-select-start:disabled { filter: grayscale(.6) brightness(.7); cursor: not-allowed; box-shadow: none; }
+
+/* ---- multiplayer lobby ---- */
+.ui-lobby {
+  position: fixed; inset: 0; z-index: 100; user-select: none; overflow: auto; display: flex;
+  font-family: 'Trebuchet MS', system-ui, sans-serif;
+  background: radial-gradient(circle at 50% 28%, #2c4030, #0d140e 75%);
+  color: #f6e6bd;
+}
+.ui-lobby-inner { margin: auto; display: flex; flex-direction: column; align-items: center; }
+.ui-lobby-box {
+  display: flex; flex-direction: column; gap: 12px; align-items: stretch; width: 300px;
+  padding: 22px; text-align: center;
+  background: linear-gradient(#7d5d34, #5c4324); border: 3px solid #3a2914; border-radius: 12px;
+  box-shadow: 0 5px 0 #2c1f0f, inset 0 1px 0 #bd9358;
+}
+.ui-lobby-box h2 { margin: 0 0 4px; font-size: 22px; color: #f0d999; text-shadow: 0 2px 0 #2c1f0f; }
+.ui-lobby-note { margin: 0; color: #e7d3a3; font-size: 14px; line-height: 1.5; }
+.ui-lobby-err { margin: 0; color: #ffb09a; font-weight: 700; font-size: 13px; line-height: 1.5; }
+.ui-lobby-code { font-size: 22px; letter-spacing: 2px; color: #ffd76a; }
+.ui-lobby-btn {
+  padding: 10px; cursor: pointer; color: #2c1f0f; font-weight: 800; font-size: 13px; letter-spacing: 1px;
+  font-family: inherit;
+  background: linear-gradient(#caa24a, #a9802f); border: 2px solid #3a2914; border-radius: 8px;
+  box-shadow: 0 3px 0 #5c4012, inset 0 1px 0 #f0d999;
+}
+.ui-lobby-btn:disabled { filter: grayscale(.6) brightness(.7); cursor: not-allowed; box-shadow: none; }
+.ui-lobby-btn.ghost { background: linear-gradient(#5c4a2c, #463720); color: #f6e6bd; }
+.ui-lobby-joinrow { display: flex; gap: 8px; }
+.ui-lobby-joinrow .ui-lobby-input { flex: 1; min-width: 0; }
+.ui-lobby-input {
+  padding: 10px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: center;
+  color: #2c1f0f; background: #e7d4a4; border: 2px solid #3a2914; border-radius: 8px; outline: none;
+}

@@ -52,4 +52,8 @@ showHomeScreen({
       },
     });
   },
+  onMultiplayer: () => {
+    // wired fully in the next task (lobby -> hero select -> ready -> game)
+    location.reload();
+  },
 });

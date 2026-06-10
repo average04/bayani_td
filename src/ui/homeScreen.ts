@@ -2,6 +2,7 @@ import { HERO_ORDER } from '../game/config/heroes';
 
 export interface HomeScreenCallbacks {
   onInfinite: () => void;
+  onMultiplayer: () => void;
 }
 
 // Full-screen title overlay with mode selection, shown before the game starts.
@@ -21,9 +22,9 @@ export function showHomeScreen(cb: HomeScreenCallbacks): void {
         <span class="ui-home-mode-name">Infinite</span>
         <span class="ui-home-mode-desc">Survive escalating waves of folklore</span>
       </button>
-      <button class="ui-home-mode soon" id="home-mp">
+      <button class="ui-home-mode" id="home-mp">
         <span class="ui-home-mode-name">Multiplayer</span>
-        <span class="ui-home-mode-desc">Coming soon</span>
+        <span class="ui-home-mode-desc">1v1 — send monsters at your rival</span>
       </button>
     </div>
     <p class="ui-home-note" id="home-note"></p>
@@ -31,12 +32,12 @@ export function showHomeScreen(cb: HomeScreenCallbacks): void {
   `;
   document.body.appendChild(home);
 
-  const note = home.querySelector<HTMLElement>('#home-note')!;
   home.querySelector<HTMLElement>('#home-infinite')!.addEventListener('click', () => {
     home.remove();
     cb.onInfinite();
   });
   home.querySelector<HTMLElement>('#home-mp')!.addEventListener('click', () => {
-    note.textContent = 'Multiplayer is coming soon — stay tuned!';
+    home.remove();
+    cb.onMultiplayer();
   });
 }

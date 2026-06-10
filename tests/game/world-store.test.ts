@@ -55,18 +55,18 @@ describe('Sari-Sari store', () => {
     const w = new World(cfg());
     w.placeStore(4, 4); // gold 850
     const st = w.stores[0];
-    expect(w.upgradeStore(st, 0)).toBe(true); // Bulk Goods +5, cost 80
-    expect(w.gold).toBe(850 - 80);
+    expect(w.upgradeStore(st, 0)).toBe(true); // Bulk Goods +5, cost 200
+    expect(w.gold).toBe(850 - 200);
     expect(st.income.tickAmount).toBe(STORE.incomeAmount + 5);
     w.update(STORE.incomeInterval); // a payout
-    expect(w.gold).toBe(850 - 80 + STORE.incomeAmount + 5);
+    expect(w.gold).toBe(850 - 200 + STORE.incomeAmount + 5);
   });
 
   it('upgrades the passive path for a per-second drip', () => {
     const w = new World(cfg());
     w.placeStore(4, 4);
     const st = w.stores[0];
-    w.upgradeStore(st, 1); // Regulars +1/s, cost 90
+    w.upgradeStore(st, 1); // Regulars +1/s, cost 220
     expect(st.income.passivePerSec).toBe(1);
     const before = w.gold;
     w.update(1); // one passive second (under the 5s tick interval)

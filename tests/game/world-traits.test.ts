@@ -134,8 +134,9 @@ describe('boss waves', () => {
   });
   it('every generated 10th wave includes Bakunawa, growing in number', () => {
     expect(generateWave(20).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 1 });
-    expect(generateWave(30).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 2 });
-    expect(generateWave(60).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 3 });
+    expect(generateWave(30).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 1 });
+    expect(generateWave(40).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 2 });
+    expect(generateWave(70).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 3 });
     expect(generateWave(21).spawns.some((s) => s.enemyTypeId === 'bakunawa')).toBe(false);
   });
 });

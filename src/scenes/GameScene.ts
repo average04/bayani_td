@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { World } from '../game/world';
 import { LEVEL_ONE } from '../game/config/levels';
 import { ENEMY_TYPES } from '../game/config/enemies';
-import { HERO_TYPES, HERO_ORDER } from '../game/config/heroes';
+import { HERO_TYPES } from '../game/config/heroes';
+import { getLoadout } from '../game/config/loadout';
 import { STORE } from '../game/config/store';
 import { WAVES, generateWave } from '../game/config/waves';
 import { loadSave, saveBestWave } from '../services/localSave';
@@ -20,6 +21,9 @@ import {
   spawnRock,
   spawnButterfly,
   spawnSkull,
+  spawnSunLance,
+  spawnCritFlash,
+  spawnQuake,
   spawnHitPuff,
   spawnDeath,
   spawnSpin,
@@ -28,7 +32,8 @@ import {
 import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel, buildStorePanel } from '../ui/uiState';
 
-const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
+const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR'];
+const STORE_KEY = 'FIVE';
 
 export class GameScene extends Phaser.Scene {
   private world!: World;
@@ -70,14 +75,14 @@ export class GameScene extends Phaser.Scene {
     this.ghost = this.add.graphics().setDepth(8000);
     this.selRing = this.add.graphics().setDepth(7000);
 
-    HERO_ORDER.forEach((id, i) => {
+    getLoadout().forEach((id, i) => {
       this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => {
         this.selectedHeroId = id;
         this.selectedTower = null;
         this.selectedStore = null;
       });
     });
-    this.input.keyboard?.on('keydown-SIX', () => {
+    this.input.keyboard?.on(`keydown-${STORE_KEY}`, () => {
       this.selectedHeroId = STORE.id;
       this.selectedTower = null;
       this.selectedStore = null;
@@ -144,6 +149,9 @@ export class GameScene extends Phaser.Scene {
     ui.onCycleTarget = () => this.selectedTower?.cycleTarget();
     ui.onRestart = () => {
       if (this.world.status !== 'playing') this.scene.restart();
+    };
+    ui.onHome = () => {
+      if (this.world.status !== 'playing') location.reload();
     };
   }
 
@@ -226,7 +234,7 @@ export class GameScene extends Phaser.Scene {
         ? buildStorePanel(this.selectedStore.levels, this.world.gold, this.selectedStore.spent)
         : null,
     );
-    getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, HERO_ORDER, HERO_TYPES));
+    getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, getLoadout(), HERO_TYPES));
     this.handleEndState();
   }
 
@@ -251,10 +259,17 @@ export class GameScene extends Phaser.Scene {
       } else if (shot.heroId === 'mangkukulam') {
         spawnSkull(this, shot.from, shot.to);
         spawnHitPuff(this, shot.to);
+      } else if (shot.heroId === 'apolaki') {
+        spawnSunLance(this, shot.from, shot.to);
+        spawnHitPuff(this, shot.to);
       } else {
         spawnProjectile(this, shot.from, shot.to);
         spawnHitPuff(this, shot.to);
       }
+      if (shot.crit) spawnCritFlash(this, shot.to);
+    }
+    for (const echo of this.world.events.echoes) {
+      spawnQuake(this, echo.pos, echo.radius);
     }
     for (const death of this.world.events.deaths) {
       spawnDeath(this, death.enemyTypeId, death.pos);
@@ -309,10 +324,13 @@ export class GameScene extends Phaser.Scene {
     g.clear();
     for (const e of this.world.enemies) {
       const frac = Math.max(0, e.hp / e.maxHp);
+      const w = e.type.boss ? 44 : 22; // bosses get a fittingly bigger bar
+      const h = e.type.boss ? 6 : 4;
+      const y = e.type.boss ? e.pos.y - 34 : e.pos.y - 22;
       g.fillStyle(0x000000, 0.6);
-      g.fillRect(e.pos.x - 11, e.pos.y - 22, 22, 4);
-      g.fillStyle(0x2ecc71, 1);
-      g.fillRect(e.pos.x - 11, e.pos.y - 22, 22 * frac, 4);
+      g.fillRect(e.pos.x - w / 2, y, w, h);
+      g.fillStyle(e.type.boss ? 0xb86dd9 : 0x2ecc71, 1);
+      g.fillRect(e.pos.x - w / 2, y, w * frac, h);
     }
   }
 

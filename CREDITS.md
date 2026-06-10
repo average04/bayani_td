@@ -35,3 +35,11 @@ Art assets used in Bayani TD.
   - License: CC-BY-SA 3.0 / GPL 3.0
   - Source: https://opengameart.org/content/lpc-monsters
   - File: bat.png from lpc-monsters.zip
+
+- **Apolaki sprite** — in-engine gold-tinted recolor of the Gabriela sheet (same LPC
+  authors/license as above). Portrait is an original procedural sun emblem
+  (`scripts/gen-apolaki-portrait.mjs`).
+
+- **Kapre / Tiyanak / Manananggal / Bakunawa sprites** — in-engine tinted/rescaled recolors of
+  the Aswang (ghost) and Tiktik (bat) sheets above; same authors and CC-BY-SA 3.0 / GPL 3.0
+  license apply.

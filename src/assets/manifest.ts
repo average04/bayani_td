@@ -200,6 +200,10 @@ export const MANIFEST: AssetManifest = {
     variant(aswangChar, 'kapre', 0x6b4f2a, 0.9),
     variant(aswangChar, 'tiyanak', 0xff6b6b, 0.4),
     variant(tiktikChar, 'manananggal', 0xc0392b, 0.7),
+    // Apolaki, the sun god: Gabriela's sheet bathed in gold
+    variant(gabrielaChar, 'apolaki', 0xffd166),
+    // Bakunawa, the moon-eating serpent boss: the winged tiktik grown huge and moon-dark
+    variant(tiktikChar, 'bakunawa', 0x7b5fd9, 1.7),
   ],
   fx: {
     projectile: { key: 'projectile', path: 'assets/fx/projectile.png' },

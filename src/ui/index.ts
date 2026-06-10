@@ -1,4 +1,5 @@
-import { HERO_TYPES, HERO_ORDER, type HeroType } from '../game/config/heroes';
+import { HERO_TYPES, type HeroType } from '../game/config/heroes';
+import { getLoadout } from '../game/config/loadout';
 import { STORE } from '../game/config/store';
 import type { UiState, UpgradePanelVM, StorePanelVM } from './uiState';
 
@@ -8,6 +9,7 @@ export interface UI {
   setStorePanel(vm: StorePanelVM | null): void;
   onSelectHero: (id: string) => void;
   onRestart: () => void;
+  onHome: () => void;
   onUpgrade: (path: number) => void;
   onSell: () => void;
   onSellStore: () => void;
@@ -69,6 +71,11 @@ export function createUI(mount: HTMLElement): UI {
 
   const nextWave = el('div', 'ui-nextwave', overlay);
   nextWave.style.display = 'none';
+
+  // boss banner, shown while a boss is on the field
+  const bossBanner = el('div', 'ui-boss', overlay);
+  bossBanner.textContent = 'BAKUNAWA RISES';
+  bossBanner.style.display = 'none';
 
   const tooltip = el('div', 'ui-tooltip', overlay);
   tooltip.style.display = 'none';
@@ -142,13 +149,17 @@ export function createUI(mount: HTMLElement): UI {
   endPanel.style.display = 'none';
   const endTitle = el('h2', 'ui-end-title', endPanel);
   const endSub = el('p', 'ui-end-sub', endPanel);
-  const restartBtn = el<HTMLButtonElement>('button', 'ui-restart', endPanel);
+  const endBtns = el('div', 'ui-end-btns', endPanel);
+  const restartBtn = el<HTMLButtonElement>('button', 'ui-restart', endBtns);
   restartBtn.textContent = 'RESTART';
+  const homeBtn = el<HTMLButtonElement>('button', 'ui-restart ui-homebtn', endBtns);
+  homeBtn.textContent = 'HOME';
 
-  // build menu
+  // build menu: the player's hero-card loadout + the store
+  const loadout = getLoadout();
   const bottom = el('div', 'ui-bottom', mount);
   const tiles: Record<string, HTMLElement> = {};
-  HERO_ORDER.forEach((id, i) => {
+  loadout.forEach((id, i) => {
     const h = HERO_TYPES[id];
     const tile = el('div', `ui-tile ui-tile-${id}`, bottom);
     el('span', `ui-portrait ui-portrait-${id}`, tile);
@@ -159,6 +170,7 @@ export function createUI(mount: HTMLElement): UI {
     tile.addEventListener('mouseenter', () => {
       tooltip.innerHTML =
         `<h4>${h.name}</h4>` +
+        (h.trait ? `<div class="ui-ttrait"><b>${h.trait.name}</b> — ${h.trait.desc}</div>` : '') +
         `<div class="ui-trow"><span>Range</span><b>${h.range}</b></div>` +
         `<div class="ui-trow"><span>Damage</span><b>${h.damage}</b></div>` +
         `<div class="ui-trow"><span>Attack Speed</span><b>${h.fireRate}/s</b></div>` +
@@ -177,7 +189,7 @@ export function createUI(mount: HTMLElement): UI {
   el('span', 'ui-portrait ui-portrait-store', storeTile);
   el('div', 'ui-tname', storeTile).textContent = STORE.name;
   el('small', 'ui-tcost', storeTile).textContent = `$${STORE.cost}`;
-  el('span', 'ui-tkey', storeTile).textContent = '[6]';
+  el('span', 'ui-tkey', storeTile).textContent = `[${loadout.length + 1}]`;
   storeTile.addEventListener('click', () => ui.onSelectHero(STORE.id));
   storeTile.addEventListener('mouseenter', () => {
     tooltip.innerHTML =
@@ -193,6 +205,7 @@ export function createUI(mount: HTMLElement): UI {
   const ui: UI = {
     onSelectHero: () => {},
     onRestart: () => {},
+    onHome: () => {},
     onUpgrade: () => {},
     onSell: () => {},
     onSellStore: () => {},
@@ -267,6 +280,7 @@ export function createUI(mount: HTMLElement): UI {
       } else {
         nextWave.style.display = 'none';
       }
+      bossBanner.style.display = vm.bossActive ? 'block' : 'none';
       for (const h of vm.heroes) {
         const tile = tiles[h.id];
         tile.classList.toggle('sel', h.selected);
@@ -291,11 +305,12 @@ export function createUI(mount: HTMLElement): UI {
         endTitle.className = `ui-end-title ${vm.status}`;
         endSub.textContent = Number.isFinite(vm.totalWaves)
           ? `Reached wave ${vm.wave} / ${vm.totalWaves}`
-          : `Reached wave ${vm.wave}`;
+          : `Reached wave ${vm.wave} · Best ${Math.max(vm.bestWave, vm.wave)}`;
       }
     },
   };
   restartBtn.addEventListener('click', () => ui.onRestart());
+  homeBtn.addEventListener('click', () => ui.onHome());
 
   instance = ui;
   return ui;

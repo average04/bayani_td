@@ -181,6 +181,60 @@ export function spawnSkull(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
   });
 }
 
+// Apolaki's sun lance: a long blazing golden spear of light that streaks to the target.
+export function spawnSunLance(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
+  const angle = Math.atan2(to.y - from.y, to.x - from.x);
+  const g = scene.add.graphics({ x: from.x, y: from.y }).setDepth(FX_DEPTH);
+  g.rotation = angle;
+  const L = 30; // lance half-length
+  const lance = (len: number, w: number): Phaser.Types.Math.Vector2Like[] => [
+    { x: len, y: 0 }, { x: len * 0.25, y: w }, { x: -len, y: 0 }, { x: len * 0.25, y: -w },
+  ];
+  g.fillStyle(0xffb347, 0.35);
+  g.fillPoints(lance(L * 1.2, 7), true); // outer heat haze
+  g.fillStyle(0xffd166, 0.85);
+  g.fillPoints(lance(L, 4), true); // golden body
+  g.fillStyle(0xfff6d8, 1);
+  g.fillPoints(lance(L * 0.9, 1.8), true); // white-hot core
+  scene.tweens.add({ targets: g, x: to.x, y: to.y, duration: 90, ease: 'Quad.In', onComplete: () => g.destroy() });
+}
+
+// Power-shot flash (Rampage/Deadeye crits): a golden starburst + expanding ring at impact.
+export function spawnCritFlash(scene: Phaser.Scene, at: Vec2): void {
+  const g = scene.add.graphics({ x: at.x, y: at.y }).setDepth(FX_DEPTH + 1);
+  g.fillStyle(0xffe28a, 0.95);
+  for (let i = 0; i < 4; i++) {
+    const a = (i * Math.PI) / 2 + Math.PI / 4;
+    g.fillTriangle(
+      Math.cos(a) * 16, Math.sin(a) * 16,
+      Math.cos(a + 1.35) * 4, Math.sin(a + 1.35) * 4,
+      Math.cos(a - 1.35) * 4, Math.sin(a - 1.35) * 4,
+    );
+  }
+  g.lineStyle(2.5, 0xffd166, 0.9);
+  g.strokeCircle(0, 0, 7);
+  g.setScale(0.4);
+  scene.tweens.add({ targets: g, scale: 1.25, alpha: 0, duration: 240, ease: 'Cubic.Out', onComplete: () => g.destroy() });
+}
+
+// Aftershock landing: a dusty shockwave ring rippling out across the ground.
+export function spawnQuake(scene: Phaser.Scene, at: Vec2, radius: number): void {
+  const g = scene.add.graphics({ x: at.x, y: at.y }).setDepth(FX_DEPTH - 1);
+  g.lineStyle(5, 0x9a8568, 0.85);
+  g.strokeCircle(0, 0, 10);
+  g.lineStyle(2, 0x6e5b40, 0.7);
+  g.strokeCircle(0, 0, 6);
+  const target = Math.max(20, radius);
+  scene.tweens.add({
+    targets: g,
+    scale: target / 10,
+    alpha: 0,
+    duration: 320,
+    ease: 'Quad.Out',
+    onComplete: () => g.destroy(),
+  });
+}
+
 export function spawnHitPuff(scene: Phaser.Scene, at: Vec2): void {
   const s = scene.add.sprite(at.x, at.y, MANIFEST.fx.hitPuff.key).setDepth(FX_DEPTH);
   s.play(MANIFEST.fx.hitPuff.key);

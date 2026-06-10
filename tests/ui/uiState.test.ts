@@ -15,6 +15,7 @@ const world = {
   status: 'playing' as const,
   nextWaveIn: 3,
   passiveIncome: 0,
+  bossActive: false,
 };
 
 describe('uiState', () => {

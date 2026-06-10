@@ -49,6 +49,50 @@ export function spawnSwordWave(scene: Phaser.Scene, from: Vec2, to: Vec2): void 
   scene.tweens.add({ targets: g, alpha: 0, duration: 55, delay: 80 });
 }
 
+// Bernardo's thrown boulder: a lumpy shaded rock that lobs in an arc and tumbles end over end.
+const ROCK_PTS: Phaser.Types.Math.Vector2Like[] = [
+  { x: -8, y: -2 }, { x: -5, y: -7 }, { x: 1, y: -8 }, { x: 7, y: -4 },
+  { x: 8, y: 2 }, { x: 4, y: 7 }, { x: -3, y: 8 }, { x: -8, y: 3 },
+];
+
+function drawBoulder(g: Phaser.GameObjects.Graphics): void {
+  g.fillStyle(0x837a6d, 1);
+  g.fillPoints(ROCK_PTS, true); // base stone
+  g.fillStyle(0x5f584d, 0.55);
+  g.fillPoints([{ x: 8, y: 2 }, { x: 4, y: 7 }, { x: -3, y: 8 }, { x: 2, y: 1 }], true); // shaded lower-right
+  g.fillStyle(0xa69c8a, 0.9);
+  g.fillPoints(ROCK_PTS.map((p) => ({ x: p.x! * 0.45 - 1.5, y: p.y! * 0.45 - 2 })), true); // highlight upper-left
+  g.fillStyle(0x4f483e, 0.85);
+  g.fillCircle(2, 1, 1.3);
+  g.fillCircle(-3, -2, 1);
+  g.fillCircle(4, -2, 0.9); // pits/cracks
+  g.lineStyle(1.5, 0x3f3930, 1);
+  g.strokePoints(ROCK_PTS, true, true); // dark outline
+}
+
+export function spawnRock(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
+  const g = scene.add.graphics().setPosition(from.x, from.y).setDepth(FX_DEPTH);
+  drawBoulder(g);
+  const dist = Math.hypot(to.x - from.x, to.y - from.y);
+  const peak = Math.min(44, dist * 0.22); // lob height; longer throws arc higher
+  const proxy = { t: 0 };
+  scene.tweens.add({
+    targets: proxy,
+    t: 1,
+    duration: 170,
+    ease: 'Linear',
+    onUpdate: () => {
+      const t = proxy.t;
+      g.setPosition(
+        from.x + (to.x - from.x) * t,
+        from.y + (to.y - from.y) * t - peak * 4 * t * (1 - t), // parabola, peak at t=0.5
+      );
+      g.rotation = t * Math.PI * 1.6; // tumble
+    },
+    onComplete: () => g.destroy(),
+  });
+}
+
 export function spawnHitPuff(scene: Phaser.Scene, at: Vec2): void {
   const s = scene.add.sprite(at.x, at.y, MANIFEST.fx.hitPuff.key).setDepth(FX_DEPTH);
   s.play(MANIFEST.fx.hitPuff.key);

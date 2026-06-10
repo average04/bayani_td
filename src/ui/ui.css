@@ -31,9 +31,9 @@ body::after {
   display: flex; flex-direction: column; justify-content: center; gap: 10px;
 }
 
-/* ---- top HUD bar ---- */
+/* ---- top HUD bar (spans the stage, which is double-wide in multiplayer) ---- */
 .ui-top {
-  width: 768px;
+  width: 100%;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -123,9 +123,9 @@ body::after {
   box-shadow: 0 3px 0 #5c4012, inset 0 1px 0 #f0d999;
 }
 
-/* ---- build menu ---- */
+/* ---- build menu (spans the stage width) ---- */
 .ui-bottom {
-  width: 768px;
+  width: 100%;
   box-sizing: border-box;
   display: flex;
   gap: 8px;
@@ -356,18 +356,13 @@ body::after {
 /* ---- multiplayer: opponent strip + send sidebar (beside the map, never over it) ---- */
 .ui-opp .ui-statval b { color: #ffb09a; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
 .ui-sends {
-  display: flex; flex-direction: column; gap: 6px; width: 280px;
+  display: flex; flex-direction: column; gap: 6px; width: 165px;
   align-self: center; flex-shrink: 0;
   padding: 10px; box-sizing: border-box;
   background: linear-gradient(#7d5d34, #5c4324); border: 3px solid #3a2914; border-radius: 10px;
   box-shadow: 0 5px 0 #2c1f0f, inset 0 1px 0 #bd9358;
 }
 .ui-sends-title { text-align: center; font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #f0d999; }
-.ui-rival-title { color: #ffb09a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ui-rival-canvas {
-  display: block; width: 100%; border: 2px solid #3a2914; border-radius: 6px;
-  background: #22321f; image-rendering: auto; margin-bottom: 4px;
-}
 .ui-sends-list { display: flex; flex-direction: column; gap: 5px; }
 .ui-send-btn {
   padding: 6px 4px; cursor: pointer; color: #2c1f0f; font-weight: 800; font-size: 10.5px;

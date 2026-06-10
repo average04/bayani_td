@@ -35,12 +35,18 @@ import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel, buildStorePanel } from '../ui/uiState';
 import { getSession, type MatchSession } from '../net/session';
 import type { TowerSnap, EnemySnap } from '../net/types';
+import { RivalBoardView } from '../render/rivalBoardView';
 import { finishMatch } from '../net/matchService';
 import { SEND_TABLE } from '../game/config/sends';
 import type { OpponentVM } from '../ui/uiState';
 
 const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR'];
 const STORE_KEY = 'FIVE';
+
+// side-by-side multiplayer boards: ours at x=0, the rival's after a divider gap
+export const BOARD_W = LEVEL_ONE.cols * LEVEL_ONE.tileSize;
+export const BOARD_GAP = 48;
+export const RIVAL_X = BOARD_W + BOARD_GAP;
 
 // a received rival-board snapshot, timestamped on arrival for interpolation
 interface RivalSnap {
@@ -69,6 +75,7 @@ export class GameScene extends Phaser.Scene {
   private peerWantsRematch = false;
   private rivalPrev: RivalSnap | null = null;
   private rivalCur: RivalSnap | null = null;
+  private rivalView: RivalBoardView | null = null;
   private enemyViews = new Map<Enemy, EnemyView>();
   private towerViews = new Map<Tower, TowerView>();
   private storeViews = new Map<Store, StoreView>();
@@ -105,6 +112,29 @@ export class GameScene extends Phaser.Scene {
     this.selRing = this.add.graphics().setDepth(7000);
     this.auraFx = this.add.graphics().setDepth(40); // under the characters, over the map
 
+    // multiplayer: the rival's board renders side by side with ours, Bloons-Battles style
+    this.rivalView = null;
+    if (this.mp) {
+      const h = LEVEL_ONE.rows * LEVEL_ONE.tileSize;
+      const divider = this.add.graphics().setDepth(100);
+      divider.fillStyle(0x10160f, 1);
+      divider.fillRect(BOARD_W, 0, BOARD_GAP, h);
+      divider.lineStyle(3, 0x3a2914, 1);
+      divider.lineBetween(BOARD_W + 1, 0, BOARD_W + 1, h);
+      divider.lineBetween(RIVAL_X - 1, 0, RIVAL_X - 1, h);
+      this.rivalView = new RivalBoardView(this, LEVEL_ONE, RIVAL_X, this.mp.opponentNickname);
+      this.add
+        .text(8, 6, this.mp.myNickname, {
+          fontFamily: 'Trebuchet MS, sans-serif',
+          fontSize: '13px',
+          fontStyle: 'bold',
+          color: '#8aff7a',
+          stroke: '#2c1f0f',
+          strokeThickness: 3,
+        })
+        .setDepth(9500);
+    }
+
     getLoadout().forEach((id, i) => {
       this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => {
         this.selectedHeroId = id;
@@ -131,6 +161,7 @@ export class GameScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
 
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (this.mp && p.x >= BOARD_W) return; // the rival's half is view-only
       if (p.rightButtonDown()) {
         this.selectedHeroId = null;
         this.selectedTower = null;
@@ -248,7 +279,7 @@ export class GameScene extends Phaser.Scene {
     void finishMatch(this.mp.matchId, this.mp.myId);
   }
 
-  // Blend the last two rival snapshots (~0.5s apart) so the mini-view moves smoothly.
+  // Blend the last two rival snapshots (~0.5s apart) so the rival board moves smoothly.
   private interpolatedRivalBoard(): { towers: TowerSnap[]; enemies: EnemySnap[] } | null {
     const cur = this.rivalCur;
     if (!cur) return null;
@@ -262,7 +293,13 @@ export class GameScene extends Phaser.Scene {
       if (!p) return e;
       return { ...e, x: p.x + (e.x - p.x) * a, y: p.y + (e.y - p.y) * a };
     });
-    return { towers: cur.towers, enemies };
+    // towers are static except the roaming Bonifacio — lerp by index when types match
+    const towers = cur.towers.map((t, i) => {
+      const p = prev.towers[i];
+      if (!p || p.heroId !== t.heroId) return t;
+      return { ...t, x: p.x + (t.x - p.x) * a, y: p.y + (t.y - p.y) * a };
+    });
+    return { towers, enemies };
   }
 
   private maybeRematch(): void {
@@ -288,6 +325,7 @@ export class GameScene extends Phaser.Scene {
     if (this.world.status !== 'playing' || !this.selectedHeroId) return;
     const p = this.input.activePointer;
     if (p.x < 0 || p.y < 0 || p.x > this.scale.width || p.y > this.scale.height) return;
+    if (this.mp && p.x >= BOARD_W) return; // no placement ghost over the rival's half
     const cs = LEVEL_ONE.cellSize;
     if (this.selectedHeroId === STORE.id) {
       const { col, row } = footprintTopLeftAt(LEVEL_ONE, p.x, p.y, STORE.width, STORE.height);
@@ -360,7 +398,7 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
-    if (this.mp) getUI().setRivalBoard(this.interpolatedRivalBoard());
+    this.rivalView?.sync(this.interpolatedRivalBoard());
     this.consumeEvents();
     this.syncViews();
     this.drawAuras();

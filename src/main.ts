@@ -9,17 +9,22 @@ import { showHomeScreen } from './ui/homeScreen';
 import { showHeroSelect } from './ui/heroSelect';
 import { setLoadout } from './game/config/loadout';
 import { showLobby } from './ui/lobby';
-import { setSession, type MatchSession } from './net/session';
+import { getSession, setSession, type MatchSession } from './net/session';
+import { BOARD_W, BOARD_GAP } from './scenes/GameScene';
 
-const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
-  width: LEVEL_ONE.cols * LEVEL_ONE.tileSize,
-  height: LEVEL_ONE.rows * LEVEL_ONE.tileSize,
-  backgroundColor: '#1d2b1f',
-  pixelArt: true,
-  parent: 'stage',
-  scene: [BootScene, PreloadScene, GameScene],
-};
+// Built lazily: multiplayer renders BOTH boards side by side (Bloons-Battles style),
+// so the canvas is double-wide plus a divider gap.
+function buildConfig(): Phaser.Types.Core.GameConfig {
+  return {
+    type: Phaser.AUTO,
+    width: getSession() ? BOARD_W * 2 + BOARD_GAP : BOARD_W,
+    height: LEVEL_ONE.rows * LEVEL_ONE.tileSize,
+    backgroundColor: '#1d2b1f',
+    pixelArt: true,
+    parent: 'stage',
+    scene: [BootScene, PreloadScene, GameScene],
+  };
+}
 
 let game: Phaser.Game | null = null;
 
@@ -44,7 +49,7 @@ window.addEventListener('resize', fitToViewport);
 
 function startGame(): void {
   createUI(document.getElementById('game')!);
-  if (!game) game = new Phaser.Game(config);
+  if (!game) game = new Phaser.Game(buildConfig());
   fitToViewport();
 }
 

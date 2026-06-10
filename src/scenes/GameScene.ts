@@ -22,6 +22,8 @@ import {
   spawnButterfly,
   spawnSkull,
   spawnSunLance,
+  spawnBook,
+  spawnSlash,
   spawnCritFlash,
   spawnQuake,
   spawnHitPuff,
@@ -40,6 +42,7 @@ export class GameScene extends Phaser.Scene {
   private hpBars!: Phaser.GameObjects.Graphics;
   private ghost!: Phaser.GameObjects.Graphics;
   private selRing!: Phaser.GameObjects.Graphics;
+  private auraFx!: Phaser.GameObjects.Graphics;
   private selectedTower: Tower | null = null;
   private selectedStore: Store | null = null;
   // the hero (or 'store') armed for deployment, or null when nothing is being deployed
@@ -74,6 +77,7 @@ export class GameScene extends Phaser.Scene {
     this.hpBars = this.add.graphics().setDepth(9000);
     this.ghost = this.add.graphics().setDepth(8000);
     this.selRing = this.add.graphics().setDepth(7000);
+    this.auraFx = this.add.graphics().setDepth(40); // under the characters, over the map
 
     getLoadout().forEach((id, i) => {
       this.input.keyboard?.on(`keydown-${HERO_KEYS[i]}`, () => {
@@ -218,6 +222,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.consumeEvents();
     this.syncViews();
+    this.drawAuras();
     this.drawHpBars();
     this.drawGhost();
     this.drawSelection();
@@ -243,11 +248,17 @@ export class GameScene extends Phaser.Scene {
 
   private consumeEvents(): void {
     for (const shot of this.world.events.shots) {
+      // nearest view to the shot origin (roaming towers move, so exact equality won't hold)
+      let shooter: TowerView | null = null;
+      let bestD = 30;
       for (const view of this.towerViews.values()) {
-        if (view.sprite.x === shot.from.x && view.sprite.y === shot.from.y) {
-          view.playAttack(shot.to.x, shot.to.y);
+        const d = Math.hypot(view.sprite.x - shot.from.x, view.sprite.y - shot.from.y);
+        if (d < bestD) {
+          bestD = d;
+          shooter = view;
         }
       }
+      shooter?.playAttack(shot.to.x, shot.to.y);
       const hero = HERO_TYPES[shot.heroId];
       if (hero?.spin) {
         spawnSpin(this, shot.from, hero.range);
@@ -265,6 +276,11 @@ export class GameScene extends Phaser.Scene {
       } else if (shot.heroId === 'apolaki') {
         spawnSunLance(this, shot.from, shot.to);
         spawnHitPuff(this, shot.to);
+      } else if (shot.heroId === 'rizal') {
+        spawnBook(this, shot.from, shot.to);
+        spawnHitPuff(this, shot.to);
+      } else if (shot.heroId === 'bonifacio') {
+        spawnSlash(this, shot.to);
       } else {
         spawnProjectile(this, shot.from, shot.to);
         spawnHitPuff(this, shot.to);
@@ -284,9 +300,12 @@ export class GameScene extends Phaser.Scene {
 
   private syncViews(): void {
     for (const t of this.world.towers) {
-      if (!this.towerViews.has(t)) {
-        this.towerViews.set(t, new TowerView(this, t));
+      let view = this.towerViews.get(t);
+      if (!view) {
+        view = new TowerView(this, t);
+        this.towerViews.set(t, view);
       }
+      view.sync(t);
     }
     const liveTowers = new Set(this.world.towers);
     for (const [t, view] of this.towerViews) {
@@ -318,6 +337,29 @@ export class GameScene extends Phaser.Scene {
       if (!live.has(e)) {
         view.destroy();
         this.enemyViews.delete(e);
+      }
+    }
+  }
+
+  // persistent aura rings: Bonifacio's fire circle and a faint gold ring for Rizal's aura
+  private drawAuras(): void {
+    const g = this.auraFx;
+    g.clear();
+    const flicker = 1 + Math.sin(this.time.now / 90) * 0.03;
+    for (const t of this.world.towers) {
+      const burn = t.stats.burnAura;
+      if (burn) {
+        const r = burn.radius * flicker;
+        g.fillStyle(0xe25822, 0.1);
+        g.fillCircle(t.pos.x, t.pos.y, r);
+        g.lineStyle(2, 0xff8c42, 0.5);
+        g.strokeCircle(t.pos.x, t.pos.y, r);
+        g.lineStyle(1, 0xffc46b, 0.35);
+        g.strokeCircle(t.pos.x, t.pos.y, r * 0.8);
+      }
+      if (t.stats.aura) {
+        g.lineStyle(1.5, 0xf0d999, 0.22);
+        g.strokeCircle(t.pos.x, t.pos.y, t.stats.range);
       }
     }
   }

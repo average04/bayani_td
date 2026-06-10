@@ -8,6 +8,7 @@ export const TARGET_MODES: TargetMode[] = ['first', 'last', 'strong', 'close'];
 export class Tower {
   readonly type: HeroType;
   readonly pos: Vec2;
+  readonly anchor: Vec2; // placement spot ("camp"); mobile towers roam from here and its cells stay reserved
   cooldown: number; // seconds remaining until it can fire
   levels: [number, number] = [0, 0];
   stats: TowerStats;
@@ -18,6 +19,7 @@ export class Tower {
   constructor(type: HeroType, pos: Vec2) {
     this.type = type;
     this.pos = pos;
+    this.anchor = { x: pos.x, y: pos.y };
     this.cooldown = 0;
     this.stats = baseStats(type);
     this.spent = type.cost;

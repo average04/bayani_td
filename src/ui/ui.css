@@ -169,6 +169,8 @@ body::after {
 .ui-portrait-diwata { background-image: url(/assets/ui/portrait-diwata.png); }
 .ui-portrait-mangkukulam { background-image: url(/assets/ui/portrait-mangkukulam.png); }
 .ui-portrait-apolaki { background-image: url(/assets/ui/portrait-apolaki.png); }
+.ui-portrait-rizal { background-image: url(/assets/ui/portrait-rizal.png); }
+.ui-portrait-bonifacio { background-image: url(/assets/ui/portrait-bonifacio.png); }
 .ui-ico-lives { background-image: url(/assets/ui/icon-lives.png); }
 .ui-ico-gold { background-image: url(/assets/ui/icon-gold.png); }
 .ui-ico-wave { background-image: url(/assets/ui/icon-wave.png); }

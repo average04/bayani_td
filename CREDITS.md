@@ -43,3 +43,6 @@ Art assets used in Bayani TD.
 - **Kapre / Tiyanak / Manananggal / Bakunawa sprites** — in-engine tinted/rescaled recolors of
   the Aswang (ghost) and Tiktik (bat) sheets above; same authors and CC-BY-SA 3.0 / GPL 3.0
   license apply.
+
+- **Jose Rizal / Andres Bonifacio sprites** — in-engine tinted recolors of the Mangkukulam and
+  Lapu-Lapu sheets above; same LPC authors and CC-BY-SA 3.0 / GPL 3.0 license apply.

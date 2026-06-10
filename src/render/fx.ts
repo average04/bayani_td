@@ -199,6 +199,60 @@ export function spawnSunLance(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
   scene.tweens.add({ targets: g, x: to.x, y: to.y, duration: 90, ease: 'Quad.In', onComplete: () => g.destroy() });
 }
 
+// Rizal's thrown book: an open tome that tumbles to the target, pages out.
+function drawBook(g: Phaser.GameObjects.Graphics): void {
+  g.fillStyle(0x6e3b1e, 1);
+  g.fillRect(-9, -6, 18, 12); // leather cover
+  g.fillStyle(0xf2e8cf, 1);
+  g.fillRect(-7.5, -4.5, 7, 9); // left page
+  g.fillRect(0.5, -4.5, 7, 9); // right page
+  g.lineStyle(1, 0xb9a583, 0.9);
+  for (const y of [-2, 0.5, 3]) {
+    g.lineBetween(-6.5, y, -1.5, y);
+    g.lineBetween(1.5, y, 6.5, y); // lines of text
+  }
+  g.lineStyle(1.5, 0x4a2613, 1);
+  g.lineBetween(0, -6, 0, 6); // spine
+}
+
+export function spawnBook(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
+  const g = scene.add.graphics().setPosition(from.x, from.y).setDepth(FX_DEPTH);
+  drawBook(g);
+  const dist = Math.hypot(to.x - from.x, to.y - from.y);
+  const peak = Math.min(30, dist * 0.16);
+  const proxy = { t: 0 };
+  scene.tweens.add({
+    targets: proxy,
+    t: 1,
+    duration: 160,
+    ease: 'Linear',
+    onUpdate: () => {
+      const t = proxy.t;
+      g.setPosition(
+        from.x + (to.x - from.x) * t,
+        from.y + (to.y - from.y) * t - peak * 4 * t * (1 - t),
+      );
+      g.rotation = t * Math.PI * 2.2; // fluttering tumble
+    },
+    onComplete: () => g.destroy(),
+  });
+}
+
+// Bonifacio's bolo slash: a quick white arc biting across the target.
+export function spawnSlash(scene: Phaser.Scene, at: Vec2): void {
+  const g = scene.add.graphics({ x: at.x, y: at.y }).setDepth(FX_DEPTH);
+  g.rotation = Math.random() * Math.PI;
+  g.lineStyle(3.5, 0xf4f7fa, 0.95);
+  g.beginPath();
+  g.arc(0, 0, 13, -0.7, 0.9);
+  g.strokePath();
+  g.lineStyle(1.5, 0xffffff, 1);
+  g.beginPath();
+  g.arc(0, 0, 13, -0.5, 0.7);
+  g.strokePath();
+  scene.tweens.add({ targets: g, rotation: g.rotation + 1.1, alpha: 0, duration: 140, ease: 'Quad.Out', onComplete: () => g.destroy() });
+}
+
 // Power-shot flash (Rampage/Deadeye crits): a golden starburst + expanding ring at impact.
 export function spawnCritFlash(scene: Phaser.Scene, at: Vec2): void {
   const g = scene.add.graphics({ x: at.x, y: at.y }).setDepth(FX_DEPTH + 1);

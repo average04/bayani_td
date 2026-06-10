@@ -21,6 +21,9 @@ export interface HeroType {
   contagion?: { radius: number; maxTargets: number; minDuration: number }; // poison jumps on death
   pierce?: boolean; // shots ignore armor
   firstStrike?: number; // damage multiplier vs enemies at >=90% HP
+  aura?: { damageAmp: number }; // OTHER towers within his range deal bonus damage (strongest aura wins)
+  burnAura?: { radius: number; dps: number }; // enemies near him take true damage over time
+  mobile?: { speed: number }; // roaming tower: chases the nearest enemy, returns to his camp when clear
 }
 
 export const HERO_TYPES: Record<string, HeroType> = {
@@ -56,6 +59,17 @@ export const HERO_TYPES: Record<string, HeroType> = {
     firstStrike: 1.5,
     trait: { name: 'Sunpierce', desc: 'Sun lances ignore armor and deal +50% to unhurt enemies' },
   },
+  rizal: {
+    id: 'rizal', name: 'Jose Rizal', cost: 110, range: 150, damage: 8, fireRate: 1.0,
+    aura: { damageAmp: 0.1 },
+    trait: { name: 'Inspiration', desc: 'Heroes in his range deal +10% damage (strongest aura applies)' },
+  },
+  bonifacio: {
+    id: 'bonifacio', name: 'Andres Bonifacio', cost: 120, range: 50, damage: 16, fireRate: 1.5,
+    mobile: { speed: 75 },
+    burnAura: { radius: 60, dps: 6 },
+    trait: { name: "Revolution's Flame", desc: 'Roams after enemies; his burning aura sears foes around him' },
+  },
 };
 
-export const HERO_ORDER = ['lapulapu', 'gabriela', 'bernardo', 'diwata', 'mangkukulam', 'apolaki'];
+export const HERO_ORDER = ['lapulapu', 'gabriela', 'bernardo', 'diwata', 'mangkukulam', 'apolaki', 'rizal', 'bonifacio'];

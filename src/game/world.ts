@@ -186,9 +186,10 @@ export class World {
     const refund = this.sellValue(tower);
     this.economy.earn(refund);
     this.towers.splice(idx, 1);
+    // free the cells at the camp/anchor — a roaming tower's pos may be anywhere on the map
     const cs = this.level.cellSize;
-    const col = Math.round(tower.pos.x / cs) - 1;
-    const row = Math.round(tower.pos.y / cs) - 1;
+    const col = Math.round(tower.anchor.x / cs) - 1;
+    const row = Math.round(tower.anchor.y / cs) - 1;
     for (const c of footprintCells(col, row)) this.occupiedCells.delete(cellKey(c.col, c.row));
     return refund;
   }
@@ -272,13 +273,25 @@ export class World {
     }
   }
 
+  // Inspiration: the strongest aura from OTHER towers whose range covers this tower.
+  private auraBoostFor(tower: Tower): number {
+    let best = 0;
+    for (const a of this.towers) {
+      if (a === tower) continue;
+      const amp = a.stats.aura?.damageAmp ?? 0;
+      if (amp > best && distance(a.pos, tower.pos) <= a.stats.range) best = amp;
+    }
+    return best;
+  }
+
   // Resolve one tower firing: rhythm traits decide the damage of THIS shot and whether an
   // aftershock echo gets queued. Returns whether the shot was a power shot (for FX).
   private fireAt(tower: Tower, affected: Enemy[], epicenter: Vec2): boolean {
     const s = tower.stats;
+    const boost = 1 + this.auraBoostFor(tower);
     const shotNo = tower.registerShot();
     const onBeat = s.rhythm !== undefined && shotNo % s.rhythm.every === 0;
-    let damage = s.damage;
+    let damage = s.damage * boost;
     if (onBeat && s.rhythm!.damageMult) damage *= s.rhythm!.damageMult;
     this.applyHit(affected, s, damage);
     if (onBeat && s.rhythm!.echo) {
@@ -287,7 +300,7 @@ export class World {
         timer: echo.delay,
         pos: { x: epicenter.x, y: epicenter.y },
         radius: s.splashRadius ?? 50,
-        damage: s.damage * echo.frac,
+        damage: s.damage * boost * echo.frac,
       });
     }
     tower.resetCooldown();
@@ -321,6 +334,32 @@ export class World {
 
     // 2. move enemies
     for (const e of this.enemies) e.update(dt);
+
+    // 2.5 roaming towers chase the nearest enemy (or walk back to camp when the field clears)
+    for (const t of this.towers) {
+      const mob = t.type.mobile;
+      if (!mob) continue;
+      let target: Enemy | null = null;
+      let bestD = Infinity;
+      for (const e of this.enemies) {
+        if (e.isDead || e.reachedEnd) continue;
+        const d = distance(e.pos, t.pos);
+        if (d < bestD) {
+          bestD = d;
+          target = e;
+        }
+      }
+      const dest = target ? target.pos : t.anchor;
+      const stop = target ? t.stats.range * 0.5 : 2; // close in, but don't stand on top of them
+      const dx = dest.x - t.pos.x;
+      const dy = dest.y - t.pos.y;
+      const d = Math.hypot(dx, dy);
+      if (d > stop) {
+        const step = Math.min(mob.speed * dt, d - stop);
+        t.pos.x += (dx / d) * step;
+        t.pos.y += (dy / d) * step;
+      }
+    }
 
     // 3. towers fire (reads effective, upgraded stats)
     for (const t of this.towers) {
@@ -374,6 +413,17 @@ export class World {
         this.events.echoes.push({ pos: echo.pos, radius: echo.radius });
       }
       this.pendingEchoes = still;
+    }
+
+    // 3.4 burning auras sear everything close (true damage, like poison)
+    for (const t of this.towers) {
+      const burn = t.stats.burnAura;
+      if (!burn) continue;
+      for (const e of this.enemies) {
+        if (!e.isDead && !e.reachedEnd && distance(e.pos, t.pos) <= burn.radius) {
+          e.hp -= burn.dps * dt;
+        }
+      }
     }
 
     // 3.5 stores generate passive income

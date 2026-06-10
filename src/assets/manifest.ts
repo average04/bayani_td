@@ -204,6 +204,10 @@ export const MANIFEST: AssetManifest = {
     variant(gabrielaChar, 'apolaki', 0xffd166),
     // Bakunawa, the moon-eating serpent boss: the winged tiktik grown huge and moon-dark
     variant(tiktikChar, 'bakunawa', 0x7b5fd9, 1.7),
+    // Jose Rizal: the robed Mangkukulam sheet cooled into a scholar's dark coat
+    variant(mangkukulamChar, 'rizal', 0x9aa4b5),
+    // Andres Bonifacio: Lapu-Lapu's warrior sheet warmed to Katipunan red
+    variant(lapulapuChar, 'bonifacio', 0xff9b80),
   ],
   fx: {
     projectile: { key: 'projectile', path: 'assets/fx/projectile.png' },

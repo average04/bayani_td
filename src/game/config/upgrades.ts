@@ -15,6 +15,8 @@ export interface TowerStats {
   contagion?: { radius: number; maxTargets: number; minDuration: number };
   pierce?: boolean;
   firstStrike?: number;
+  aura?: { damageAmp: number };
+  burnAura?: { radius: number; dps: number };
 }
 
 export interface StatDelta {
@@ -25,6 +27,8 @@ export interface StatDelta {
   slow?: { factor: number; duration: number }; // set
   poison?: { dps: number; duration: number }; // set
   root?: { chance: number; duration: number }; // set
+  aura?: { damageAmp: number }; // set
+  burnAura?: { radius: number; dps: number }; // set
 }
 
 export interface UpgradeLevel {
@@ -156,6 +160,50 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
+  // Jose Rizal — support (base: dmg 8, range 150, rate 1.0, aura +10% dmg to heroes in range).
+  rizal: [
+    {
+      name: 'La Solidaridad',
+      levels: [
+        { name: 'Propaganda', cost: 70, desc: 'Aura +15% dmg, +10 range', delta: { aura: { damageAmp: 0.15 }, range: 10 } },
+        { name: 'El Filibusterismo', cost: 150, desc: 'Aura +20% dmg', delta: { aura: { damageAmp: 0.2 } } },
+        { name: 'La Liga Filipina', cost: 280, desc: 'Aura +26% dmg, +15 range', delta: { aura: { damageAmp: 0.26 }, range: 15 } },
+        { name: 'National Hero', cost: 520, desc: 'Aura +35% dmg, +20 range', delta: { aura: { damageAmp: 0.35 }, range: 20 } },
+      ],
+    },
+    {
+      name: 'Man of Letters',
+      levels: [
+        { name: 'Sharp Critique', cost: 60, desc: '+6 damage', delta: { damage: 6 } },
+        { name: 'Rapid Essays', cost: 120, desc: '+0.8 attack speed', delta: { fireRate: 0.8 } },
+        { name: 'Banned Books', cost: 220, desc: 'Books splash r40 (ideas spread)', delta: { splashRadius: 40 } },
+        { name: 'Mightier Than the Sword', cost: 400, desc: '+14 damage, +0.7 atk speed', delta: { damage: 14, fireRate: 0.7 } },
+      ],
+    },
+  ],
+
+  // Andres Bonifacio — roaming melee (base: dmg 16, range 50, rate 1.5, burn 6/s r60).
+  bonifacio: [
+    {
+      name: 'Supremo',
+      levels: [
+        { name: 'Bolo Drill', cost: 65, desc: '+8 damage', delta: { damage: 8 } },
+        { name: 'Fervor', cost: 130, desc: '+0.5 attack speed', delta: { fireRate: 0.5 } },
+        { name: 'Cry of Balintawak', cost: 240, desc: '+14 damage, +0.5 atk speed', delta: { damage: 14, fireRate: 0.5 } },
+        { name: 'Father of the Revolution', cost: 450, desc: '+30 damage, +0.5 atk speed', delta: { damage: 30, fireRate: 0.5 } },
+      ],
+    },
+    {
+      name: 'Pugad Lawin',
+      levels: [
+        { name: 'Kindled Torch', cost: 70, desc: 'Burn 10/s, r65', delta: { burnAura: { radius: 65, dps: 10 } } },
+        { name: 'Bonfire', cost: 150, desc: 'Burn 16/s, r70', delta: { burnAura: { radius: 70, dps: 16 } } },
+        { name: 'Blaze of Katipunan', cost: 280, desc: 'Burn 26/s, r80', delta: { burnAura: { radius: 80, dps: 26 } } },
+        { name: 'Wildfire', cost: 520, desc: 'Burn 40/s, r95', delta: { burnAura: { radius: 95, dps: 40 } } },
+      ],
+    },
+  ],
+
   // Mangkukulam — poison caster (base: dmg 10, range 120, rate 0.8, poison 8/3s).
   mangkukulam: [
     {
@@ -193,6 +241,8 @@ export function baseStats(hero: HeroType): TowerStats {
     contagion: hero.contagion,
     pierce: hero.pierce,
     firstStrike: hero.firstStrike,
+    aura: hero.aura,
+    burnAura: hero.burnAura,
   };
 }
 
@@ -204,6 +254,8 @@ function applyDelta(s: TowerStats, d: StatDelta): void {
   if (d.slow) s.slow = d.slow;
   if (d.poison) s.poison = d.poison;
   if (d.root) s.root = d.root;
+  if (d.aura) s.aura = d.aura;
+  if (d.burnAura) s.burnAura = d.burnAura;
 }
 
 export function effectiveStats(hero: HeroType, levels: readonly [number, number]): TowerStats {

@@ -29,6 +29,22 @@ export class TowerView {
     });
   }
 
+  /** Follow a (possibly roaming) tower: track position/depth and walk when it moves. */
+  sync(tower: Tower): void {
+    const dx = tower.pos.x - this.sprite.x;
+    const dy = tower.pos.y - this.sprite.y;
+    const moving = Math.hypot(dx, dy) > 0.5;
+    this.sprite.setPosition(tower.pos.x, tower.pos.y);
+    this.sprite.setDepth(tower.pos.y);
+    if (moving) {
+      const { facing, flipX } = facingFromDelta(dx, dy);
+      this.sprite.setFlipX(flipX);
+      this.sprite.play(this.resolve(`${this.key}-walk-${facing}`, `${this.key}-walk-down`), true);
+    } else if (this.sprite.anims.currentAnim?.key.includes('-walk-')) {
+      this.sprite.play(`${this.key}-idle-down`, true);
+    }
+  }
+
   private resolve(preferred: string, fallback: string): string {
     return this.sprite.scene.anims.exists(preferred) ? preferred : fallback;
   }

@@ -11,6 +11,8 @@ function effectLine(h: HeroType): string {
   if (h.splashRadius) return `Splash r${h.splashRadius}`;
   if (h.slow) return `Slow x${h.slow.factor} / ${h.slow.duration}s`;
   if (h.poison) return `Poison ${h.poison.dps}/s / ${h.poison.duration}s`;
+  if (h.aura) return `Support · Inspires +${Math.round(h.aura.damageAmp * 100)}% dmg`;
+  if (h.mobile) return h.burnAura ? `Roaming · Burn ${h.burnAura.dps}/s` : 'Roaming melee';
   if (h.pierce) return 'Armor-piercing';
   return 'Single target';
 }

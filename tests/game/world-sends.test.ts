@@ -48,4 +48,20 @@ describe('incoming sends', () => {
     w.update(1);
     expect(w.enemies).toHaveLength(0);
   });
+
+  it('does not win a finite game while sends are still queued', () => {
+    const w = new World({
+      level,
+      enemyTypes: { grunt },
+      heroTypes: {},
+      waves: [{ spawns: [] }], // single empty wave -> instantly clearable
+    });
+    w.startNextWave();
+    w.queueIncomingSend('grunt', 1);
+    w.update(0.1); // send still pending (arrives at 0.4s)
+    expect(w.status).toBe('playing');
+    w.update(0.4); // send materializes
+    expect(w.enemies).toHaveLength(1);
+    expect(w.status).toBe('playing');
+  });
 });

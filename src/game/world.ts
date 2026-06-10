@@ -138,7 +138,11 @@ export class World {
     return true;
   }
 
-  /** Multiplayer: opponent sent extra monsters. They enter staggered, scaled to OUR wave. */
+  /**
+   * Multiplayer: opponent sent extra monsters. They enter staggered, scaled to OUR wave.
+   * Each call's stagger starts from 0.4s, so overlapping calls arrive interleaved (by design).
+   * Unknown enemy ids (a bad network message) drop the whole send.
+   */
   queueIncomingSend(enemyTypeId: string, count: number): void {
     if (!this.enemyTypes[enemyTypeId]) return;
     for (let i = 0; i < count; i++) {
@@ -484,7 +488,9 @@ export class World {
     }
     this.enemies = survivors;
 
-    // wave-clear bonus, paid once per cleared wave (all spawned, none left on the field)
+    // wave-clear bonus, paid once per cleared wave (all spawned, none left on the field).
+    // Queued multiplayer sends intentionally do NOT delay this (or the auto-start below):
+    // sends are additive pressure, not part of the wave.
     const wave = this.waveManager.currentWaveNumber;
     if (
       wave > this.lastBonusWave &&
@@ -510,8 +516,13 @@ export class World {
       this.nextWaveTimer = 0;
     }
 
-    // 5. win when the last wave is fully cleared
-    if (this.state.status === 'playing' && this.waveManager.isComplete && this.enemies.length === 0) {
+    // 5. win when the last wave is fully cleared (queued sends still count as a threat)
+    if (
+      this.state.status === 'playing' &&
+      this.waveManager.isComplete &&
+      this.enemies.length === 0 &&
+      this.incomingSends.length === 0
+    ) {
       this.state.win();
     }
   }

@@ -37,10 +37,9 @@ export class MatchChannel implements MatchTransport {
       }
     });
     await new Promise<void>((resolve, reject) => {
-      this.channel.subscribe(async (status) => {
+      this.channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          await this.channel.track({ nickname: myNickname });
-          resolve();
+          this.channel.track({ nickname: myNickname }).then(() => resolve(), reject);
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           reject(new Error(`realtime channel: ${status}`));
         }

@@ -6,7 +6,7 @@ export interface SendEvent {
 export interface StatusEvent {
   wave: number;
   lives: number;
-  gold: number;
+  gold: number; // intentionally shared in v1 (trusted clients); revisit if sends become rank-based
 }
 
 export interface MatchEvents {

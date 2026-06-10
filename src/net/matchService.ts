@@ -40,20 +40,25 @@ export async function saveNickname(userId: string, nickname: string): Promise<vo
   if (error) throw error;
 }
 
-/** Create a private room (status 'waiting'); retries on the rare code collision. */
-export async function createRoom(userId: string): Promise<MatchRow> {
+/** Insert a match row with a fresh code, retrying on the rare code collision. */
+async function insertMatch(userId: string, status: 'waiting' | 'searching'): Promise<MatchRow> {
   const sb = getSupabase();
   for (let i = 0; i < 5; i++) {
     const code = generateCode();
     const { data, error } = await sb
       .from('matches')
-      .insert({ code, status: 'waiting', host_id: userId })
+      .insert({ code, status, host_id: userId })
       .select('id, code, host_id, guest_id')
       .single();
     if (data) return data;
     if (error && error.code !== '23505') throw error; // 23505 = unique_violation -> retry
   }
   throw new Error('could not allocate a room code');
+}
+
+/** Create a private room (status 'waiting'); retries on the rare code collision. */
+export async function createRoom(userId: string): Promise<MatchRow> {
+  return insertMatch(userId, 'waiting');
 }
 
 /** Join a room by code. Atomic claim: the conditional update wins or returns null. */
@@ -102,13 +107,8 @@ export async function quickMatch(
     if (claimed && claimed.length > 0) return { match: claimed[0], isHost: false };
     // someone else claimed it between select and update — try the next row
   }
-  const { data, error } = await sb
-    .from('matches')
-    .insert({ code: generateCode(), status: 'searching', host_id: userId })
-    .select('id, code, host_id, guest_id')
-    .single();
-  if (error || !data) throw error ?? new Error('failed to join the queue');
-  return { match: data, isHost: true };
+  const match = await insertMatch(userId, 'searching');
+  return { match, isHost: true };
 }
 
 /** Host marks their own waiting/searching room active once presence shows the guest arrived. */

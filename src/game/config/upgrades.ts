@@ -7,6 +7,7 @@ export interface TowerStats {
   splashRadius?: number;
   slow?: { factor: number; duration: number };
   poison?: { dps: number; duration: number };
+  root?: { chance: number; duration: number }; // chance (0-1) to immobilize a hit enemy for duration
   spin?: boolean;
 }
 
@@ -17,6 +18,7 @@ export interface StatDelta {
   splashRadius?: number; // additive
   slow?: { factor: number; duration: number }; // set
   poison?: { dps: number; duration: number }; // set
+  root?: { chance: number; duration: number }; // set
 }
 
 export interface UpgradeLevel {
@@ -99,24 +101,26 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Diwata — slow support (base: dmg 12, range 130, rate 1.4, slow 0.5/1.5s).
+  // Diwata — the slower. Deep Chill turns her slow into an AoE frost that chills whole groups;
+  // Nature's Wrath entangles, with a growing chance to root enemies in place.
+  // (base: dmg 12, range 130, rate 1.4, slow 0.5/1.5s, single target).
   diwata: [
     {
       name: 'Deep Chill',
       levels: [
-        { name: 'Chilling Aura', cost: 60, desc: 'Slow 0.4x / 1.5s, +15 range', delta: { slow: { factor: 0.4, duration: 1.5 }, range: 15 } },
-        { name: 'Deep Freeze', cost: 120, desc: 'Slow 0.3x / 2s', delta: { slow: { factor: 0.3, duration: 2 } } },
-        { name: 'Bitter Cold', cost: 220, desc: 'Slow 0.25x / 2.5s, +20 range', delta: { slow: { factor: 0.25, duration: 2.5 }, range: 20 } },
-        { name: 'Eternal Winter', cost: 400, desc: 'Slow 0.15x / 3s', delta: { slow: { factor: 0.15, duration: 3 } } },
+        { name: 'Frost Touch', cost: 60, desc: 'Slow 0.4x / 1.5s, splash r45', delta: { slow: { factor: 0.4, duration: 1.5 }, splashRadius: 45, range: 10 } },
+        { name: 'Frost Nova', cost: 130, desc: 'Slow 0.32x / 2s, splash r65', delta: { slow: { factor: 0.32, duration: 2 }, splashRadius: 20 } },
+        { name: 'Bitter Cold', cost: 240, desc: 'Slow 0.22x / 2.5s, splash r85, +15 range', delta: { slow: { factor: 0.22, duration: 2.5 }, splashRadius: 20, range: 15 } },
+        { name: 'Eternal Winter', cost: 430, desc: 'Slow 0.12x / 3s, splash r110', delta: { slow: { factor: 0.12, duration: 3 }, splashRadius: 25 } },
       ],
     },
     {
       name: "Nature's Wrath",
       levels: [
-        { name: 'Thorn Lash', cost: 55, desc: '+4 damage', delta: { damage: 4 } },
-        { name: 'Quick Spirits', cost: 110, desc: '+1.0 attack speed', delta: { fireRate: 1.0 } },
-        { name: 'Bramble', cost: 200, desc: '+8 damage, +1.0 attack speed', delta: { damage: 8, fireRate: 1.0 } },
-        { name: 'Forest Fury', cost: 360, desc: '+18 damage', delta: { damage: 18 } },
+        { name: 'Tangling Vines', cost: 55, desc: '+5 dmg, 15% root 0.6s', delta: { damage: 5, root: { chance: 0.15, duration: 0.6 } } },
+        { name: 'Snare', cost: 120, desc: '+1.0 atk speed, 25% root 0.8s', delta: { fireRate: 1.0, root: { chance: 0.25, duration: 0.8 } } },
+        { name: 'Gnarled Roots', cost: 220, desc: '+10 dmg, 40% root 1.0s', delta: { damage: 10, root: { chance: 0.4, duration: 1.0 } } },
+        { name: "Forest's Grasp", cost: 400, desc: '+22 dmg, 60% root 1.2s', delta: { damage: 22, root: { chance: 0.6, duration: 1.2 } } },
       ],
     },
   ],
@@ -163,6 +167,7 @@ function applyDelta(s: TowerStats, d: StatDelta): void {
   if (d.splashRadius) s.splashRadius = (s.splashRadius ?? 0) + d.splashRadius;
   if (d.slow) s.slow = d.slow;
   if (d.poison) s.poison = d.poison;
+  if (d.root) s.root = d.root;
 }
 
 export function effectiveStats(hero: HeroType, levels: readonly [number, number]): TowerStats {

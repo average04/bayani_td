@@ -226,6 +226,7 @@ export class World {
       e.takeDamage(stats.damage);
       if (stats.slow) e.applySlow(stats.slow.factor, stats.slow.duration);
       if (stats.poison) e.applyPoison(stats.poison.dps, stats.poison.duration);
+      if (stats.root && Math.random() < stats.root.chance) e.applyRoot(stats.root.duration);
     }
   }
 

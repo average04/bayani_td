@@ -12,6 +12,7 @@ export class Enemy {
   slowTimer = 0;
   poisonDps = 0;
   poisonTimer = 0;
+  rootTimer = 0; // while > 0 the enemy is rooted in place (speed 0), overriding any slow
   private readonly path: Vec2[];
 
   constructor(type: EnemyType, path: Vec2[], maxHp: number = type.maxHp) {
@@ -46,6 +47,10 @@ export class Enemy {
       this.slowTimer = Math.max(0, this.slowTimer - dt);
       if (this.slowTimer <= 0) this.slowFactor = 1;
     }
+    if (this.rootTimer > 0) {
+      this.rootTimer = Math.max(0, this.rootTimer - dt);
+      speedMult = 0; // roots fully immobilize, overriding any slow
+    }
     let travel = this.type.speed * speedMult * dt;
     while (travel > 0 && this.pathIndex < this.path.length) {
       const target = this.path[this.pathIndex];
@@ -79,6 +84,10 @@ export class Enemy {
   applyPoison(dps: number, duration: number): void {
     this.poisonDps = Math.max(this.poisonDps, dps);
     this.poisonTimer = Math.max(this.poisonTimer, duration);
+  }
+
+  applyRoot(duration: number): void {
+    this.rootTimer = Math.max(this.rootTimer, duration);
   }
 
   get isDead(): boolean {

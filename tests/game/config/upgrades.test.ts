@@ -21,6 +21,18 @@ describe('upgrades', () => {
     expect(b4.slow).toEqual({ factor: 0.5, duration: 1.5 });
   });
 
+  it('Diwata Deep Chill grants AoE splash + stronger slow; Nature\'s Wrath grants root', () => {
+    const diwata = HERO_TYPES.diwata;
+    const chill = effectiveStats(diwata, [4, 0]);
+    expect(chill.splashRadius).toBe(45 + 20 + 20 + 25); // accumulates across the path
+    expect(chill.slow).toEqual({ factor: 0.12, duration: 3 }); // last tier's slow
+    expect(chill.root).toBeUndefined();
+
+    const wrath = effectiveStats(diwata, [0, 2]);
+    expect(wrath.root).toEqual({ chance: 0.25, duration: 0.8 }); // Snare overrides Tangling Vines
+    expect(wrath.splashRadius).toBeUndefined(); // no splash on this path
+  });
+
   it('canUpgradePath enforces the one-path-past-2 rule', () => {
     expect(canUpgradePath([0, 0], 0)).toBe(true);
     expect(canUpgradePath([2, 2], 0)).toBe(true);

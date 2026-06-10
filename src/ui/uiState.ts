@@ -59,10 +59,12 @@ export interface UpgradePanelVM {
 
 function statsEffect(s: TowerStats): string {
   if (s.spin) return 'Melee spin';
-  if (s.splashRadius) return `Splash r${s.splashRadius}`;
-  if (s.slow) return `Slow x${s.slow.factor} / ${s.slow.duration}s`;
-  if (s.poison) return `Poison ${s.poison.dps}/s`;
-  return 'Single target';
+  const parts: string[] = [];
+  if (s.splashRadius) parts.push(`Splash r${s.splashRadius}`);
+  if (s.slow) parts.push(`Slow x${s.slow.factor}/${s.slow.duration}s`);
+  if (s.poison) parts.push(`Poison ${s.poison.dps}/s`);
+  if (s.root) parts.push(`Root ${Math.round(s.root.chance * 100)}%`);
+  return parts.length ? parts.join(' · ') : 'Single target';
 }
 
 export function buildUpgradePanel(

@@ -35,4 +35,15 @@ describe('Enemy', () => {
     e.takeDamage(50);
     expect(e.isDead).toBe(true);
   });
+
+  it('does not move while rooted, then resumes', () => {
+    const e = new Enemy(type, path);
+    e.applyRoot(1);
+    e.update(0.5); // rooted: should not move
+    expect(e.pos.x).toBeCloseTo(0);
+    e.update(0.5); // root expires exactly here, still no travel this frame
+    expect(e.pos.x).toBeCloseTo(0);
+    e.update(0.5); // root gone: moves 100 * 0.5 = 50px
+    expect(e.pos.x).toBeCloseTo(50);
+  });
 });

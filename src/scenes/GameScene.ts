@@ -33,6 +33,10 @@ import {
 } from '../render/fx';
 import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel, buildStorePanel } from '../ui/uiState';
+import { getSession, type MatchSession } from '../net/session';
+import { finishMatch } from '../net/matchService';
+import { SEND_TABLE } from '../game/config/sends';
+import type { OpponentVM } from '../ui/uiState';
 
 const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR'];
 const STORE_KEY = 'FIVE';
@@ -49,6 +53,12 @@ export class GameScene extends Phaser.Scene {
   private selectedHeroId: string | null = null;
   private bestWave = 0;
   private endHandled = false;
+  private mp: MatchSession | null = null;
+  private opponent: OpponentVM | null = null;
+  private statusTimer = 0;
+  private forfeitTimer: number | null = null; // seconds until opponent forfeits, when absent
+  private wantRematch = false;
+  private peerWantsRematch = false;
   private enemyViews = new Map<Enemy, EnemyView>();
   private towerViews = new Map<Tower, TowerView>();
   private storeViews = new Map<Store, StoreView>();
@@ -155,11 +165,67 @@ export class GameScene extends Phaser.Scene {
     };
     ui.onCycleTarget = () => this.selectedTower?.cycleTarget();
     ui.onRestart = () => {
-      if (this.world.status !== 'playing') this.scene.restart();
+      if (this.world.status === 'playing') return;
+      if (this.mp) {
+        this.wantRematch = true;
+        this.mp.transport.emit('rematch');
+        this.maybeRematch();
+      } else {
+        this.scene.restart();
+      }
     };
     ui.onHome = () => {
       if (this.world.status !== 'playing') location.reload();
     };
+
+    this.mp = getSession();
+    if (this.mp) this.initMultiplayer(this.mp);
+  }
+
+  private initMultiplayer(mp: MatchSession): void {
+    this.opponent = { nickname: mp.opponentNickname, lives: 20, wave: 0 };
+    this.wantRematch = false;
+    this.peerWantsRematch = false;
+    mp.transport.on('send', (e) => this.world.queueIncomingSend(e.enemyTypeId, e.count));
+    mp.transport.on('status', (e) => {
+      if (this.opponent) {
+        this.opponent.lives = e.lives;
+        this.opponent.wave = e.wave;
+      }
+    });
+    mp.transport.on('defeat', () => this.winMatch());
+    mp.transport.on('peerLeave', () => {
+      if (this.world.status === 'playing') this.forfeitTimer = 30;
+    });
+    mp.transport.on('peerJoin', () => {
+      this.forfeitTimer = null;
+    });
+    mp.transport.on('rematch', () => {
+      this.peerWantsRematch = true;
+      this.maybeRematch();
+    });
+    const ui = getUI();
+    ui.onSend = (enemyTypeId) => {
+      const option = SEND_TABLE.find((o) => o.enemyTypeId === enemyTypeId);
+      if (option && this.world.buySend(option)) {
+        mp.transport.emit('send', { enemyTypeId, count: 1 });
+      }
+    };
+    ui.onConcede = () => {
+      if (this.world.status === 'playing') this.world.state.loseLife(this.world.lives);
+    };
+  }
+
+  private winMatch(): void {
+    if (!this.mp || this.world.status !== 'playing') return;
+    this.world.state.win();
+    void finishMatch(this.mp.matchId, this.mp.myId);
+  }
+
+  private maybeRematch(): void {
+    if (this.wantRematch && this.peerWantsRematch && this.world.status !== 'playing') {
+      this.scene.restart();
+    }
   }
 
   private tryPlaceBuild(x: number, y: number): void {
@@ -220,6 +286,24 @@ export class GameScene extends Phaser.Scene {
     if (this.world.status === 'playing') {
       this.world.update(delta / 1000);
     }
+    if (this.mp && this.world.status === 'playing') {
+      this.statusTimer += delta / 1000;
+      if (this.statusTimer >= 0.5) {
+        this.statusTimer = 0;
+        this.mp.transport.emit('status', {
+          wave: this.world.waveNumber,
+          lives: this.world.lives,
+          gold: this.world.gold,
+        });
+      }
+      if (this.forfeitTimer !== null) {
+        this.forfeitTimer -= delta / 1000;
+        if (this.forfeitTimer <= 0) {
+          this.forfeitTimer = null;
+          this.winMatch();
+        }
+      }
+    }
     this.consumeEvents();
     this.syncViews();
     this.drawAuras();
@@ -242,7 +326,10 @@ export class GameScene extends Phaser.Scene {
         ? buildStorePanel(this.selectedStore.levels, this.world.gold, this.selectedStore.spent)
         : null,
     );
-    getUI().update(buildUiState(this.world, this.selectedHeroId, this.bestWave, getLoadout(), HERO_TYPES));
+    getUI().update(
+      buildUiState(this.world, this.selectedHeroId, this.bestWave, getLoadout(), HERO_TYPES,
+        this.mp ? { opponent: this.opponent } : undefined),
+    );
     this.handleEndState();
   }
 
@@ -376,6 +463,10 @@ export class GameScene extends Phaser.Scene {
       g.fillRect(e.pos.x - w / 2, y, w, h);
       g.fillStyle(e.type.boss ? 0xb86dd9 : 0x2ecc71, 1);
       g.fillRect(e.pos.x - w / 2, y, w * frac, h);
+      if (e.sent) {
+        g.fillStyle(0xff5544, 1);
+        g.fillTriangle(e.pos.x, y - 6, e.pos.x - 4, y - 1, e.pos.x + 4, y - 1);
+      }
     }
   }
 
@@ -384,5 +475,8 @@ export class GameScene extends Phaser.Scene {
     this.endHandled = true;
     saveBestWave(this.world.waveNumber);
     this.bestWave = Math.max(this.bestWave, this.world.waveNumber);
+    if (this.mp && this.world.status === 'lost') {
+      this.mp.transport.emit('defeat');
+    }
   }
 }

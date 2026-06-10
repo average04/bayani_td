@@ -8,6 +8,8 @@ import { createUI } from './ui';
 import { showHomeScreen } from './ui/homeScreen';
 import { showHeroSelect } from './ui/heroSelect';
 import { setLoadout } from './game/config/loadout';
+import { showLobby } from './ui/lobby';
+import { setSession, type MatchSession } from './net/session';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -40,20 +42,75 @@ function fitToViewport(): void {
 }
 window.addEventListener('resize', fitToViewport);
 
+function startGame(): void {
+  createUI(document.getElementById('game')!);
+  if (!game) game = new Phaser.Game(config);
+  fitToViewport();
+}
+
+function readyThenStart(
+  session: MatchSession,
+  readyState: { peerReady: boolean; onPeerReady: () => void },
+): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'ui-countdown';
+  overlay.textContent = 'Waiting for your rival…';
+  document.body.appendChild(overlay);
+  let started = false;
+  const maybeStart = (): void => {
+    if (started || !readyState.peerReady) return;
+    started = true;
+    let n = 3;
+    overlay.textContent = String(n);
+    const tick = window.setInterval(() => {
+      n -= 1;
+      if (n > 0) {
+        overlay.textContent = String(n);
+      } else {
+        window.clearInterval(tick);
+        overlay.remove();
+        startGame();
+      }
+    }, 1000);
+  };
+  readyState.onPeerReady = maybeStart;
+  session.transport.on('peerLeave', () => {
+    if (!started) {
+      overlay.textContent = 'Rival left. Returning home…';
+      setTimeout(() => location.reload(), 1500);
+    }
+  });
+  session.transport.emit('ready');
+  maybeStart();
+}
+
 // Title screen -> hero card select -> the Phaser game boots with the chosen loadout.
 showHomeScreen({
   onInfinite: () => {
     showHeroSelect({
       onStart: (loadout) => {
         setLoadout(loadout);
-        createUI(document.getElementById('game')!);
-        if (!game) game = new Phaser.Game(config);
-        fitToViewport();
+        startGame();
       },
     });
   },
   onMultiplayer: () => {
-    // wired fully in the next task (lobby -> hero select -> ready -> game)
-    location.reload();
+    showLobby({
+      onBack: () => location.reload(),
+      onMatched: (session) => {
+        setSession(session);
+        const readyState = { peerReady: false, onPeerReady: () => {} };
+        session.transport.on('ready', () => {
+          readyState.peerReady = true;
+          readyState.onPeerReady();
+        });
+        showHeroSelect({
+          onStart: (loadout) => {
+            setLoadout(loadout);
+            readyThenStart(session, readyState);
+          },
+        });
+      },
+    });
   },
 });

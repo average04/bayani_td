@@ -55,7 +55,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Gabriela — fast single-target shooter (base: dmg 6, range 140, rate 3).
+  // Gabriela — fast single-target shooter (base: dmg 12, range 140, rate 3).
   gabriela: [
     {
       name: 'Sharpshooter',
@@ -77,7 +77,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Bernardo — splash strongman (base: dmg 12, range 100, rate 1.2, splash 50).
+  // Bernardo — splash strongman (base: dmg 15, range 100, rate 1.2, splash 50).
   bernardo: [
     {
       name: 'Earthshaker',
@@ -99,7 +99,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Diwata — slow support (base: dmg 4, range 130, rate 1.5, slow 0.5/1.5s).
+  // Diwata — slow support (base: dmg 12, range 130, rate 1, slow 0.5/1.5s).
   diwata: [
     {
       name: 'Deep Chill',
@@ -121,7 +121,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Mangkukulam — poison caster (base: dmg 5, range 120, rate 1, poison 8/3s).
+  // Mangkukulam — poison caster (base: dmg 10, range 120, rate 0.8, poison 8/3s).
   mangkukulam: [
     {
       name: 'Curse',

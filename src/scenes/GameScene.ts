@@ -14,7 +14,17 @@ import { renderMap } from '../render/mapRenderer';
 import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
 import { StoreView } from '../render/storeView';
-import { spawnProjectile, spawnSwordWave, spawnRock, spawnHitPuff, spawnDeath, spawnSpin, spawnGoldPopup } from '../render/fx';
+import {
+  spawnProjectile,
+  spawnSwordWave,
+  spawnRock,
+  spawnButterfly,
+  spawnSkull,
+  spawnHitPuff,
+  spawnDeath,
+  spawnSpin,
+  spawnGoldPopup,
+} from '../render/fx';
 import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel, buildStorePanel } from '../ui/uiState';
 
@@ -235,6 +245,11 @@ export class GameScene extends Phaser.Scene {
         spawnHitPuff(this, shot.to);
       } else if (shot.heroId === 'bernardo') {
         spawnRock(this, shot.from, shot.to);
+        spawnHitPuff(this, shot.to);
+      } else if (shot.heroId === 'diwata') {
+        spawnButterfly(this, shot.from, shot.to);
+      } else if (shot.heroId === 'mangkukulam') {
+        spawnSkull(this, shot.from, shot.to);
         spawnHitPuff(this, shot.to);
       } else {
         spawnProjectile(this, shot.from, shot.to);

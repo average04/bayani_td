@@ -93,6 +93,94 @@ export function spawnRock(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
   });
 }
 
+// Diwata's spirit butterfly: teal wings that flap and flutter along a wavy path to the target.
+function drawButterfly(g: Phaser.GameObjects.Graphics): void {
+  // wings (local +x = forward; right side y>0, left side y<0), forewings larger than hindwings
+  const wing = (x: number, y: number, r: number): void => {
+    g.fillStyle(0x6fc99a, 0.95);
+    g.fillCircle(x, y, r);
+    g.fillStyle(0xcdeede, 0.85);
+    g.fillCircle(x + 0.5, y, r * 0.4); // pale inner
+    g.fillStyle(0x2f6b4c, 0.9);
+    g.fillCircle(x + r * 0.5, y + (y > 0 ? r * 0.4 : -r * 0.4), 0.9); // wing spot
+  };
+  wing(3, 5, 4.2);
+  wing(3, -5, 4.2); // forewings
+  wing(-2.5, 5, 3); // hindwings
+  wing(-2.5, -5, 3);
+  g.fillStyle(0x2a2e26, 1);
+  g.fillCircle(-4, 0, 1.5);
+  g.fillCircle(0, 0, 1.7);
+  g.fillCircle(4, 0, 1.4);
+  g.fillCircle(6.5, 0, 1.6); // segmented body + head
+  g.lineStyle(1, 0x2a2e26, 0.9);
+  g.lineBetween(6.5, 0, 9, -2.5);
+  g.lineBetween(6.5, 0, 9, 2.5); // antennae
+}
+
+export function spawnButterfly(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
+  const angle = Math.atan2(to.y - from.y, to.x - from.x);
+  const g = scene.add.graphics().setDepth(FX_DEPTH);
+  drawButterfly(g);
+  g.rotation = angle;
+  const px = -Math.sin(angle);
+  const py = Math.cos(angle); // perpendicular to travel
+  const proxy = { t: 0 };
+  scene.tweens.add({
+    targets: proxy,
+    t: 1,
+    duration: 220,
+    ease: 'Sine.InOut',
+    onUpdate: () => {
+      const t = proxy.t;
+      const wob = Math.sin(t * Math.PI * 3) * 7 * (1 - t); // flutter side-to-side, settling at the target
+      g.setPosition(from.x + (to.x - from.x) * t + px * wob, from.y + (to.y - from.y) * t + py * wob);
+    },
+    onComplete: () => g.destroy(),
+  });
+  scene.tweens.add({ targets: g, scaleY: 0.5, duration: 60, yoyo: true, repeat: 2, ease: 'Sine.InOut' }); // wing flap
+}
+
+// Mangkukulam's cursed skull: a glowing purple skull that bobs and wobbles to the target.
+function drawSkull(g: Phaser.GameObjects.Graphics): void {
+  g.fillStyle(0x8a4fd0, 0.3);
+  g.fillCircle(0, 0, 9); // sickly aura
+  g.fillStyle(0xc9b3e6, 1);
+  g.fillCircle(0, -1, 6); // cranium
+  g.fillRoundedRect(-3.6, 2.5, 7.2, 4.2, 1.6); // jaw
+  g.fillStyle(0xe6d8f7, 0.7);
+  g.fillCircle(-2, -3, 1.6); // highlight
+  g.fillStyle(0x3a1d5c, 1);
+  g.fillCircle(-2.4, -1, 1.9);
+  g.fillCircle(2.4, -1, 1.9); // eye sockets
+  g.fillTriangle(0, 0.5, -1.1, 2.6, 1.1, 2.6); // nasal cavity
+  g.lineStyle(1, 0x6a4a90, 0.9);
+  g.lineBetween(-1.4, 2.8, -1.4, 6.2);
+  g.lineBetween(1.4, 2.8, 1.4, 6.2); // teeth gaps
+}
+
+export function spawnSkull(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
+  const angle = Math.atan2(to.y - from.y, to.x - from.x);
+  const g = scene.add.graphics().setDepth(FX_DEPTH);
+  drawSkull(g);
+  const px = -Math.sin(angle);
+  const py = Math.cos(angle);
+  const proxy = { t: 0 };
+  scene.tweens.add({
+    targets: proxy,
+    t: 1,
+    duration: 180,
+    ease: 'Linear',
+    onUpdate: () => {
+      const t = proxy.t;
+      const bob = Math.sin(t * Math.PI * 2.5) * 5 * (1 - t * 0.5);
+      g.setPosition(from.x + (to.x - from.x) * t + px * bob, from.y + (to.y - from.y) * t + py * bob);
+      g.rotation = Math.sin(t * Math.PI * 4) * 0.25; // eerie wobble
+    },
+    onComplete: () => g.destroy(),
+  });
+}
+
 export function spawnHitPuff(scene: Phaser.Scene, at: Vec2): void {
   const s = scene.add.sprite(at.x, at.y, MANIFEST.fx.hitPuff.key).setDepth(FX_DEPTH);
   s.play(MANIFEST.fx.hitPuff.key);

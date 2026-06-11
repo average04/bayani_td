@@ -107,6 +107,27 @@ body::after {
   background: rgba(20, 14, 6, .55);
 }
 .ui-end-btns { display: flex; gap: 12px; }
+
+/* ---- infinite leaderboard (end screen + home modal) ---- */
+.ui-lb {
+  display: flex; flex-direction: column; gap: 6px; width: 280px; max-height: 260px;
+  padding: 10px 14px; box-sizing: border-box; overflow-y: auto;
+  background: rgba(16, 9, 3, .62); border: 2px solid #3a2914; border-radius: 10px;
+}
+.ui-lb-title { text-align: center; font-size: 11px; font-weight: 800; letter-spacing: 3px; color: #ffd76a; }
+.ui-lb-status { text-align: center; font-size: 11px; font-weight: 700; color: #cdb98a; }
+.ui-lb-list { display: flex; flex-direction: column; gap: 3px; }
+.ui-lb-row {
+  display: flex; align-items: center; gap: 8px; padding: 3px 8px;
+  font-size: 12px; color: #e7d4a4; border-radius: 5px;
+}
+.ui-lb-row.me { background: rgba(212, 175, 55, .22); outline: 1px solid #d4af37; color: #ffe28a; }
+.ui-lb-rank { width: 30px; font-weight: 800; color: #caa24a; }
+.ui-lb-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.ui-lb-wave { font-weight: 800; color: #8aff7a; }
+.ui-lb-form { display: flex; gap: 6px; }
+.ui-lb-form .ui-lobby-input { flex: 1; min-width: 0; padding: 7px; font-size: 12px; }
+.ui-lb-form .ui-lobby-btn { padding: 7px 12px; font-size: 11px; }
 .ui-homebtn { background: linear-gradient(#5c4a2c, #463720); color: #f6e6bd; }
 
 /* boss banner: pulses at the top edge of the stage while a boss is on the field */
@@ -257,6 +278,18 @@ body::after {
 .ui-home-mode-desc { font-size: 12px; opacity: .8; }
 .ui-home-mode.soon { filter: grayscale(.55) brightness(.78); }
 .ui-home-note { height: 18px; margin: 16px 0 0; color: #ffd76a; font-weight: 700; }
+.ui-home-lbbtn {
+  margin-top: 18px; padding: 8px 22px; cursor: pointer; font-family: inherit;
+  color: #f6e6bd; font-weight: 800; font-size: 12px; letter-spacing: 2px;
+  background: linear-gradient(#5c4a2c, #463720); border: 2px solid #3a2914; border-radius: 8px;
+  box-shadow: 0 3px 0 #2c1f0f, inset 0 1px 0 #bd9358;
+}
+.ui-home-lbbtn:hover { filter: brightness(1.1); }
+.ui-home-lbmodal {
+  position: fixed; inset: 0; z-index: 110; display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 14, 10, .7);
+}
+.ui-lb-modal { width: 340px; max-height: 70vh; background: linear-gradient(#3a2c18, #2a1f10); }
 .ui-home-heroes { display: flex; gap: 10px; margin-top: 22px; }
 .ui-home-hero {
   width: 46px; height: 46px; border-radius: 8px; border: 2px solid #3a2914;

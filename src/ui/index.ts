@@ -3,12 +3,17 @@ import { getLoadout } from '../game/config/loadout';
 import { STORE } from '../game/config/store';
 import { LEVEL_ONE } from '../game/config/levels';
 import { getSession } from '../net/session';
+import {
+  leaderboardAvailable, submitBestWave, saveNameAndSubmit, fetchLeaderboard,
+  type LeaderboardState,
+} from '../net/leaderboard';
 import type { UiState, UpgradePanelVM, StorePanelVM } from './uiState';
 
 export interface UI {
   update(vm: UiState): void;
   setUpgradePanel(vm: UpgradePanelVM | null): void;
   setStorePanel(vm: StorePanelVM | null): void;
+  showEndLeaderboard(wave: number): void;
   onSelectHero: (id: string) => void;
   onRestart: () => void;
   onHome: () => void;
@@ -200,6 +205,8 @@ export function createUI(mount: HTMLElement): UI {
   endPanel.style.display = 'none';
   const endTitle = el('h2', 'ui-end-title', endPanel);
   const endSub = el('p', 'ui-end-sub', endPanel);
+  const lbBox = el('div', 'ui-lb', endPanel); // solo infinite: TOP BAYANI leaderboard
+  lbBox.style.display = 'none';
   const endBtns = el('div', 'ui-end-btns', endPanel);
   const restartBtn = el<HTMLButtonElement>('button', 'ui-restart', endBtns);
   restartBtn.textContent = 'RESTART';
@@ -272,6 +279,45 @@ export function createUI(mount: HTMLElement): UI {
     refreshLeftHint();
   });
 
+  function renderLeaderboard(state: LeaderboardState, wave: number): void {
+    lbBox.innerHTML = '';
+    el('div', 'ui-lb-title', lbBox).textContent = 'TOP BAYANI';
+    if (state.top.length === 0) {
+      el('div', 'ui-lb-status', lbBox).textContent = 'No champions yet — be the first!';
+    }
+    const list = el('div', 'ui-lb-list', lbBox);
+    state.top.forEach((row, i) => {
+      const r = el('div', 'ui-lb-row', list);
+      if (row.userId === state.myUserId) r.classList.add('me');
+      el('span', 'ui-lb-rank', r).textContent = `#${i + 1}`;
+      el('span', 'ui-lb-name', r).textContent = row.nickname;
+      el('span', 'ui-lb-wave', r).textContent = `W${row.bestWave}`;
+    });
+    // you're on the board but below the cutoff
+    if (state.myNickname && state.myRank !== null && state.myRank > state.top.length) {
+      el('div', 'ui-lb-status', lbBox).textContent = `Your rank: #${state.myRank}`;
+    }
+    // first run ever: claim a name to put this score on the board
+    if (!state.myNickname) {
+      const form = el('div', 'ui-lb-form', lbBox);
+      const input = el<HTMLInputElement>('input', 'ui-lobby-input', form);
+      input.maxLength = 20;
+      input.placeholder = 'Name to save your score';
+      const btn = el<HTMLButtonElement>('button', 'ui-lobby-btn', form);
+      btn.textContent = 'SAVE';
+      btn.addEventListener('click', () => {
+        const name = input.value.trim();
+        if (name.length < 2) return;
+        btn.disabled = true;
+        void saveNameAndSubmit(name, wave)
+          .then(() => ui.showEndLeaderboard(wave))
+          .catch(() => {
+            btn.disabled = false;
+          });
+      });
+    }
+  }
+
   const ui: UI = {
     onSelectHero: () => {},
     onRestart: () => {},
@@ -283,6 +329,23 @@ export function createUI(mount: HTMLElement): UI {
     onCycleTarget: () => {},
     onSend: () => {},
     onConcede: () => {},
+    showEndLeaderboard(wave: number): void {
+      if (!leaderboardAvailable()) {
+        lbBox.style.display = 'none';
+        return;
+      }
+      lbBox.style.display = 'flex';
+      lbBox.innerHTML = '';
+      el('div', 'ui-lb-title', lbBox).textContent = 'TOP BAYANI';
+      const status = el('div', 'ui-lb-status', lbBox);
+      status.textContent = 'Loading…';
+      void submitBestWave(wave)
+        .then(() => fetchLeaderboard(10))
+        .then((state) => renderLeaderboard(state, wave))
+        .catch(() => {
+          status.textContent = 'Leaderboard unavailable right now.';
+        });
+    },
     setStorePanel(vm: StorePanelVM | null): void {
       if (!vm) {
         storePanel.style.display = 'none';

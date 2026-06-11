@@ -558,5 +558,7 @@ export class GameScene extends Phaser.Scene {
     if (this.mp && this.world.status === 'lost') {
       this.mp.transport.emit('defeat');
     }
+    // solo infinite: put the run on the global leaderboard and show the standings
+    if (!this.mp) getUI().showEndLeaderboard(this.bestWave);
   }
 }

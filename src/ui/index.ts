@@ -35,6 +35,16 @@ function el<T extends HTMLElement = HTMLElement>(tag: string, cls: string, paren
   return node;
 }
 
+// monster identity colors for the send menu (match the rival-board reading of each type)
+const SEND_COLORS: Record<string, string> = {
+  tiyanak: '#ff6b6b',
+  tiktik: '#b8c4d0',
+  aswang: '#7fc97f',
+  manananggal: '#c0392b',
+  kapre: '#8a5a2b',
+  bakunawa: '#9a6df0',
+};
+
 function effectText(h: HeroType): string {
   if (h.spin) return 'Melee spin (AoE)';
   if (h.splashRadius) return `Splash r${h.splashRadius}`;
@@ -54,8 +64,13 @@ export function createUI(mount: HTMLElement): UI {
   const left = el('div', 'ui-left', mount);
   const col = el('div', 'ui-col', mount);
 
-  // top HUD bar
+  const mpMode = getSession() !== null;
+  const boardW = LEVEL_ONE.cols * LEVEL_ONE.tileSize;
+
+  // top HUD bar. In MP your stats cluster over YOUR board; the rival strip alone
+  // sits over THEIR board.
   const top = el('div', 'ui-top', col);
+  top.classList.toggle('mp', mpMode);
   const statValue = (icon: string, label: string): HTMLElement => {
     const s = el('div', 'ui-stat', top);
     el('span', `ui-ico ui-ico-${icon}`, s);
@@ -71,6 +86,7 @@ export function createUI(mount: HTMLElement): UI {
   const waveBox = el('div', 'ui-statval', waveStat);
   el('span', 'ui-lab', waveBox).textContent = 'Wave';
   const waveV = el('b', '', waveBox);
+  const waveSub = el('span', 'ui-wave-sub', waveStat); // "next in Ns" countdown, off the map
   const bestStat = el('div', 'ui-stat', top);
   const bestBox = el('div', 'ui-statval', bestStat);
   el('span', 'ui-lab', bestBox).textContent = 'Best';
@@ -83,15 +99,11 @@ export function createUI(mount: HTMLElement): UI {
   const oppV = el('b', '', oppBox);
 
   // stage (Phaser mounts here) + overlay; double-wide in MP for the side-by-side boards
-  const mpMode = getSession() !== null;
-  const boardW = LEVEL_ONE.cols * LEVEL_ONE.tileSize;
   const stage = el('div', 'ui-stage', col);
   stage.id = 'stage';
   stage.style.width = `${mpMode ? boardW * 2 + 48 : boardW}px`;
   const overlay = el('div', 'ui-overlay', stage);
-
-  const nextWave = el('div', 'ui-nextwave', overlay);
-  nextWave.style.display = 'none';
+  overlay.classList.toggle('mp', mpMode); // centered overlays anchor to YOUR board, not the divider
 
   // boss banner, shown while a boss is on the field
   const bossBanner = el('div', 'ui-boss', overlay);
@@ -99,6 +111,12 @@ export function createUI(mount: HTMLElement): UI {
   bossBanner.style.display = 'none';
 
   const sendBtns = new Map<string, HTMLButtonElement>();
+
+  // placeholder for the details column so it never reads as an empty hole
+  const leftHint = el('div', 'ui-left-hint', left);
+  el('div', 'ui-left-hint-title', leftHint).textContent = 'DETAILS';
+  el('div', 'ui-left-hint-text', leftHint).textContent =
+    'Select a hero or store on the field to inspect, upgrade or sell it. Hover a card below to compare stats.';
 
   const tooltip = el('div', 'ui-tooltip', left);
   tooltip.style.display = 'none';
@@ -168,6 +186,16 @@ export function createUI(mount: HTMLElement): UI {
   const storeSell = el<HTMLButtonElement>('button', 'ui-upg-sell', storePanel);
   storeSell.addEventListener('click', () => ui.onSellStore());
 
+  // the hint fills the details column only while nothing else occupies it
+  const refreshLeftHint = (): void => {
+    const busy =
+      tooltip.style.display !== 'none' ||
+      upg.style.display !== 'none' ||
+      storePanel.style.display !== 'none';
+    leftHint.style.display = busy ? 'none' : 'flex';
+  };
+  refreshLeftHint();
+
   const endPanel = el('div', 'ui-end', overlay);
   endPanel.style.display = 'none';
   const endTitle = el('h2', 'ui-end-title', endPanel);
@@ -213,9 +241,11 @@ export function createUI(mount: HTMLElement): UI {
         `<div class="ui-trow"><span>Effect</span><b>${effectText(h)}</b></div>` +
         `<div class="ui-trow"><span>Cost</span><b>$${h.cost}</b></div>`;
       tooltip.style.display = 'block';
+      refreshLeftHint();
     });
     tile.addEventListener('mouseleave', () => {
       tooltip.style.display = 'none';
+      refreshLeftHint();
     });
     tiles[id] = tile;
   });
@@ -235,9 +265,11 @@ export function createUI(mount: HTMLElement): UI {
       `<div class="ui-trow"><span>Cost</span><b>$${STORE.cost}</b></div>` +
       `<div class="ui-trow"><span>Limit</span><b>${STORE.maxCount} per game</b></div>`;
     tooltip.style.display = 'block';
+    refreshLeftHint();
   });
   storeTile.addEventListener('mouseleave', () => {
     tooltip.style.display = 'none';
+    refreshLeftHint();
   });
 
   const ui: UI = {
@@ -254,9 +286,11 @@ export function createUI(mount: HTMLElement): UI {
     setStorePanel(vm: StorePanelVM | null): void {
       if (!vm) {
         storePanel.style.display = 'none';
+        refreshLeftHint();
         return;
       }
       storePanel.style.display = 'block';
+      refreshLeftHint();
       storeName.textContent = vm.name;
       storeIncome.textContent = vm.income;
       storeSell.textContent = `Sell — $${vm.sellValue}`;
@@ -278,9 +312,11 @@ export function createUI(mount: HTMLElement): UI {
     setUpgradePanel(vm: UpgradePanelVM | null): void {
       if (!vm) {
         upg.style.display = 'none';
+        refreshLeftHint();
         return;
       }
       upg.style.display = 'block';
+      refreshLeftHint();
       upgName.textContent = vm.heroName;
       upgStat.damage.textContent = String(vm.stats.damage);
       upgStat.range.textContent = String(vm.stats.range);
@@ -314,12 +350,8 @@ export function createUI(mount: HTMLElement): UI {
       passiveV.textContent = vm.passiveIncome > 0 ? `+${+vm.passiveIncome.toFixed(1)}/s` : '';
       waveV.textContent = Number.isFinite(vm.totalWaves) ? `${vm.wave} / ${vm.totalWaves}` : `${vm.wave}`;
       bestV.textContent = String(vm.bestWave);
-      if (vm.status === 'playing' && vm.nextWaveIn !== null) {
-        nextWave.style.display = 'block';
-        nextWave.textContent = `Next wave in ${Math.ceil(vm.nextWaveIn)}…`;
-      } else {
-        nextWave.style.display = 'none';
-      }
+      waveSub.textContent =
+        vm.status === 'playing' && vm.nextWaveIn !== null ? `next in ${Math.ceil(vm.nextWaveIn)}s` : '';
       bossBanner.style.display = vm.bossActive ? 'block' : 'none';
       for (const h of vm.heroes) {
         const tile = tiles[h.id];
@@ -359,11 +391,19 @@ export function createUI(mount: HTMLElement): UI {
           let btn = sendBtns.get(s.id);
           if (!btn) {
             btn = el<HTMLButtonElement>('button', 'ui-send-btn', sendBox);
+            const head = el('span', 'ui-send-head', btn);
+            const swatch = el('span', 'ui-send-dot', head);
+            swatch.style.background = SEND_COLORS[s.id] ?? '#f2e8cf';
+            el('span', 'ui-send-name', head).textContent = s.name;
+            el('small', 'ui-send-sub', btn);
             const id = s.id;
             btn.addEventListener('click', () => ui.onSend(id));
             sendBtns.set(s.id, btn);
           }
-          btn.textContent = s.unlocked ? `${s.name} $${s.cost}` : `${s.name} — wave ${s.unlockWave}`;
+          btn.querySelector<HTMLElement>('.ui-send-sub')!.textContent = s.unlocked
+            ? `$${s.cost}`
+            : `unlocks wave ${s.unlockWave}`;
+          btn.classList.toggle('locked', !s.unlocked);
           btn.disabled = vm.status !== 'playing' || !s.unlocked || !s.affordable;
         }
         concedeBtn.disabled = vm.status !== 'playing';

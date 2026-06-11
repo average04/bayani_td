@@ -63,18 +63,28 @@ body::after {
 /* z-index keeps the overlay above the Phaser canvas (injected after createUI runs) */
 .ui-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
 
-.ui-nextwave {
-  position: absolute; right: 12px; bottom: 12px; pointer-events: none;
-  padding: 9px 16px; color: #f8eccb; font-weight: 800; letter-spacing: .5px;
-  background: linear-gradient(#7d5d34, #5c4324); border: 2px solid #3a2914; border-radius: 8px;
-  box-shadow: 0 3px 0 #2c1f0f, inset 0 1px 0 #bd9358;
-}
+/* the next-wave countdown lives inside the Wave HUD stat — never on the map */
+.ui-wave-sub { font-size: 10px; font-weight: 700; color: #ffd76a; margin-left: 7px; white-space: nowrap; }
+/* multiplayer HUD: your stats cluster over your board; the rival strip alone goes right */
+.ui-top.mp .ui-stat.ui-wave { margin-left: 0; }
+.ui-top.mp .ui-opp { margin-left: auto; }
+/* in MP the stage is double-wide: centered banners anchor over YOUR board (384 = boardW/2) */
+.ui-overlay.mp .ui-boss, .ui-overlay.mp .ui-deploy { left: 384px; }
 
 .ui-tooltip {
   pointer-events: none;
   background: #e7d4a4; border: 2px solid #3a2914; border-radius: 8px; padding: 8px 10px;
   color: #4a3719; font-size: 12px; box-shadow: 0 6px 14px rgba(0,0,0,.4);
 }
+
+/* details-column placeholder: keeps the sidebar feeling intentional when nothing is selected */
+.ui-left-hint {
+  display: flex; flex-direction: column; gap: 8px; padding: 16px 14px;
+  border: 2px dashed rgba(189, 147, 88, .45); border-radius: 10px;
+  color: #cdb98a;
+}
+.ui-left-hint-title { font-size: 10px; font-weight: 800; letter-spacing: 3px; opacity: .8; }
+.ui-left-hint-text { font-size: 12px; line-height: 1.55; opacity: .75; }
 .ui-tooltip h4 { margin: 0 0 5px; font-size: 13px; color: #5c3d12; }
 .ui-trow { display: flex; justify-content: space-between; margin-top: 2px; }
 .ui-ttrait { margin: 0 0 6px; padding: 4px 6px; font-size: 11px; line-height: 1.3;
@@ -99,9 +109,9 @@ body::after {
 .ui-end-btns { display: flex; gap: 12px; }
 .ui-homebtn { background: linear-gradient(#5c4a2c, #463720); color: #f6e6bd; }
 
-/* boss banner: pulses at the top of the stage while a boss is on the field */
+/* boss banner: pulses at the top edge of the stage while a boss is on the field */
 .ui-boss {
-  position: absolute; left: 50%; top: 46px; transform: translateX(-50%);
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
   pointer-events: none; padding: 7px 20px; white-space: nowrap;
   color: #f3d9ff; font-weight: 800; font-size: 16px; letter-spacing: 3px;
   background: linear-gradient(rgba(58, 28, 84, .92), rgba(34, 14, 52, .92));
@@ -365,11 +375,16 @@ body::after {
 .ui-sends-title { text-align: left; font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #5c3d12; }
 .ui-sends-list { display: flex; flex-direction: column; gap: 5px; }
 .ui-send-btn {
-  padding: 6px 4px; cursor: pointer; color: #2c1f0f; font-weight: 800; font-size: 10.5px;
-  font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 5px 4px; cursor: pointer; color: #2c1f0f; font-family: inherit;
   background: linear-gradient(#caa24a, #a9802f); border: 2px solid #3a2914; border-radius: 6px;
   box-shadow: 0 2px 0 #5c4012, inset 0 1px 0 #f0d999;
 }
+.ui-send-head { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.ui-send-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #3a2914; flex-shrink: 0; }
+.ui-send-name { font-weight: 800; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-send-sub { font-weight: 700; font-size: 9.5px; opacity: .85; }
+.ui-send-btn.locked .ui-send-sub { font-size: 8.5px; }
 .ui-send-btn:disabled { filter: grayscale(.6) brightness(.7); cursor: not-allowed; box-shadow: none; }
 .ui-sends-concede {
   align-self: flex-end; width: 110px;

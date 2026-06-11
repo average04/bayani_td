@@ -20,6 +20,7 @@ export class Enemy {
   // carried so the world can spread this enemy's poison when it dies (Contagion)
   contagion: { radius: number; maxTargets: number; minDuration: number } | null = null;
   sent = false; // arrived via an opponent's send (multiplayer) — gets a visual marker
+  slowResist = 0; // 0..1: fraction of incoming slow shrugged off (deep-wave veterans)
   private readonly path: Vec2[];
 
   constructor(type: EnemyType, path: Vec2[], maxHp: number = type.maxHp) {
@@ -98,7 +99,9 @@ export class Enemy {
 
   applySlow(factor: number, duration: number): void {
     if (this.type.slowImmune) return; // some enemies shrug off slows entirely
-    this.slowFactor = Math.min(this.slowFactor, factor);
+    // slow resistance claws back part of the speed loss: resist 0.6 turns a 0.5x chill into 0.8x
+    const effective = 1 - (1 - factor) * (1 - this.slowResist);
+    this.slowFactor = Math.min(this.slowFactor, effective);
     this.slowTimer = Math.max(this.slowTimer, duration);
   }
 

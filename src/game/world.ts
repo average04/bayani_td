@@ -1,5 +1,5 @@
 import type { LevelConfig } from './config/levels';
-import { scaledMaxHp, type EnemyType } from './config/enemies';
+import { scaledMaxHp, slowResistFor, type EnemyType } from './config/enemies';
 import type { HeroType } from './config/heroes';
 import type { WaveConfig } from './config/waves';
 import { distance, type Vec2 } from './geometry';
@@ -367,7 +367,11 @@ export class World {
     // 1. spawn
     for (const id of this.waveManager.update(dt)) {
       const type = this.enemyTypes[id];
-      if (type) this.enemies.push(new Enemy(type, this.level.path, scaledMaxHp(type.maxHp, this.waveNumber)));
+      if (type) {
+        const e = new Enemy(type, this.level.path, scaledMaxHp(type.maxHp, this.waveNumber));
+        e.slowResist = slowResistFor(type, this.waveNumber);
+        this.enemies.push(e);
+      }
     }
 
     // 1.5 sent monsters arrive (multiplayer)
@@ -382,6 +386,7 @@ export class World {
         const type = this.enemyTypes[s.enemyTypeId];
         const e = new Enemy(type, this.level.path, scaledMaxHp(type.maxHp, Math.max(1, this.waveNumber)));
         e.sent = true;
+        e.slowResist = slowResistFor(type, Math.max(1, this.waveNumber));
         this.enemies.push(e);
       }
       this.incomingSends = still;

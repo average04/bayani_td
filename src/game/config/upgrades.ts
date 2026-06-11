@@ -25,7 +25,9 @@ export interface StatDelta {
   fireRate?: number; // additive
   splashRadius?: number; // additive
   slow?: { factor: number; duration: number }; // set
-  poison?: { dps: number; duration: number; hpFracPerSec?: number }; // set
+  // MERGED into the current poison (unlike the other status deltas): omitted fields keep
+  // their value, so one path can raise the flat dps while the other adds splash/HP-burn
+  poison?: Partial<{ dps: number; duration: number; hpFracPerSec: number }>;
   root?: { chance: number; duration: number }; // set
   aura?: { damageAmp: number }; // set
   burnAura?: { radius: number; dps: number; hpFracPerSec?: number }; // set
@@ -222,8 +224,8 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
       levels: [
         { name: 'Quick Hexes', cost: 55, desc: '+0.5 attack speed', delta: { fireRate: 0.5 } },
         { name: 'Cursed Bolt', cost: 110, desc: '+6 damage', delta: { damage: 6 } },
-        { name: 'Deadly Vials', cost: 210, desc: 'Vials splash r45 — poison everyone hit: 16/s + 3% max HP/s, 7s', delta: { splashRadius: 45, poison: { dps: 16, duration: 7, hpFracPerSec: 0.03 } } },
-        { name: 'Malediction', cost: 390, desc: '+0.8 atk speed, +12 dmg; vial poison 16/s + 4% max HP/s, 8s', delta: { fireRate: 0.8, damage: 12, poison: { dps: 16, duration: 8, hpFracPerSec: 0.04 } } },
+        { name: 'Deadly Vials', cost: 210, desc: 'Vials splash r45 — your poison hits everyone, +3% max HP/s, 7s', delta: { splashRadius: 45, poison: { duration: 7, hpFracPerSec: 0.03 } } },
+        { name: 'Malediction', cost: 390, desc: '+0.8 atk speed, +12 dmg; vial plague 4% max HP/s, 8s', delta: { fireRate: 0.8, damage: 12, poison: { duration: 8, hpFracPerSec: 0.04 } } },
       ],
     },
   ],
@@ -254,7 +256,14 @@ function applyDelta(s: TowerStats, d: StatDelta): void {
   if (d.fireRate) s.fireRate += d.fireRate;
   if (d.splashRadius) s.splashRadius = (s.splashRadius ?? 0) + d.splashRadius;
   if (d.slow) s.slow = d.slow;
-  if (d.poison) s.poison = d.poison;
+  if (d.poison) {
+    const cur = s.poison ?? { dps: 0, duration: 0 };
+    s.poison = {
+      dps: d.poison.dps ?? cur.dps,
+      duration: d.poison.duration ?? cur.duration,
+      hpFracPerSec: d.poison.hpFracPerSec ?? cur.hpFracPerSec,
+    };
+  }
   if (d.root) s.root = d.root;
   if (d.aura) s.aura = d.aura;
   if (d.burnAura) s.burnAura = d.burnAura;

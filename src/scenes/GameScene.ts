@@ -364,8 +364,15 @@ export class GameScene extends Phaser.Scene {
     }
     const t = this.selectedTower;
     if (!t) return;
+    // roamers: the selection box sits on the flag (the thing you clicked); a soft ring
+    // tracks the hero himself wherever he is fighting
+    const ref = t.type.mobile ? t.anchor : t.pos;
     g.lineStyle(2, 0xf0d999, 0.95);
-    g.strokeRect(t.pos.x - cs, t.pos.y - cs, cs * 2, cs * 2);
+    g.strokeRect(ref.x - cs, ref.y - cs, cs * 2, cs * 2);
+    if (t.type.mobile) {
+      g.lineStyle(1.5, 0xf0d999, 0.7);
+      g.strokeCircle(t.pos.x, t.pos.y, 18);
+    }
     g.lineStyle(1, 0xf0d999, 0.45);
     g.strokeCircle(t.pos.x, t.pos.y, t.stats.range);
   }
@@ -543,6 +550,16 @@ export class GameScene extends Phaser.Scene {
       if (t.stats.aura) {
         g.lineStyle(1.5, 0xf0d999, 0.22);
         g.strokeCircle(t.pos.x, t.pos.y, t.stats.range);
+      }
+      // camp flag where a roaming hero is stationed (click it to select him mid-chase)
+      if (t.type.mobile) {
+        const a = t.anchor;
+        g.fillStyle(0x3a2914, 1);
+        g.fillCircle(a.x, a.y + 9, 2.5); // base
+        g.lineStyle(2, 0x3a2914, 1);
+        g.lineBetween(a.x, a.y + 9, a.x, a.y - 15); // pole
+        g.fillStyle(0xc0392b, 1);
+        g.fillTriangle(a.x + 1, a.y - 15, a.x + 1, a.y - 6, a.x + 13, a.y - 10.5); // pennant
       }
     }
   }

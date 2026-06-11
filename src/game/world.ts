@@ -191,7 +191,10 @@ export class World {
   towerAt(x: number, y: number): Tower | null {
     const cs = this.level.cellSize;
     for (const t of this.towers) {
-      if (Math.abs(x - t.pos.x) <= cs && Math.abs(y - t.pos.y) <= cs) return t;
+      // a roamer is selected ONLY via his camp flag — bodies overlap mid-chase and
+      // would make picking a specific one impossible
+      const ref = t.type.mobile ? t.anchor : t.pos;
+      if (Math.abs(x - ref.x) <= cs && Math.abs(y - ref.y) <= cs) return t;
     }
     return null;
   }

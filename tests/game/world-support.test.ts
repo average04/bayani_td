@@ -88,6 +88,16 @@ describe('roaming tower (Bonifacio)', () => {
     expect(t.pos.x).toBeCloseTo(172, 1); // moved toward the leader, ignoring the nearby straggler
   });
 
+  it('a roamer is selected via his camp flag, not his moving body', () => {
+    const w = makeWorld({ roam: roamer });
+    w.placeTower('roam', 2, 2); // flag at (72,72)
+    const t = w.towers[0];
+    addEnemy(w, 472, 72);
+    w.update(1); // he ran to ~(172,72)
+    expect(w.towerAt(72, 72)).toBe(t); // clicking the flag selects him...
+    expect(w.towerAt(t.pos.x, t.pos.y)).toBeNull(); // ...his body is not a click target
+  });
+
   it('selling a roamer frees his camp cells even after he wandered off', () => {
     const w = makeWorld({ roam: roamer });
     expect(w.placeTower('roam', 2, 2)).toBe(true);

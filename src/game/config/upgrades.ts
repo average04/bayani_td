@@ -160,7 +160,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Jose Rizal — support (base: dmg 8, range 150, rate 1.0, aura +10% dmg to heroes in range).
+  // Jose Rizal — support (base: dmg 15, range 150, rate 1.0, aura +10% dmg to heroes in range).
   rizal: [
     {
       name: 'La Solidaridad',
@@ -182,7 +182,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Andres Bonifacio — roaming melee (base: dmg 16, range 50, rate 1.5, burn 6/s r60).
+  // Andres Bonifacio — roaming melee (base: dmg 20, range 50, rate 1.2, burn 6/s r60).
   bonifacio: [
     {
       name: 'Supremo',

@@ -61,12 +61,12 @@ export const HERO_TYPES: Record<string, HeroType> = {
     trait: { name: 'Sunpierce', desc: 'Sun lances ignore armor and deal +50% to unhurt enemies' },
   },
   rizal: {
-    id: 'rizal', name: 'Jose Rizal', cost: 110, range: 150, damage: 8, fireRate: 1.0,
+    id: 'rizal', name: 'Jose Rizal', cost: 110, range: 150, damage: 15, fireRate: 1.0,
     aura: { damageAmp: 0.1 },
     trait: { name: 'Inspiration', desc: 'Heroes in his range deal +10% damage (strongest aura applies)' },
   },
   bonifacio: {
-    id: 'bonifacio', name: 'Andres Bonifacio', cost: 120, range: 50, damage: 18, fireRate: 1.5,
+    id: 'bonifacio', name: 'Andres Bonifacio', cost: 120, range: 50, damage: 20, fireRate: 1.2,
     mobile: { speed: 85 },
     burnAura: { radius: 60, dps: 6 },
     trait: { name: "Revolution's Flame", desc: 'Hunts the front-most enemy; his burning aura sears foes around him' },

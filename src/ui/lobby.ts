@@ -1,7 +1,7 @@
 import { supabaseConfigured } from '../net/supabaseClient';
 import {
   ensureSession, getNickname, saveNickname, createRoom, joinRoom, quickMatch,
-  cancelMatch, markActive, type MatchRow,
+  cancelMatch, markActive, countSearching, type MatchRow,
 } from '../net/matchService';
 import { MatchChannel } from '../net/matchChannel';
 import type { MatchSession } from '../net/session';
@@ -24,11 +24,23 @@ export function showLobby(cb: LobbyCallbacks): void {
   document.body.appendChild(root);
   let leaving = false;
   let finished = false;
+  let queuePoll: number | null = null;
+
+  const stopQueuePoll = (): void => {
+    if (queuePoll !== null) {
+      window.clearInterval(queuePoll);
+      queuePoll = null;
+    }
+  };
 
   const swap = (node: HTMLElement): void => {
+    stopQueuePoll(); // leaving whatever view was polling
     inner.innerHTML = '';
     inner.appendChild(node);
   };
+
+  // a slowly rotating sun-ray ring — the "looking for someone" animation
+  const spinner = (): string => `<span class="ui-lobby-spinner"></span>`;
 
   const fail = (msg: string, retry: () => void): void => {
     const v = el(`<div class="ui-lobby-box">
@@ -53,7 +65,7 @@ export function showLobby(cb: LobbyCallbacks): void {
   void boot();
 
   async function boot(): Promise<void> {
-    swap(el(`<p class="ui-lobby-note">Connecting…</p>`));
+    swap(el(`<div class="ui-lobby-wait">${spinner()}<p class="ui-lobby-note">Connecting…</p></div>`));
     try {
       const myId = await ensureSession();
       const nick = await getNickname(myId);
@@ -115,13 +127,17 @@ export function showLobby(cb: LobbyCallbacks): void {
       const row = existing ?? (await createRoom(myId));
       const transport = new MatchChannel(row.id);
       const v = el(`<div class="ui-lobby-box">
+        ${spinner()}
         <p class="ui-lobby-note"></p>
+        <p class="ui-lobby-queue"></p>
         <button class="ui-lobby-btn ghost">CANCEL</button>
       </div>`);
       const note = v.querySelector<HTMLElement>('.ui-lobby-note')!;
+      const queueLine = v.querySelector<HTMLElement>('.ui-lobby-queue')!;
       if (kind === 'room') {
         note.innerHTML = `Room code: <b class="ui-lobby-code"></b><br/>Waiting for your rival…`;
         note.querySelector('.ui-lobby-code')!.textContent = row.code;
+        queueLine.style.display = 'none';
       } else {
         note.textContent = 'Searching for a rival…';
       }
@@ -132,6 +148,16 @@ export function showLobby(cb: LobbyCallbacks): void {
         menu(myId, myNickname);
       });
       swap(v);
+      if (kind === 'queue') {
+        // live queue size (refreshed every 3s; includes yourself)
+        const refreshQueue = (): void => {
+          void countSearching().then((n) => {
+            queueLine.textContent = n <= 1 ? 'You are first in the queue' : `${n} players in the queue`;
+          });
+        };
+        refreshQueue();
+        queuePoll = window.setInterval(refreshQueue, 3000);
+      }
       transport.on('peerJoin', (oppNick) => {
         if (leaving) return;
         void markActive(row.id).then(() => {
@@ -146,7 +172,7 @@ export function showLobby(cb: LobbyCallbacks): void {
 
   /** Guest path: claimed a row, join the channel; host is (or will be) present. */
   async function guest(myId: string, myNickname: string, row: MatchRow): Promise<void> {
-    swap(el(`<p class="ui-lobby-note">Joining…</p>`));
+    swap(el(`<div class="ui-lobby-wait">${spinner()}<p class="ui-lobby-note">Joining…</p></div>`));
     const transport = new MatchChannel(row.id);
     transport.on('peerJoin', (oppNick) => {
       done({ matchId: row.id, myId, isHost: false, myNickname, opponentNickname: oppNick, transport });
@@ -166,7 +192,7 @@ export function showLobby(cb: LobbyCallbacks): void {
 
   async function join(myId: string, myNickname: string, code: string): Promise<void> {
     if (!code.trim()) return;
-    swap(el(`<p class="ui-lobby-note">Looking for the room…</p>`));
+    swap(el(`<div class="ui-lobby-wait">${spinner()}<p class="ui-lobby-note">Looking for the room…</p></div>`));
     try {
       const row = await joinRoom(myId, code);
       if (!row) {
@@ -180,7 +206,7 @@ export function showLobby(cb: LobbyCallbacks): void {
   }
 
   async function quick(myId: string, myNickname: string): Promise<void> {
-    swap(el(`<p class="ui-lobby-note">Searching…</p>`));
+    swap(el(`<div class="ui-lobby-wait">${spinner()}<p class="ui-lobby-note">Searching…</p></div>`));
     try {
       const { match, isHost } = await quickMatch(myId);
       if (isHost) await host(myId, myNickname, 'queue', match);
@@ -193,6 +219,7 @@ export function showLobby(cb: LobbyCallbacks): void {
   function done(session: MatchSession): void {
     if (finished) return; // guards the double-fire (presence + fallback timer)
     finished = true;
+    stopQueuePoll();
     root.remove();
     cb.onMatched(session);
   }

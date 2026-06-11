@@ -111,6 +111,16 @@ export async function quickMatch(
   return { match, isHost: true };
 }
 
+/** How many players are sitting in the quick-match queue right now (includes yourself). */
+export async function countSearching(): Promise<number> {
+  const { count } = await getSupabase()
+    .from('matches')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'searching')
+    .is('guest_id', null);
+  return count ?? 0;
+}
+
 /** Host marks their own waiting/searching room active once presence shows the guest arrived. */
 export async function markActive(matchId: string): Promise<void> {
   await getSupabase().from('matches').update({ status: 'active' }).eq('id', matchId);

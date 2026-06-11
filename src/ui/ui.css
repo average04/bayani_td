@@ -348,6 +348,19 @@ body::after {
 .ui-lobby-note { margin: 0; color: #e7d3a3; font-size: 14px; line-height: 1.5; }
 .ui-lobby-err { margin: 0; color: #ffb09a; font-weight: 700; font-size: 13px; line-height: 1.5; }
 .ui-lobby-code { font-size: 22px; letter-spacing: 2px; color: #ffd76a; }
+.ui-lobby-queue { margin: 0; font-size: 12px; font-weight: 700; color: #ffd76a; min-height: 15px; }
+.ui-lobby-wait { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+/* sun-ray searching spinner: a rotating ring with a bright leading arc */
+.ui-lobby-spinner {
+  display: block; width: 38px; height: 38px; margin: 0 auto; border-radius: 50%;
+  border: 4px solid rgba(240, 217, 153, .22);
+  border-top-color: #f0d999; border-right-color: #caa24a;
+  animation: ui-lobby-spin 0.9s linear infinite;
+}
+@keyframes ui-lobby-spin { to { transform: rotate(360deg); } }
+/* only text that FOLLOWS a spinner breathes — menu copy stays steady */
+.ui-lobby-spinner ~ .ui-lobby-note { animation: ui-lobby-breathe 1.6s ease-in-out infinite; }
+@keyframes ui-lobby-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
 .ui-lobby-btn {
   padding: 10px; cursor: pointer; color: #2c1f0f; font-weight: 800; font-size: 13px; letter-spacing: 1px;
   font-family: inherit;

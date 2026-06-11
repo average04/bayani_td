@@ -91,7 +91,10 @@ function statsEffect(s: TowerStats): string {
   }
   if (s.root) parts.push(`Root ${Math.round(s.root.chance * 100)}%`);
   if (s.aura) parts.push(`Inspire +${Math.round(s.aura.damageAmp * 100)}%`);
-  if (s.burnAura) parts.push(`Burn ${s.burnAura.dps}/s r${s.burnAura.radius}`);
+  if (s.burnAura) {
+    const hpPart = s.burnAura.hpFracPerSec ? ` +${Math.round(s.burnAura.hpFracPerSec * 1000) / 10}% HP/s` : '';
+    parts.push(`Burn ${s.burnAura.dps}/s${hpPart} r${s.burnAura.radius}`);
+  }
   return parts.length ? parts.join(' · ') : 'Single target';
 }
 

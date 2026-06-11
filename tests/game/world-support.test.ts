@@ -113,4 +113,16 @@ describe('burning aura (Bonifacio trait)', () => {
     expect(near.hp).toBeCloseTo(90, 5);
     expect(far.hp).toBe(100);
   });
+
+  it('the HP-based component burns a fraction of the victim max HP per second', () => {
+    const fire: HeroType = {
+      id: 'fire', name: 'F', cost: 0, range: 10, damage: 5, fireRate: 0.0001,
+      burnAura: { radius: 60, dps: 6, hpFracPerSec: 0.03 },
+    };
+    const w = makeWorld({ fire });
+    w.placeTower('fire', 2, 2);
+    const e = addEnemy(w, 112, 72); // plain: maxHp 100 -> 6 + 3 = 9/s
+    w.update(1);
+    expect(e.hp).toBeCloseTo(91, 5);
+  });
 });

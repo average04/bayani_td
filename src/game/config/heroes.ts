@@ -23,7 +23,8 @@ export interface HeroType {
   pierce?: boolean; // shots ignore armor
   firstStrike?: number; // damage multiplier vs enemies at >=90% HP
   aura?: { damageAmp: number }; // OTHER towers within his range deal bonus damage (strongest aura wins)
-  burnAura?: { radius: number; dps: number }; // enemies near him take true damage over time
+  // enemies near him take true damage over time; hpFracPerSec adds % of victim max HP per second
+  burnAura?: { radius: number; dps: number; hpFracPerSec?: number };
   mobile?: { speed: number }; // roaming tower: chases the nearest enemy, returns to his camp when clear
 }
 
@@ -68,7 +69,7 @@ export const HERO_TYPES: Record<string, HeroType> = {
   bonifacio: {
     id: 'bonifacio', name: 'Andres Bonifacio', cost: 120, range: 50, damage: 20, fireRate: 1.2,
     mobile: { speed: 85 },
-    burnAura: { radius: 60, dps: 6 },
+    burnAura: { radius: 60, dps: 6, hpFracPerSec: 0.03 },
     trait: { name: "Revolution's Flame", desc: 'Hunts the front-most enemy; his burning aura sears foes around him' },
   },
 };

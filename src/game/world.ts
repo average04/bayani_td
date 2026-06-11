@@ -472,13 +472,14 @@ export class World {
       this.pendingEchoes = still;
     }
 
-    // 3.4 burning auras sear everything close (true damage, like poison)
+    // 3.4 burning auras sear everything close (true damage, like poison; the HP-based
+    // component scales with each victim, so big late-game bodies still feel the fire)
     for (const t of this.towers) {
       const burn = t.stats.burnAura;
       if (!burn) continue;
       for (const e of this.enemies) {
         if (!e.isDead && !e.reachedEnd && distance(e.pos, t.pos) <= burn.radius) {
-          e.hp -= burn.dps * dt;
+          e.hp -= (burn.dps + (burn.hpFracPerSec ?? 0) * e.maxHp) * dt;
         }
       }
     }

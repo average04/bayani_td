@@ -16,7 +16,7 @@ export interface TowerStats {
   pierce?: boolean;
   firstStrike?: number;
   aura?: { damageAmp: number };
-  burnAura?: { radius: number; dps: number };
+  burnAura?: { radius: number; dps: number; hpFracPerSec?: number };
 }
 
 export interface StatDelta {
@@ -28,7 +28,7 @@ export interface StatDelta {
   poison?: { dps: number; duration: number; hpFracPerSec?: number }; // set
   root?: { chance: number; duration: number }; // set
   aura?: { damageAmp: number }; // set
-  burnAura?: { radius: number; dps: number }; // set
+  burnAura?: { radius: number; dps: number; hpFracPerSec?: number }; // set
 }
 
 export interface UpgradeLevel {
@@ -196,10 +196,10 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     {
       name: 'Pugad Lawin',
       levels: [
-        { name: 'Kindled Torch', cost: 70, desc: 'Burn 10/s, r65', delta: { burnAura: { radius: 65, dps: 10 } } },
-        { name: 'Bonfire', cost: 150, desc: 'Burn 16/s, r70', delta: { burnAura: { radius: 70, dps: 16 } } },
-        { name: 'Blaze of Katipunan', cost: 280, desc: 'Burn 26/s, r80', delta: { burnAura: { radius: 80, dps: 26 } } },
-        { name: 'Wildfire', cost: 520, desc: 'Burn 40/s, r95', delta: { burnAura: { radius: 95, dps: 40 } } },
+        { name: 'Kindled Torch', cost: 70, desc: 'Burn 10/s + 3% max HP/s, r65', delta: { burnAura: { radius: 65, dps: 10, hpFracPerSec: 0.03 } } },
+        { name: 'Bonfire', cost: 150, desc: 'Burn 16/s + 3% max HP/s, r70', delta: { burnAura: { radius: 70, dps: 16, hpFracPerSec: 0.03 } } },
+        { name: 'Blaze of Katipunan', cost: 280, desc: 'Burn 26/s + 3% max HP/s, r80', delta: { burnAura: { radius: 80, dps: 26, hpFracPerSec: 0.03 } } },
+        { name: 'Wildfire', cost: 520, desc: 'Burn 40/s + 3% max HP/s, r95', delta: { burnAura: { radius: 95, dps: 40, hpFracPerSec: 0.03 } } },
       ],
     },
   ],

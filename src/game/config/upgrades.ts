@@ -205,8 +205,8 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
   ],
 
   // Mangkukulam — poison caster (base: dmg 13, range 120, rate 0.8, poison 8/3s).
-  // Curse tier 3 is a brutal single-target HP-based melter; tier 4 (Deadly Vials) trades
-  // per-target intensity for AoE: the vial splashes and curses everyone it touches.
+  // Two distinct builds: Curse is the single-target HP-based melter; Dark Arts becomes
+  // the AoE epidemic at tier 3 (Deadly Vials) — the vial splashes and curses everyone hit.
   mangkukulam: [
     {
       name: 'Curse',
@@ -214,7 +214,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
         { name: 'Hex', cost: 60, desc: 'Poison 12/s, 3s', delta: { poison: { dps: 12, duration: 3 } } },
         { name: 'Wasting Curse', cost: 120, desc: 'Poison 18/s, 4s', delta: { poison: { dps: 18, duration: 4 } } },
         { name: 'Plague', cost: 220, desc: 'Poison 24/s + 6% max HP/s, 5s', delta: { poison: { dps: 24, duration: 5, hpFracPerSec: 0.06 } } },
-        { name: 'Deadly Vials', cost: 410, desc: 'Vials splash r45 — poison everyone hit: 16/s + 3% max HP/s, 7s', delta: { splashRadius: 45, poison: { dps: 16, duration: 7, hpFracPerSec: 0.03 } } },
+        { name: 'Death Curse', cost: 410, desc: 'Poison 36/s + 8% max HP/s, 6s', delta: { poison: { dps: 36, duration: 6, hpFracPerSec: 0.08 } } },
       ],
     },
     {
@@ -222,7 +222,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
       levels: [
         { name: 'Quick Hexes', cost: 55, desc: '+0.5 attack speed', delta: { fireRate: 0.5 } },
         { name: 'Cursed Bolt', cost: 110, desc: '+6 damage', delta: { damage: 6 } },
-        { name: 'Voodoo Spread', cost: 210, desc: 'Curse splashes r45', delta: { splashRadius: 45 } },
+        { name: 'Deadly Vials', cost: 210, desc: 'Vials splash r45 — poison everyone hit: 16/s + 3% max HP/s, 7s', delta: { splashRadius: 45, poison: { dps: 16, duration: 7, hpFracPerSec: 0.03 } } },
         { name: 'Malediction', cost: 390, desc: '+0.8 atk speed, +12 damage', delta: { fireRate: 0.8, damage: 12 } },
       ],
     },

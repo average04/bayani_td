@@ -98,16 +98,7 @@ export function createUI(mount: HTMLElement): UI {
   bossBanner.textContent = 'BAKUNAWA RISES';
   bossBanner.style.display = 'none';
 
-  // multiplayer send sidebar, BESIDE the map (never over it). Shown at build time in MP
-  // so the fit-to-viewport scale measures the full width.
-  const sendPanel = el('div', 'ui-sends', mount);
-  sendPanel.style.display = mpMode ? 'flex' : 'none';
-  el('div', 'ui-sends-title', sendPanel).textContent = 'SEND';
   const sendBtns = new Map<string, HTMLButtonElement>();
-  const sendBox = el('div', 'ui-sends-list', sendPanel);
-  const concedeBtn = el<HTMLButtonElement>('button', 'ui-sends-concede', sendPanel);
-  concedeBtn.textContent = 'CONCEDE';
-  concedeBtn.addEventListener('click', () => ui.onConcede());
 
   const tooltip = el('div', 'ui-tooltip', left);
   tooltip.style.display = 'none';
@@ -187,13 +178,26 @@ export function createUI(mount: HTMLElement): UI {
   const homeBtn = el<HTMLButtonElement>('button', 'ui-restart ui-homebtn', endBtns);
   homeBtn.textContent = 'HOME';
 
-  // build menu: the player's hero-card loadout + the store
+  // build menu: hero cards + store under OUR board; in MP the monster send menu
+  // sits beside them, under the RIVAL's board (you send monsters at THEM)
   const loadout = getLoadout();
   const bottom = el('div', 'ui-bottom', col);
+  const buildBox = el('div', 'ui-bottom-build', bottom);
+  buildBox.style.width = mpMode ? `${boardW - 24}px` : '100%';
+  let sendBox: HTMLElement | null = null;
+  let concedeBtn: HTMLButtonElement | null = null;
+  if (mpMode) {
+    const sendsWrap = el('div', 'ui-bottom-sends', bottom);
+    el('div', 'ui-sends-title', sendsWrap).textContent = 'SEND MONSTERS';
+    sendBox = el('div', 'ui-sends-grid', sendsWrap);
+    concedeBtn = el<HTMLButtonElement>('button', 'ui-sends-concede', sendsWrap);
+    concedeBtn.textContent = 'CONCEDE';
+    concedeBtn.addEventListener('click', () => ui.onConcede());
+  }
   const tiles: Record<string, HTMLElement> = {};
   loadout.forEach((id, i) => {
     const h = HERO_TYPES[id];
-    const tile = el('div', `ui-tile ui-tile-${id}`, bottom);
+    const tile = el('div', `ui-tile ui-tile-${id}`, buildBox);
     el('span', `ui-portrait ui-portrait-${id}`, tile);
     el('div', 'ui-tname', tile).textContent = h.name;
     el('small', 'ui-tcost', tile).textContent = `$${h.cost}`;
@@ -217,7 +221,7 @@ export function createUI(mount: HTMLElement): UI {
   });
 
   // sari-sari store (economy) build tile
-  const storeTile = el('div', 'ui-tile ui-tile-store', bottom);
+  const storeTile = el('div', 'ui-tile ui-tile-store', buildBox);
   el('span', 'ui-portrait ui-portrait-store', storeTile);
   el('div', 'ui-tname', storeTile).textContent = STORE.name;
   const storeCost = el('small', 'ui-tcost', storeTile);
@@ -350,8 +354,7 @@ export function createUI(mount: HTMLElement): UI {
       } else {
         oppStat.style.display = 'none';
       }
-      if (vm.sends) {
-        sendPanel.style.display = 'flex';
+      if (vm.sends && sendBox && concedeBtn) {
         for (const s of vm.sends) {
           let btn = sendBtns.get(s.id);
           if (!btn) {
@@ -364,8 +367,6 @@ export function createUI(mount: HTMLElement): UI {
           btn.disabled = vm.status !== 'playing' || !s.unlocked || !s.affordable;
         }
         concedeBtn.disabled = vm.status !== 'playing';
-      } else {
-        sendPanel.style.display = 'none';
       }
     },
   };

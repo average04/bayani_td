@@ -355,14 +355,14 @@ body::after {
 
 /* ---- multiplayer: opponent strip + send sidebar (beside the map, never over it) ---- */
 .ui-opp .ui-statval b { color: #ffb09a; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
-.ui-sends {
-  display: flex; flex-direction: column; gap: 6px; width: 165px;
-  align-self: center; flex-shrink: 0;
-  padding: 10px; box-sizing: border-box;
-  background: linear-gradient(#7d5d34, #5c4324); border: 3px solid #3a2914; border-radius: 10px;
-  box-shadow: 0 5px 0 #2c1f0f, inset 0 1px 0 #bd9358;
+/* hero cards stay under OUR board; the send menu sits under the RIVAL's board */
+.ui-bottom-build { display: flex; gap: 8px; flex-shrink: 0; box-sizing: border-box; }
+.ui-bottom-sends {
+  flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  margin-left: 40px; /* clears the board divider */
 }
-.ui-sends-title { text-align: center; font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #f0d999; }
+.ui-sends-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; }
+.ui-sends-title { text-align: left; font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #5c3d12; }
 .ui-sends-list { display: flex; flex-direction: column; gap: 5px; }
 .ui-send-btn {
   padding: 6px 4px; cursor: pointer; color: #2c1f0f; font-weight: 800; font-size: 10.5px;
@@ -372,6 +372,7 @@ body::after {
 }
 .ui-send-btn:disabled { filter: grayscale(.6) brightness(.7); cursor: not-allowed; box-shadow: none; }
 .ui-sends-concede {
+  align-self: flex-end; width: 110px;
   margin-top: 2px; padding: 5px; cursor: pointer; color: #f6e6bd; font-weight: 800; font-size: 10px;
   font-family: inherit;
   background: linear-gradient(#8a4a3a, #6e3527); border: 2px solid #3a2914; border-radius: 6px;

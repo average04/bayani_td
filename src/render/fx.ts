@@ -239,19 +239,30 @@ export function spawnBook(scene: Phaser.Scene, from: Vec2, to: Vec2): void {
   });
 }
 
-// Bonifacio's bolo slash: a quick white arc biting across the target.
+// Bonifacio's bolo slash: a wide steel arc with an ember trail biting across the target.
 export function spawnSlash(scene: Phaser.Scene, at: Vec2): void {
   const g = scene.add.graphics({ x: at.x, y: at.y }).setDepth(FX_DEPTH);
   g.rotation = Math.random() * Math.PI;
-  g.lineStyle(3.5, 0xf4f7fa, 0.95);
+  g.lineStyle(7, 0xffb070, 0.35);
   g.beginPath();
-  g.arc(0, 0, 13, -0.7, 0.9);
-  g.strokePath();
-  g.lineStyle(1.5, 0xffffff, 1);
+  g.arc(0, 0, 18, -0.9, 1.1);
+  g.strokePath(); // ember glow under the steel
+  g.lineStyle(4.5, 0xf4f7fa, 0.95);
   g.beginPath();
-  g.arc(0, 0, 13, -0.5, 0.7);
+  g.arc(0, 0, 18, -0.8, 1.0);
   g.strokePath();
-  scene.tweens.add({ targets: g, rotation: g.rotation + 1.1, alpha: 0, duration: 140, ease: 'Quad.Out', onComplete: () => g.destroy() });
+  g.lineStyle(2, 0xffffff, 1);
+  g.beginPath();
+  g.arc(0, 0, 18, -0.6, 0.8);
+  g.strokePath(); // bright leading edge
+  scene.tweens.add({
+    targets: g,
+    rotation: g.rotation + 1.6,
+    alpha: 0,
+    duration: 180,
+    ease: 'Quad.Out',
+    onComplete: () => g.destroy(),
+  });
 }
 
 // Power-shot flash (Rampage/Deadeye crits): a golden starburst + expanding ring at impact.

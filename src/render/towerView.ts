@@ -36,6 +36,9 @@ export class TowerView {
     const moving = Math.hypot(dx, dy) > 0.5;
     this.sprite.setPosition(tower.pos.x, tower.pos.y);
     this.sprite.setDepth(tower.pos.y);
+    // never stomp a swing mid-animation — the hero glides a step while finishing it
+    const attacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim?.key.includes('-attack-');
+    if (attacking) return;
     if (moving) {
       const { facing, flipX } = facingFromDelta(dx, dy);
       this.sprite.setFlipX(flipX);

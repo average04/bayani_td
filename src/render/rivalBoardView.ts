@@ -51,7 +51,23 @@ export class RivalBoardView {
         entry = { heroId: t.heroId, sprite };
         this.towerSprites[i] = entry;
       }
-      entry.sprite.setPosition(this.offsetX + t.x, t.y).setDepth(t.y);
+      const s = entry.sprite;
+      const nx = this.offsetX + t.x;
+      const dx = nx - s.x;
+      const dy = t.y - s.y;
+      const moving = Math.hypot(dx, dy) > 0.5;
+      s.setPosition(nx, t.y).setDepth(t.y);
+      // walk while gliding (roamers), but never stomp a replayed swing
+      const attacking = s.anims.isPlaying && s.anims.currentAnim?.key.includes('-attack-');
+      if (!attacking) {
+        if (moving) {
+          const { facing, flipX } = facingFromDelta(dx, dy);
+          s.setFlipX(flipX);
+          this.playIfExists(s, `${t.heroId}-walk-${facing}`, `${t.heroId}-walk-down`);
+        } else if (s.anims.currentAnim?.key.includes('-walk-')) {
+          this.playIfExists(s, `${t.heroId}-idle-down`);
+        }
+      }
     }
     for (let i = board.towers.length; i < this.towerSprites.length; i++) {
       this.towerSprites[i].sprite.destroy();

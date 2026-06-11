@@ -15,26 +15,11 @@ import { renderMap } from '../render/mapRenderer';
 import { EnemyView } from '../render/enemyView';
 import { TowerView } from '../render/towerView';
 import { StoreView } from '../render/storeView';
-import {
-  spawnProjectile,
-  spawnSwordWave,
-  spawnRock,
-  spawnButterfly,
-  spawnSkull,
-  spawnSunLance,
-  spawnBook,
-  spawnSlash,
-  spawnCritFlash,
-  spawnQuake,
-  spawnHitPuff,
-  spawnDeath,
-  spawnSpin,
-  spawnGoldPopup,
-} from '../render/fx';
+import { spawnHeroShotFx, spawnQuake, spawnDeath, spawnGoldPopup } from '../render/fx';
 import { getUI } from '../ui';
 import { buildUiState, buildUpgradePanel, buildStorePanel } from '../ui/uiState';
 import { getSession, type MatchSession } from '../net/session';
-import type { TowerSnap, EnemySnap } from '../net/types';
+import type { TowerSnap, EnemySnap, ShotSnap, DeathSnap } from '../net/types';
 import { RivalBoardView } from '../render/rivalBoardView';
 import { finishMatch } from '../net/matchService';
 import { SEND_TABLE } from '../game/config/sends';
@@ -76,6 +61,8 @@ export class GameScene extends Phaser.Scene {
   private rivalPrev: RivalSnap | null = null;
   private rivalCur: RivalSnap | null = null;
   private rivalView: RivalBoardView | null = null;
+  private netShots: ShotSnap[] = [];
+  private netDeaths: DeathSnap[] = [];
   private enemyViews = new Map<Enemy, EnemyView>();
   private towerViews = new Map<Tower, TowerView>();
   private storeViews = new Map<Store, StoreView>();
@@ -243,10 +230,14 @@ export class GameScene extends Phaser.Scene {
         this.opponent.lives = e.lives;
         this.opponent.wave = e.wave;
       }
-      // keep the last two board snapshots so the mini-view can interpolate between them
+      // keep the last two board snapshots so the rival view can interpolate between them
       if (e.towers && e.enemies) {
         this.rivalPrev = this.rivalCur;
         this.rivalCur = { at: performance.now(), towers: e.towers, enemies: e.enemies };
+      }
+      // replay their attack/death moments on the rival board
+      if (e.shots?.length || e.deaths?.length) {
+        this.rivalView?.replay(e.shots ?? [], e.deaths ?? []);
       }
     });
     mp.transport.on('defeat', () => this.winMatch());
@@ -388,7 +379,11 @@ export class GameScene extends Phaser.Scene {
             y: Math.round(e.pos.y),
             hp: Math.max(0, Math.round((e.hp / e.maxHp) * 100) / 100),
           })),
+          shots: this.netShots,
+          deaths: this.netDeaths,
         });
+        this.netShots = [];
+        this.netDeaths = [];
       }
       if (this.forfeitTimer !== null) {
         this.forfeitTimer -= delta / 1000;
@@ -441,39 +436,29 @@ export class GameScene extends Phaser.Scene {
         }
       }
       shooter?.playAttack(shot.to.x, shot.to.y);
-      const hero = HERO_TYPES[shot.heroId];
-      if (hero?.spin) {
-        spawnSpin(this, shot.from, hero.range);
-      } else if (shot.heroId === 'gabriela') {
-        spawnSwordWave(this, shot.from, shot.to);
-        spawnHitPuff(this, shot.to);
-      } else if (shot.heroId === 'bernardo') {
-        spawnRock(this, shot.from, shot.to);
-        spawnHitPuff(this, shot.to);
-      } else if (shot.heroId === 'diwata') {
-        spawnButterfly(this, shot.from, shot.to);
-      } else if (shot.heroId === 'mangkukulam') {
-        spawnSkull(this, shot.from, shot.to);
-        spawnHitPuff(this, shot.to);
-      } else if (shot.heroId === 'apolaki') {
-        spawnSunLance(this, shot.from, shot.to);
-        spawnHitPuff(this, shot.to);
-      } else if (shot.heroId === 'rizal') {
-        spawnBook(this, shot.from, shot.to);
-        spawnHitPuff(this, shot.to);
-      } else if (shot.heroId === 'bonifacio') {
-        spawnSlash(this, shot.to);
-      } else {
-        spawnProjectile(this, shot.from, shot.to);
-        spawnHitPuff(this, shot.to);
+      spawnHeroShotFx(this, shot.heroId, shot.from, shot.to, shot.crit);
+      // batch for the rival's view of OUR board (bounded; sent with the next status ping)
+      if (this.mp && this.netShots.length < 40) {
+        this.netShots.push({
+          heroId: shot.heroId,
+          fx: Math.round(shot.from.x), fy: Math.round(shot.from.y),
+          tx: Math.round(shot.to.x), ty: Math.round(shot.to.y),
+          crit: shot.crit || undefined,
+        });
       }
-      if (shot.crit) spawnCritFlash(this, shot.to);
     }
     for (const echo of this.world.events.echoes) {
       spawnQuake(this, echo.pos, echo.radius);
     }
     for (const death of this.world.events.deaths) {
       spawnDeath(this, death.enemyTypeId, death.pos);
+      if (this.mp && this.netDeaths.length < 30) {
+        this.netDeaths.push({
+          typeId: death.enemyTypeId,
+          x: Math.round(death.pos.x),
+          y: Math.round(death.pos.y),
+        });
+      }
     }
     for (const g of this.world.events.gold) {
       spawnGoldPopup(this, g.pos, g.amount);

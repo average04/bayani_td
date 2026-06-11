@@ -4,7 +4,8 @@ import { ENEMY_TYPES } from '../game/config/enemies';
 import { getCharacter } from '../assets/manifest';
 import { facingFromDelta } from './facing';
 import { renderMap } from './mapRenderer';
-import type { TowerSnap, EnemySnap } from '../net/types';
+import { spawnHeroShotFx, spawnDeath } from './fx';
+import type { TowerSnap, EnemySnap, ShotSnap, DeathSnap } from '../net/types';
 
 // Renders the opponent's battlefield with the REAL map art and character sprites
 // (Bloons-Battles style): a full second board at offsetX, driven by interpolated
@@ -95,6 +96,52 @@ export class RivalBoardView {
         this.enemySprites.delete(id);
       }
     }
+  }
+
+  /**
+   * Replay the rival's batched attack/death moments (collected between status pings),
+   * staggered across the ping interval so they read as live combat, not a burst.
+   */
+  replay(shots: ShotSnap[], deaths: DeathSnap[]): void {
+    const window = 450; // ms — just under the 500ms ping cadence
+    shots.forEach((s, i) => {
+      this.scene.time.delayedCall((i / Math.max(1, shots.length)) * window, () => {
+        const from = { x: this.offsetX + s.fx, y: s.fy };
+        const to = { x: this.offsetX + s.tx, y: s.ty };
+        this.playTowerAttack(from, to);
+        spawnHeroShotFx(this.scene, s.heroId, from, to, s.crit ?? false);
+      });
+    });
+    deaths.forEach((d, i) => {
+      this.scene.time.delayedCall((i / Math.max(1, deaths.length)) * window, () => {
+        spawnDeath(this.scene, d.typeId, { x: this.offsetX + d.x, y: d.y });
+      });
+    });
+  }
+
+  /** Face the shooter at its target and run its attack animation, then settle back to idle. */
+  private playTowerAttack(from: { x: number; y: number }, to: { x: number; y: number }): void {
+    let best: { heroId: string; sprite: Phaser.GameObjects.Sprite } | null = null;
+    let bestD = 30;
+    for (const entry of this.towerSprites) {
+      const d = Math.hypot(entry.sprite.x - from.x, entry.sprite.y - from.y);
+      if (d < bestD) {
+        bestD = d;
+        best = entry;
+      }
+    }
+    if (!best) return;
+    const { heroId, sprite } = best;
+    const { facing, flipX } = facingFromDelta(to.x - sprite.x, to.y - sprite.y);
+    sprite.setFlipX(flipX);
+    const attack = this.scene.anims.exists(`${heroId}-attack-${facing}`)
+      ? `${heroId}-attack-${facing}`
+      : `${heroId}-attack-down`;
+    if (!this.scene.anims.exists(attack)) return;
+    sprite.play(attack, true);
+    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      this.playIfExists(sprite, `${heroId}-idle-${facing}`, `${heroId}-idle-down`);
+    });
   }
 
   private makeSprite(characterKey: string): Phaser.GameObjects.Sprite {

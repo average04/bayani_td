@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Vec2 } from '../game/geometry';
 import { MANIFEST } from '../assets/manifest';
+import { HERO_TYPES } from '../game/config/heroes';
 
 const FX_DEPTH = 5000;
 
@@ -350,4 +351,42 @@ export function spawnGoldPopup(scene: Phaser.Scene, at: Vec2, amount: number): v
 function deathAnimKey(scene: Phaser.Scene, enemyTypeId: string): string {
   const down = `${enemyTypeId}-death-down`;
   return scene.anims.exists(down) ? down : `${enemyTypeId}-walk-down`;
+}
+
+// One entry point for a hero's signature shot FX (projectile + impact + crit flash).
+// Used for both the local board and the replayed rival board.
+export function spawnHeroShotFx(
+  scene: Phaser.Scene,
+  heroId: string,
+  from: Vec2,
+  to: Vec2,
+  crit = false,
+): void {
+  const hero = HERO_TYPES[heroId];
+  if (hero?.spin) {
+    spawnSpin(scene, from, hero.range);
+  } else if (heroId === 'gabriela') {
+    spawnSwordWave(scene, from, to);
+    spawnHitPuff(scene, to);
+  } else if (heroId === 'bernardo') {
+    spawnRock(scene, from, to);
+    spawnHitPuff(scene, to);
+  } else if (heroId === 'diwata') {
+    spawnButterfly(scene, from, to);
+  } else if (heroId === 'mangkukulam') {
+    spawnSkull(scene, from, to);
+    spawnHitPuff(scene, to);
+  } else if (heroId === 'apolaki') {
+    spawnSunLance(scene, from, to);
+    spawnHitPuff(scene, to);
+  } else if (heroId === 'rizal') {
+    spawnBook(scene, from, to);
+    spawnHitPuff(scene, to);
+  } else if (heroId === 'bonifacio') {
+    spawnSlash(scene, to);
+  } else {
+    spawnProjectile(scene, from, to);
+    spawnHitPuff(scene, to);
+  }
+  if (crit) spawnCritFlash(scene, to);
 }

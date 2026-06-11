@@ -18,12 +18,30 @@ export interface EnemySnap {
   hp: number; // 0..1 fraction
 }
 
+// attack/death moments batched since the last ping, replayed on the rival's view
+export interface ShotSnap {
+  heroId: string;
+  fx: number; // from x/y
+  fy: number;
+  tx: number; // to x/y
+  ty: number;
+  crit?: boolean;
+}
+
+export interface DeathSnap {
+  typeId: string;
+  x: number;
+  y: number;
+}
+
 export interface StatusEvent {
   wave: number;
   lives: number;
   gold: number; // intentionally shared in v1 (trusted clients); revisit if sends become rank-based
   towers?: TowerSnap[];
   enemies?: EnemySnap[];
+  shots?: ShotSnap[];
+  deaths?: DeathSnap[];
 }
 
 export interface MatchEvents {

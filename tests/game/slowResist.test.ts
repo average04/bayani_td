@@ -24,6 +24,15 @@ describe('deep-wave slow resistance', () => {
     expect(slowResistFor(ENEMY_TYPES.tiktik, 60)).toBe(0);
   });
 
+  it('tiyanak carry a flat 80% resistance at every wave (no longer fully immune)', () => {
+    expect(slowResistFor(ENEMY_TYPES.tiyanak, 1)).toBeCloseTo(0.8, 5);
+    expect(slowResistFor(ENEMY_TYPES.tiyanak, 60)).toBeCloseTo(0.8, 5);
+    const e = new Enemy(ENEMY_TYPES.tiyanak, path); // constructor applies the baseline
+    e.applySlow(0.5, 2); // 50% chill lands as 10%: 1 - 0.5*0.2 = 0.9
+    expect(e.slowFactor).toBeCloseTo(0.9, 5);
+    expect(e.slowTimer).toBe(2);
+  });
+
   it('the boss ignores slows outright', () => {
     const e = new Enemy(ENEMY_TYPES.bakunawa, path);
     e.applySlow(0.3, 3);

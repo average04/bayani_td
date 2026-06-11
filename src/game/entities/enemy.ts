@@ -20,11 +20,12 @@ export class Enemy {
   // carried so the world can spread this enemy's poison when it dies (Contagion)
   contagion: { radius: number; maxTargets: number; minDuration: number } | null = null;
   sent = false; // arrived via an opponent's send (multiplayer) — gets a visual marker
-  slowResist = 0; // 0..1: fraction of incoming slow shrugged off (deep-wave veterans)
+  slowResist: number; // 0..1: fraction of incoming slow shrugged off (baseline + deep-wave ramp)
   private readonly path: Vec2[];
 
   constructor(type: EnemyType, path: Vec2[], maxHp: number = type.maxHp) {
     this.type = type;
+    this.slowResist = type.slowResist ?? 0; // the world raises this with the deep-wave ramp
     this.maxHp = maxHp;
     this.hp = maxHp;
     this.path = path;

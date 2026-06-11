@@ -8,6 +8,7 @@ export interface EnemyType {
   armor?: number; // flat per-hit damage reduction (default 0)
   regenPerSec?: number; // hp healed per second (default 0)
   slowImmune?: boolean; // ignores slow effects entirely (default false)
+  slowResist?: number; // flat baseline slow resistance, 0..1 (default 0)
   resistsSlow?: boolean; // veteran: builds deep-wave slow resistance (see slowResistFor)
   boss?: boolean; // boss enemy: bigger HP bar, boss banner while on the field
 }
@@ -16,7 +17,8 @@ export const ENEMY_TYPES: Record<string, EnemyType> = {
   aswang: { id: 'aswang', name: 'Aswang', maxHp: 60, speed: 60, reward: 4, leakDamage: 1 },
   tiktik: { id: 'tiktik', name: 'Tiktik', maxHp: 30, speed: 110, reward: 2, leakDamage: 1 },
   kapre: { id: 'kapre', name: 'Kapre', maxHp: 120, speed: 45, reward: 7, leakDamage: 1, armor: 8, resistsSlow: true },
-  tiyanak: { id: 'tiyanak', name: 'Tiyanak', maxHp: 18, speed: 130, reward: 1, leakDamage: 1, slowImmune: true },
+  // tiyanak mostly shrug off chills (80%) but are no longer untouchable
+  tiyanak: { id: 'tiyanak', name: 'Tiyanak', maxHp: 18, speed: 130, reward: 1, leakDamage: 1, slowResist: 0.8 },
   manananggal: { id: 'manananggal', name: 'Manananggal', maxHp: 70, speed: 70, reward: 6, leakDamage: 1, regenPerSec: 6, resistsSlow: true },
   // Bakunawa, the moon-eating serpent: every-10th-wave boss. Slow, heavily armored wall of
   // HP that costs 10 lives if it reaches the base. HP scales with wave like everything else.
@@ -38,9 +40,10 @@ export const SLOW_RESIST_END_WAVE = 60;
 export const SLOW_RESIST_MAX = 0.6;
 
 export function slowResistFor(type: EnemyType, waveNumber: number): number {
-  if (!type.resistsSlow) return 0;
+  const base = type.slowResist ?? 0;
+  if (!type.resistsSlow) return base;
   const t = (waveNumber - SLOW_RESIST_START_WAVE) / (SLOW_RESIST_END_WAVE - SLOW_RESIST_START_WAVE);
-  return Math.max(0, Math.min(1, t)) * SLOW_RESIST_MAX;
+  return Math.max(base, Math.max(0, Math.min(1, t)) * SLOW_RESIST_MAX);
 }
 
 export function scaledMaxHp(baseMaxHp: number, waveNumber: number): number {

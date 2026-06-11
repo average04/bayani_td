@@ -57,6 +57,7 @@ export interface UiState {
   heroes: HeroVM[];
   opponent?: OpponentVM | null;
   sends?: SendVM[];
+  paused?: boolean; // solo only — multiplayer cannot pause
 }
 
 export function canAfford(gold: number, cost: number): boolean {
@@ -161,8 +162,9 @@ export function buildUiState(
   bestWave: number,
   heroOrder: string[],
   heroTypes: Record<string, HeroType>,
-  mp?: { opponent: OpponentVM | null },
+  extras?: { opponent?: OpponentVM | null; paused?: boolean },
 ): UiState {
+  const mp = extras?.opponent !== undefined; // the send menu exists only in a match
   return {
     lives: world.lives,
     gold: world.gold,
@@ -185,7 +187,7 @@ export function buildUiState(
         selected: id === selectedHeroId,
       };
     }),
-    opponent: mp ? mp.opponent : undefined,
+    opponent: mp ? extras!.opponent : undefined,
     sends: mp
       ? SEND_TABLE.map((o) => ({
           id: o.enemyTypeId,
@@ -196,5 +198,6 @@ export function buildUiState(
           affordable: world.gold >= o.cost,
         }))
       : undefined,
+    paused: extras?.paused,
   };
 }

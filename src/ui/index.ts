@@ -24,6 +24,9 @@ export interface UI {
   onCycleTarget: () => void;
   onSend: (enemyTypeId: string) => void;
   onConcede: () => void;
+  onPauseToggle: () => void;
+  onRestartRun: () => void;
+  onEndRun: () => void;
 }
 
 let instance: UI | null = null;
@@ -103,6 +106,47 @@ export function createUI(mount: HTMLElement): UI {
   el('span', 'ui-lab', oppBox).textContent = 'Rival';
   const oppV = el('b', '', oppBox);
 
+  // solo run controls: pause / restart / end (multiplayer cannot pause — hidden there).
+  // Destructive buttons take a second click ("SURE?") within 3s to fire.
+  let pauseBtn: HTMLButtonElement | null = null;
+  let restartRunBtn: HTMLButtonElement | null = null;
+  let endRunBtn: HTMLButtonElement | null = null;
+  if (!mpMode) {
+    const ctl = el('div', 'ui-runctl', top);
+    const armed = new Map<HTMLButtonElement, number>();
+    const confirmable = (btn: HTMLButtonElement, label: string, action: () => void): void => {
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        const timer = armed.get(btn);
+        if (timer !== undefined) {
+          window.clearTimeout(timer);
+          armed.delete(btn);
+          btn.classList.remove('confirm');
+          btn.textContent = label;
+          action();
+          return;
+        }
+        btn.classList.add('confirm');
+        btn.textContent = 'SURE?';
+        armed.set(
+          btn,
+          window.setTimeout(() => {
+            armed.delete(btn);
+            btn.classList.remove('confirm');
+            btn.textContent = label;
+          }, 3000),
+        );
+      });
+    };
+    pauseBtn = el<HTMLButtonElement>('button', 'ui-runctl-btn', ctl);
+    pauseBtn.textContent = 'PAUSE';
+    pauseBtn.addEventListener('click', () => ui.onPauseToggle());
+    restartRunBtn = el<HTMLButtonElement>('button', 'ui-runctl-btn', ctl);
+    confirmable(restartRunBtn, 'RESTART', () => ui.onRestartRun());
+    endRunBtn = el<HTMLButtonElement>('button', 'ui-runctl-btn', ctl);
+    confirmable(endRunBtn, 'END', () => ui.onEndRun());
+  }
+
   // stage (Phaser mounts here) + overlay; double-wide in MP for the side-by-side boards
   const stage = el('div', 'ui-stage', col);
   stage.id = 'stage';
@@ -114,6 +158,11 @@ export function createUI(mount: HTMLElement): UI {
   const bossBanner = el('div', 'ui-boss', overlay);
   bossBanner.textContent = 'BAKUNAWA RISES';
   bossBanner.style.display = 'none';
+
+  // dim veil while a solo run is paused
+  const pausedVeil = el('div', 'ui-paused', overlay);
+  pausedVeil.textContent = 'PAUSED';
+  pausedVeil.style.display = 'none';
 
   const sendBtns = new Map<string, HTMLButtonElement>();
 
@@ -329,6 +378,9 @@ export function createUI(mount: HTMLElement): UI {
     onCycleTarget: () => {},
     onSend: () => {},
     onConcede: () => {},
+    onPauseToggle: () => {},
+    onRestartRun: () => {},
+    onEndRun: () => {},
     showEndLeaderboard(wave: number): void {
       if (!leaderboardAvailable()) {
         lbBox.style.display = 'none';
@@ -416,6 +468,14 @@ export function createUI(mount: HTMLElement): UI {
       waveSub.textContent =
         vm.status === 'playing' && vm.nextWaveIn !== null ? `next in ${Math.ceil(vm.nextWaveIn)}s` : '';
       bossBanner.style.display = vm.bossActive ? 'block' : 'none';
+      pausedVeil.style.display = vm.paused ? 'flex' : 'none';
+      if (pauseBtn && restartRunBtn && endRunBtn) {
+        const playing = vm.status === 'playing';
+        pauseBtn.textContent = vm.paused ? 'RESUME' : 'PAUSE';
+        pauseBtn.disabled = !playing;
+        restartRunBtn.disabled = !playing;
+        endRunBtn.disabled = !playing;
+      }
       for (const h of vm.heroes) {
         const tile = tiles[h.id];
         tile.classList.toggle('sel', h.selected);

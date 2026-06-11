@@ -52,6 +52,7 @@ export class GameScene extends Phaser.Scene {
   private selectedHeroId: string | null = null;
   private bestWave = 0;
   private endHandled = false;
+  private paused = false; // solo only; multiplayer never pauses
   private mp: MatchSession | null = null;
   private opponent: OpponentVM | null = null;
   private statusTimer = 0;
@@ -85,6 +86,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.bestWave = loadSave().bestWave;
     this.endHandled = false;
+    this.paused = false;
     this.statusTimer = 0;
     this.forfeitTimer = null;
     this.enemyViews.clear();
@@ -202,6 +204,20 @@ export class GameScene extends Phaser.Scene {
     ui.onHome = () => {
       if (this.world.status !== 'playing') location.reload();
     };
+    if (!getSession()) {
+      // solo run controls (the UI shows them only outside multiplayer)
+      ui.onPauseToggle = () => {
+        if (this.world.status === 'playing') this.paused = !this.paused;
+      };
+      ui.onRestartRun = () => this.scene.restart();
+      ui.onEndRun = () => {
+        if (this.world.status === 'playing') {
+          this.paused = false;
+          this.world.state.loseLife(this.world.lives);
+        }
+      };
+      this.input.keyboard?.on('keydown-P', () => ui.onPauseToggle());
+    }
 
     if (this.mp) this.initMultiplayer(this.mp);
   }
@@ -355,7 +371,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
-    if (this.world.status === 'playing') {
+    if (this.world.status === 'playing' && !this.paused) {
       this.world.update(delta / 1000);
     }
     if (this.mp && this.world.status === 'playing') {
@@ -418,7 +434,7 @@ export class GameScene extends Phaser.Scene {
     );
     getUI().update(
       buildUiState(this.world, this.selectedHeroId, this.bestWave, getLoadout(), HERO_TYPES,
-        this.mp ? { opponent: this.opponent } : undefined),
+        this.mp ? { opponent: this.opponent } : { paused: this.paused }),
     );
     this.handleEndState();
   }

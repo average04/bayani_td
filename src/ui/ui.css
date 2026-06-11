@@ -71,6 +71,28 @@ body::after {
 /* in MP the stage is double-wide: centered banners anchor over YOUR board (384 = boardW/2) */
 .ui-overlay.mp .ui-boss, .ui-overlay.mp .ui-deploy { left: 384px; }
 
+/* solo run controls: pause / restart / end (only built outside multiplayer) */
+.ui-runctl { display: flex; gap: 6px; margin-left: auto; }
+.ui-stat.ui-wave { margin-left: 0; } /* stats cluster left; the controls (or rival strip) own the right */
+.ui-runctl-btn {
+  padding: 6px 10px; cursor: pointer; font-family: inherit;
+  color: #f6e6bd; font-weight: 800; font-size: 10px; letter-spacing: 1px;
+  background: linear-gradient(#5c4a2c, #463720); border: 2px solid #3a2914; border-radius: 6px;
+  box-shadow: 0 2px 0 #2c1f0f, inset 0 1px 0 #bd9358;
+}
+.ui-runctl-btn:hover { filter: brightness(1.12); }
+.ui-runctl-btn:disabled { filter: grayscale(.6) brightness(.7); cursor: not-allowed; box-shadow: none; }
+.ui-runctl-btn.confirm { background: linear-gradient(#8a4a3a, #6e3527); color: #ffe3d6; }
+
+/* dim veil while paused */
+.ui-paused {
+  position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 14, 10, .55);
+  font-size: 42px; font-weight: 800; letter-spacing: 6px; color: #f0d999;
+  text-shadow: 0 3px 0 #2c1f0f, 0 0 22px rgba(240, 217, 153, .35);
+}
+
 .ui-tooltip {
   pointer-events: none;
   background: #e7d4a4; border: 2px solid #3a2914; border-radius: 8px; padding: 8px 10px;

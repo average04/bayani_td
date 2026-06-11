@@ -306,7 +306,9 @@ export class World {
         // Fey Mark rides on the slow: amplified damage for as long as the chill lasts
         if (stats.mark) e.applyMark(1 + stats.mark.amp, stats.slow.duration);
       }
-      if (stats.poison) e.applyPoison(stats.poison.dps, stats.poison.duration, stats.contagion ?? null);
+      if (stats.poison) {
+        e.applyPoison(stats.poison.dps, stats.poison.duration, stats.contagion ?? null, stats.poison.hpFracPerSec ?? 0);
+      }
       if (stats.root && Math.random() < stats.root.chance) e.applyRoot(stats.root.duration);
     }
   }

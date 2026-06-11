@@ -12,7 +12,8 @@ export interface HeroType {
   fireRate: number; // shots per second
   splashRadius?: number; // if set, damage all enemies within this radius of the target
   slow?: { factor: number; duration: number }; // on-hit speed multiplier for a duration
-  poison?: { dps: number; duration: number }; // on-hit damage-over-time (ignores armor)
+  // on-hit damage-over-time (ignores armor); hpFracPerSec adds % of the victim's max HP per second
+  poison?: { dps: number; duration: number; hpFracPerSec?: number };
   spin?: boolean; // melee spin: each swing hits ALL enemies within `range` of the hero itself (no single target)
   trait?: HeroTrait; // unique signature passive, described in the UI
   // every Nth shot is special: multiplies damage (crit) and/or echoes the hit a moment later
@@ -49,7 +50,7 @@ export const HERO_TYPES: Record<string, HeroType> = {
     trait: { name: 'Fey Mark', desc: 'Enemies she slows take +15% damage from all sources' },
   },
   mangkukulam: {
-    id: 'mangkukulam', name: 'Mangkukulam', cost: 110, range: 120, damage: 10, fireRate: 0.8, poison: { dps: 8, duration: 3 },
+    id: 'mangkukulam', name: 'Mangkukulam', cost: 110, range: 120, damage: 13, fireRate: 0.8, poison: { dps: 8, duration: 3 },
     contagion: { radius: 70, maxTargets: 2, minDuration: 1.5 },
     trait: { name: 'Contagion', desc: 'Poisoned enemies spread their curse to nearby foes on death' },
   },

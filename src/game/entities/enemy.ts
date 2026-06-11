@@ -106,8 +106,10 @@ export class Enemy {
     this.slowTimer = Math.max(this.slowTimer, duration);
   }
 
-  applyPoison(dps: number, duration: number, contagion: Enemy['contagion'] = null): void {
-    this.poisonDps = Math.max(this.poisonDps, dps);
+  applyPoison(dps: number, duration: number, contagion: Enemy['contagion'] = null, hpFracPerSec = 0): void {
+    // HP-based curses resolve against THIS victim's max HP at application time
+    const effective = dps + hpFracPerSec * this.maxHp;
+    this.poisonDps = Math.max(this.poisonDps, effective);
     this.poisonTimer = Math.max(this.poisonTimer, duration);
     if (contagion) this.contagion = contagion;
   }

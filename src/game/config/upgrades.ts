@@ -6,7 +6,7 @@ export interface TowerStats {
   fireRate: number;
   splashRadius?: number;
   slow?: { factor: number; duration: number };
-  poison?: { dps: number; duration: number };
+  poison?: { dps: number; duration: number; hpFracPerSec?: number };
   root?: { chance: number; duration: number }; // chance (0-1) to immobilize a hit enemy for duration
   spin?: boolean;
   // unique-trait fields, copied from the hero definition (see heroes.ts)
@@ -25,7 +25,7 @@ export interface StatDelta {
   fireRate?: number; // additive
   splashRadius?: number; // additive
   slow?: { factor: number; duration: number }; // set
-  poison?: { dps: number; duration: number }; // set
+  poison?: { dps: number; duration: number; hpFracPerSec?: number }; // set
   root?: { chance: number; duration: number }; // set
   aura?: { damageAmp: number }; // set
   burnAura?: { radius: number; dps: number }; // set
@@ -204,15 +204,17 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Mangkukulam — poison caster (base: dmg 10, range 120, rate 0.8, poison 8/3s).
+  // Mangkukulam — poison caster (base: dmg 13, range 120, rate 0.8, poison 8/3s).
+  // Curse tier 3+ turns the poison HP-BASED: a % of the victim's max HP per second,
+  // so the curse scales into deep waves and eats tanks alive.
   mangkukulam: [
     {
       name: 'Curse',
       levels: [
         { name: 'Hex', cost: 60, desc: 'Poison 12/s, 3s', delta: { poison: { dps: 12, duration: 3 } } },
         { name: 'Wasting Curse', cost: 120, desc: 'Poison 18/s, 4s', delta: { poison: { dps: 18, duration: 4 } } },
-        { name: 'Plague', cost: 220, desc: 'Poison 28/s, 5s, +15 range', delta: { poison: { dps: 28, duration: 5 }, range: 15 } },
-        { name: 'Death Curse', cost: 410, desc: 'Poison 45/s, 6s', delta: { poison: { dps: 45, duration: 6 } } },
+        { name: 'Plague', cost: 220, desc: 'Poison 16/s + 1.5% max HP/s, 5s, +15 range', delta: { poison: { dps: 16, duration: 5, hpFracPerSec: 0.015 }, range: 15 } },
+        { name: 'Death Curse', cost: 410, desc: 'Poison 24/s + 3% max HP/s, 6s', delta: { poison: { dps: 24, duration: 6, hpFracPerSec: 0.03 } } },
       ],
     },
     {

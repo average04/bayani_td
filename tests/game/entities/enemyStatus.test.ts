@@ -27,6 +27,15 @@ describe('Enemy status effects', () => {
     expect(e.pos.x).toBeCloseTo(50);
   });
 
+  it('hp-based poison adds a fraction of the victim max HP per second', () => {
+    const small = new Enemy(etype({ maxHp: 100, speed: 0 }), path);
+    small.applyPoison(10, 3, null, 0.02); // 10 + 2% of 100 = 12/s
+    expect(small.poisonDps).toBeCloseTo(12, 5);
+    const tank = new Enemy(etype({ maxHp: 2000, speed: 0 }), path);
+    tank.applyPoison(10, 3, null, 0.02); // 10 + 2% of 2000 = 50/s — scales with the target
+    expect(tank.poisonDps).toBeCloseTo(50, 5);
+  });
+
   it('slow-immune enemies ignore slows entirely', () => {
     const e = new Enemy(etype({ speed: 100, slowImmune: true }), path);
     e.applySlow(0.5, 10);

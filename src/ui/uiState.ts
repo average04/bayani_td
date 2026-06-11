@@ -85,7 +85,10 @@ function statsEffect(s: TowerStats): string {
   const parts: string[] = [];
   if (s.splashRadius) parts.push(`Splash r${s.splashRadius}`);
   if (s.slow) parts.push(`Slow x${s.slow.factor}/${s.slow.duration}s`);
-  if (s.poison) parts.push(`Poison ${s.poison.dps}/s`);
+  if (s.poison) {
+    const hpPart = s.poison.hpFracPerSec ? ` +${Math.round(s.poison.hpFracPerSec * 1000) / 10}% HP/s` : '';
+    parts.push(`Poison ${s.poison.dps}/s${hpPart}`);
+  }
   if (s.root) parts.push(`Root ${Math.round(s.root.chance * 100)}%`);
   if (s.aura) parts.push(`Inspire +${Math.round(s.aura.damageAmp * 100)}%`);
   if (s.burnAura) parts.push(`Burn ${s.burnAura.dps}/s r${s.burnAura.radius}`);

@@ -205,16 +205,16 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
   ],
 
   // Mangkukulam — poison caster (base: dmg 13, range 120, rate 0.8, poison 8/3s).
-  // Curse tier 3+ turns the poison HP-BASED: a % of the victim's max HP per second,
-  // so the curse scales into deep waves and eats tanks alive.
+  // Curse tier 3 is a brutal single-target HP-based melter; tier 4 (Deadly Vials) trades
+  // per-target intensity for AoE: the vial splashes and curses everyone it touches.
   mangkukulam: [
     {
       name: 'Curse',
       levels: [
         { name: 'Hex', cost: 60, desc: 'Poison 12/s, 3s', delta: { poison: { dps: 12, duration: 3 } } },
         { name: 'Wasting Curse', cost: 120, desc: 'Poison 18/s, 4s', delta: { poison: { dps: 18, duration: 4 } } },
-        { name: 'Plague', cost: 220, desc: 'Poison 16/s + 1.5% max HP/s, 5s, +15 range', delta: { poison: { dps: 16, duration: 5, hpFracPerSec: 0.015 }, range: 15 } },
-        { name: 'Death Curse', cost: 410, desc: 'Poison 24/s + 3% max HP/s, 6s', delta: { poison: { dps: 24, duration: 6, hpFracPerSec: 0.03 } } },
+        { name: 'Plague', cost: 220, desc: 'Poison 24/s + 6% max HP/s, 5s', delta: { poison: { dps: 24, duration: 5, hpFracPerSec: 0.06 } } },
+        { name: 'Deadly Vials', cost: 410, desc: 'Vials splash r45 — poison everyone hit: 16/s + 3% max HP/s, 7s', delta: { splashRadius: 45, poison: { dps: 16, duration: 7, hpFracPerSec: 0.03 } } },
       ],
     },
     {

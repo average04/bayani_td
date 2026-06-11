@@ -28,7 +28,7 @@ export function showHomeScreen(cb: HomeScreenCallbacks): void {
         <span class="ui-home-mode-desc">1v1 — send monsters at your rival</span>
       </button>
     </div>
-    <button class="ui-home-lbbtn" id="home-lb">LEADERBOARD</button>
+    <div class="ui-lb ui-home-lb" id="home-lb" style="display:none"></div>
     <div class="ui-home-heroes">${heroes}</div>
   `;
   document.body.appendChild(home);
@@ -41,77 +41,57 @@ export function showHomeScreen(cb: HomeScreenCallbacks): void {
     home.remove();
     cb.onMultiplayer();
   });
-  home.querySelector<HTMLElement>('#home-lb')!.addEventListener('click', () => showLeaderboardModal());
+  void loadHomeLeaderboard(home.querySelector<HTMLElement>('#home-lb')!);
 }
 
-// Modal over the title screen: the global infinite-mode standings.
-function showLeaderboardModal(): void {
-  const overlay = document.createElement('div');
-  overlay.className = 'ui-home-lbmodal';
-  const box = document.createElement('div');
-  box.className = 'ui-lb ui-lb-modal';
-  overlay.appendChild(box);
+// The global infinite standings, embedded right on the title screen.
+async function loadHomeLeaderboard(box: HTMLElement): Promise<void> {
+  if (!leaderboardAvailable()) return; // quietly absent until Supabase is configured
 
+  box.style.display = 'flex';
   const title = document.createElement('div');
   title.className = 'ui-lb-title';
   title.textContent = 'TOP BAYANI — INFINITE';
-  box.appendChild(title);
-
   const status = document.createElement('div');
   status.className = 'ui-lb-status';
-  box.appendChild(status);
-
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'ui-lobby-btn ghost';
-  closeBtn.textContent = 'CLOSE';
-  closeBtn.addEventListener('click', () => overlay.remove());
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.remove();
-  });
-  document.body.appendChild(overlay);
-
-  if (!leaderboardAvailable()) {
-    status.textContent = 'Leaderboard needs Supabase configured (.env.local).';
-    box.appendChild(closeBtn);
-    return;
-  }
   status.textContent = 'Loading…';
-  box.appendChild(closeBtn);
-  void fetchLeaderboard(20)
-    .then((state) => {
-      status.remove();
-      const list = document.createElement('div');
-      list.className = 'ui-lb-list';
-      if (state.top.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'ui-lb-status';
-        empty.textContent = 'No champions yet — be the first!';
-        list.appendChild(empty);
-      }
-      state.top.forEach((row, i) => {
-        const r = document.createElement('div');
-        r.className = 'ui-lb-row' + (row.userId === state.myUserId ? ' me' : '');
-        const rank = document.createElement('span');
-        rank.className = 'ui-lb-rank';
-        rank.textContent = `#${i + 1}`;
-        const name = document.createElement('span');
-        name.className = 'ui-lb-name';
-        name.textContent = row.nickname;
-        const wave = document.createElement('span');
-        wave.className = 'ui-lb-wave';
-        wave.textContent = `W${row.bestWave}`;
-        r.append(rank, name, wave);
-        list.appendChild(r);
-      });
-      box.insertBefore(list, closeBtn);
-      if (state.myNickname && state.myRank !== null && state.myRank > state.top.length) {
-        const mine = document.createElement('div');
-        mine.className = 'ui-lb-status';
-        mine.textContent = `Your rank: #${state.myRank}`;
-        box.insertBefore(mine, closeBtn);
-      }
-    })
-    .catch(() => {
-      status.textContent = 'Leaderboard unavailable right now.';
+  box.append(title, status);
+
+  try {
+    const state = await fetchLeaderboard(5);
+    status.remove();
+    if (state.top.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'ui-lb-status';
+      empty.textContent = 'No champions yet — be the first!';
+      box.appendChild(empty);
+      return;
+    }
+    const list = document.createElement('div');
+    list.className = 'ui-lb-list';
+    state.top.forEach((row, i) => {
+      const r = document.createElement('div');
+      r.className = 'ui-lb-row' + (row.userId === state.myUserId ? ' me' : '');
+      const rank = document.createElement('span');
+      rank.className = 'ui-lb-rank';
+      rank.textContent = `#${i + 1}`;
+      const name = document.createElement('span');
+      name.className = 'ui-lb-name';
+      name.textContent = row.nickname;
+      const wave = document.createElement('span');
+      wave.className = 'ui-lb-wave';
+      wave.textContent = `W${row.bestWave}`;
+      r.append(rank, name, wave);
+      list.appendChild(r);
     });
+    box.appendChild(list);
+    if (state.myNickname && state.myRank !== null && state.myRank > state.top.length) {
+      const mine = document.createElement('div');
+      mine.className = 'ui-lb-status';
+      mine.textContent = `Your rank: #${state.myRank}`;
+      box.appendChild(mine);
+    }
+  } catch {
+    status.textContent = 'Leaderboard unavailable right now.';
+  }
 }

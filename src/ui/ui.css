@@ -278,18 +278,8 @@ body::after {
 .ui-home-mode-desc { font-size: 12px; opacity: .8; }
 .ui-home-mode.soon { filter: grayscale(.55) brightness(.78); }
 .ui-home-note { height: 18px; margin: 16px 0 0; color: #ffd76a; font-weight: 700; }
-.ui-home-lbbtn {
-  margin-top: 18px; padding: 8px 22px; cursor: pointer; font-family: inherit;
-  color: #f6e6bd; font-weight: 800; font-size: 12px; letter-spacing: 2px;
-  background: linear-gradient(#5c4a2c, #463720); border: 2px solid #3a2914; border-radius: 8px;
-  box-shadow: 0 3px 0 #2c1f0f, inset 0 1px 0 #bd9358;
-}
-.ui-home-lbbtn:hover { filter: brightness(1.1); }
-.ui-home-lbmodal {
-  position: fixed; inset: 0; z-index: 110; display: flex; align-items: center; justify-content: center;
-  background: rgba(10, 14, 10, .7);
-}
-.ui-lb-modal { width: 340px; max-height: 70vh; background: linear-gradient(#3a2c18, #2a1f10); }
+/* standings embedded on the title screen, under the mode buttons */
+.ui-home-lb { width: 320px; margin-top: 18px; background: rgba(16, 9, 3, .5); }
 .ui-home-heroes { display: flex; gap: 10px; margin-top: 22px; }
 .ui-home-hero {
   width: 46px; height: 46px; border-radius: 8px; border: 2px solid #3a2914;

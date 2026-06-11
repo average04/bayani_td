@@ -320,6 +320,13 @@ body::after {
   border: solid #2c1f0f; border-width: 0 3px 3px 0; transform: rotate(45deg);
 }
 .ui-card.sel .ui-card-check { opacity: 1; transform: scale(1); }
+/* multiplayer pick timer: both players are on the same clock */
+.ui-select-timer {
+  margin: 0 0 12px; padding: 5px 16px; font-size: 13px; font-weight: 800; letter-spacing: 1px;
+  color: #ffd76a; background: rgba(16, 9, 3, .45); border: 2px solid #3a2914; border-radius: 8px;
+}
+.ui-select-timer.urgent { color: #ffb09a; border-color: #8a4a3a; animation: ui-lobby-breathe 0.8s ease-in-out infinite; }
+
 .ui-select-foot { display: flex; align-items: center; gap: 18px; margin-top: 16px; }
 .ui-select-count { font-weight: 800; letter-spacing: 1px; color: #cdb98a; }
 .ui-select-start {
@@ -369,6 +376,20 @@ body::after {
 }
 .ui-lobby-btn:disabled { filter: grayscale(.6) brightness(.7); cursor: not-allowed; box-shadow: none; }
 .ui-lobby-btn.ghost { background: linear-gradient(#5c4a2c, #463720); color: #f6e6bd; }
+/* the main call to action: bigger, brighter, glowing */
+.ui-lobby-btn.primary {
+  padding: 15px; font-size: 17px; letter-spacing: 2px;
+  background: linear-gradient(#ffd76a, #caa24a);
+  box-shadow: 0 4px 0 #5c4012, inset 0 1px 0 #fff0c2, 0 0 18px rgba(255, 215, 106, .35);
+}
+.ui-lobby-btn.primary:hover { filter: brightness(1.06); }
+.ui-lobby-sep {
+  display: flex; align-items: center; gap: 10px; margin: 2px 0;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #cdb98a; text-transform: uppercase;
+}
+.ui-lobby-sep::before, .ui-lobby-sep::after {
+  content: ''; flex: 1; height: 1px; background: rgba(189, 147, 88, .4);
+}
 .ui-lobby-joinrow { display: flex; gap: 8px; }
 .ui-lobby-joinrow .ui-lobby-input { flex: 1; min-width: 0; }
 .ui-lobby-input {

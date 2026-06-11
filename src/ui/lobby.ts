@@ -101,12 +101,13 @@ export function showLobby(cb: LobbyCallbacks): void {
     const v = el(`<div class="ui-lobby-box">
       <h2>Multiplayer — Versus</h2>
       <p class="ui-lobby-note">Playing as <b></b></p>
+      <button class="ui-lobby-btn primary" data-a="quick">QUICK MATCH</button>
+      <div class="ui-lobby-sep">or play a friend</div>
       <button class="ui-lobby-btn" data-a="create">CREATE ROOM</button>
       <div class="ui-lobby-joinrow">
         <input class="ui-lobby-input" maxlength="10" placeholder="BAYAN-0000" />
         <button class="ui-lobby-btn" data-a="join">JOIN</button>
       </div>
-      <button class="ui-lobby-btn" data-a="quick">QUICK MATCH</button>
       <button class="ui-lobby-btn ghost" data-a="back">BACK</button>
     </div>`);
     v.querySelector('.ui-lobby-note b')!.textContent = myNickname;

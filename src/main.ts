@@ -85,6 +85,14 @@ function readyThenStart(
     overlay.textContent = 'Rival left. Returning home…';
     setTimeout(() => location.reload(), 1500);
   });
+  // a peer that silently vanished before our handler registered would stall us forever;
+  // the pick timer is 30s, so 45s with no 'ready' means the match is dead
+  setTimeout(() => {
+    if (!started) {
+      overlay.textContent = 'Rival is not responding. Returning home…';
+      setTimeout(() => location.reload(), 1500);
+    }
+  }, 45_000);
   session.transport.emit('ready');
   maybeStart();
 }
@@ -109,12 +117,15 @@ showHomeScreen({
           readyState.peerReady = true;
           readyState.onPeerReady();
         });
-        showHeroSelect({
-          onStart: (loadout) => {
-            setLoadout(loadout);
-            readyThenStart(session, readyState);
+        showHeroSelect(
+          {
+            onStart: (loadout) => {
+              setLoadout(loadout);
+              readyThenStart(session, readyState);
+            },
           },
-        });
+          { timerS: 30 }, // both players are on the same pick clock
+        );
       },
     });
   },

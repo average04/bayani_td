@@ -18,7 +18,8 @@ function effectLine(h: HeroType): string {
 }
 
 // Full-screen card-picker: choose exactly LOADOUT_SIZE heroes to bring into the run.
-export function showHeroSelect(cb: HeroSelectCallbacks): void {
+// `opts.timerS` (multiplayer) auto-fills the remaining slots and starts when it expires.
+export function showHeroSelect(cb: HeroSelectCallbacks, opts?: { timerS?: number }): void {
   const saved = loadSave().loadout;
   const selected = new Set<string>(saved ?? HERO_ORDER.slice(0, LOADOUT_SIZE));
 
@@ -30,6 +31,7 @@ export function showHeroSelect(cb: HeroSelectCallbacks): void {
     <div class="ui-select-inner">
       <h1 class="ui-select-title">Choose your Bayani</h1>
       <p class="ui-select-sub">Bring <b>${LOADOUT_SIZE}</b> hero cards into battle</p>
+      <div class="ui-select-timer" style="display:none"></div>
       <div class="ui-select-grid"></div>
       <div class="ui-select-foot">
         <span class="ui-select-count"></span>
@@ -40,6 +42,7 @@ export function showHeroSelect(cb: HeroSelectCallbacks): void {
   const grid = root.querySelector<HTMLElement>('.ui-select-grid')!;
   const countEl = root.querySelector<HTMLElement>('.ui-select-count')!;
   const startBtn = root.querySelector<HTMLButtonElement>('.ui-select-start')!;
+  const timerEl = root.querySelector<HTMLElement>('.ui-select-timer')!;
 
   const cards = new Map<string, HTMLElement>();
   for (const id of HERO_ORDER) {
@@ -77,13 +80,46 @@ export function showHeroSelect(cb: HeroSelectCallbacks): void {
   }
   refresh();
 
-  startBtn.addEventListener('click', () => {
+  let started = false;
+  let countdown: number | null = null;
+
+  const start = (): void => {
+    if (started) return;
     const loadout = HERO_ORDER.filter((id) => selected.has(id));
     if (!isValidLoadout(loadout)) return;
+    started = true;
+    if (countdown !== null) window.clearInterval(countdown);
     saveLoadout(loadout);
     root.remove();
     cb.onStart(loadout);
-  });
+  };
+
+  startBtn.addEventListener('click', start);
+
+  // multiplayer pick timer: when it runs out, top up the loadout and march to battle
+  if (opts?.timerS) {
+    let remaining = opts.timerS;
+    timerEl.style.display = 'block';
+    const renderTimer = (): void => {
+      timerEl.textContent = `Battle begins in ${remaining}s`;
+      timerEl.classList.toggle('urgent', remaining <= 5);
+    };
+    renderTimer();
+    countdown = window.setInterval(() => {
+      remaining -= 1;
+      if (remaining > 0) {
+        renderTimer();
+        return;
+      }
+      window.clearInterval(countdown!);
+      countdown = null;
+      for (const id of HERO_ORDER) {
+        if (selected.size >= LOADOUT_SIZE) break;
+        selected.add(id);
+      }
+      start();
+    }, 1000);
+  }
 
   document.body.appendChild(root);
 }

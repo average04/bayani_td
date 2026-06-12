@@ -1,7 +1,7 @@
 import { supabaseConfigured } from '../net/supabaseClient';
 import {
   ensureSession, getNickname, saveNickname, createRoom, joinRoom, quickMatch,
-  cancelMatch, markActive, countSearching, type MatchRow,
+  cancelMatch, countSearching, type MatchRow,
 } from '../net/matchService';
 import { MatchChannel } from '../net/matchChannel';
 import type { MatchSession } from '../net/session';
@@ -161,9 +161,8 @@ export function showLobby(cb: LobbyCallbacks): void {
       }
       transport.on('peerJoin', (oppNick) => {
         if (leaving) return;
-        void markActive(row.id).then(() => {
-          done({ matchId: row.id, myId, isHost: true, myNickname, opponentNickname: oppNick, transport });
-        });
+        // the guest's join_match / quick_match RPC already flipped the row to 'active'
+        done({ matchId: row.id, myId, isHost: true, myNickname, opponentNickname: oppNick, transport });
       });
       await transport.join(myNickname);
     } catch (e) {

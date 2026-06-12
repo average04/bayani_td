@@ -7,8 +7,13 @@ export interface MatchRow {
   guest_id: string | null;
 }
 
+// 5 chars from an unambiguous alphabet (no 0/O/1/I) ≈ 28M codes — typeable but not
+// brute-forceable now that rooms are private (only the holder of the code can join).
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export function generateCode(): string {
-  return `BAYAN-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+  let c = '';
+  for (let i = 0; i < 5; i++) c += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+  return `BAYAN-${c}`;
 }
 
 export function normalizeCode(input: string): string {
@@ -56,87 +61,41 @@ async function insertMatch(userId: string, status: 'waiting' | 'searching'): Pro
   throw new Error('could not allocate a room code');
 }
 
-/** Create a private room (status 'waiting'); retries on the rare code collision. */
+/** Create a private room (status 'waiting'); retries on the rare code collision.
+ * The row is readable only by its participants (RLS), so the code is a real secret. */
 export async function createRoom(userId: string): Promise<MatchRow> {
   return insertMatch(userId, 'waiting');
 }
 
-/** Join a room by code. Atomic claim: the conditional update wins or returns null. */
-export async function joinRoom(userId: string, codeInput: string): Promise<MatchRow | null> {
-  const sb = getSupabase();
-  const code = normalizeCode(codeInput);
-  const { data: row } = await sb
-    .from('matches')
-    .select('id, code, host_id, guest_id')
-    .eq('code', code)
-    .eq('status', 'waiting')
-    .is('guest_id', null)
-    .maybeSingle();
-  if (!row) return null;
-  const { data: claimed } = await sb
-    .from('matches')
-    .update({ guest_id: userId, status: 'active' })
-    .eq('id', row.id)
-    .is('guest_id', null)
-    .select('id, code, host_id, guest_id');
-  return claimed && claimed.length > 0 ? claimed[0] : null;
+/** Join a room by code via the server RPC (atomic claim; the table itself isn't exposed). */
+export async function joinRoom(_userId: string, codeInput: string): Promise<MatchRow | null> {
+  const { data, error } = await getSupabase().rpc('join_match', { p_code: normalizeCode(codeInput) });
+  if (error) throw error;
+  return (data as MatchRow) ?? null; // null when no open room matched the code
 }
 
-/** Quick match: claim the oldest 'searching' row, else enqueue ourselves as one. */
-export async function quickMatch(
-  userId: string,
-): Promise<{ match: MatchRow; isHost: boolean }> {
-  const sb = getSupabase();
-  for (let i = 0; i < 3; i++) {
-    const { data: open } = await sb
-      .from('matches')
-      .select('id, code, host_id, guest_id')
-      .eq('status', 'searching')
-      .neq('host_id', userId)
-      .is('guest_id', null)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (!open) break;
-    const { data: claimed } = await sb
-      .from('matches')
-      .update({ guest_id: userId, status: 'active' })
-      .eq('id', open.id)
-      .is('guest_id', null)
-      .select('id, code, host_id, guest_id');
-    if (claimed && claimed.length > 0) return { match: claimed[0], isHost: false };
-    // someone else claimed it between select and update — try the next row
-  }
-  const match = await insertMatch(userId, 'searching');
-  return { match, isHost: true };
+/** Quick match via the server RPC: claims the oldest opponent or enqueues us. */
+export async function quickMatch(userId: string): Promise<{ match: MatchRow; isHost: boolean }> {
+  const { data, error } = await getSupabase().rpc('quick_match');
+  if (error || !data) throw error ?? new Error('matchmaking failed');
+  const match = data as MatchRow;
+  return { match, isHost: match.host_id === userId };
 }
 
-/** How many players are sitting in the quick-match queue right now (includes yourself). */
+/** How many players are sitting in the quick-match queue right now (server-counted). */
 export async function countSearching(): Promise<number> {
-  const { count } = await getSupabase()
-    .from('matches')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'searching')
-    .is('guest_id', null);
-  return count ?? 0;
+  const { data } = await getSupabase().rpc('count_searching');
+  return (data as number) ?? 0;
 }
 
-/** Host marks their own waiting/searching room active once presence shows the guest arrived. */
-export async function markActive(matchId: string): Promise<void> {
-  await getSupabase().from('matches').update({ status: 'active' }).eq('id', matchId);
-}
-
-/** Cancel an open room/queue entry (host only — RLS enforces). */
+/** Cancel an own still-open room/queue entry (RLS delete policy enforces ownership). */
 export async function cancelMatch(matchId: string): Promise<void> {
   await getSupabase().from('matches').delete().eq('id', matchId);
 }
 
-/** The winner records the result (loser does nothing). */
-export async function finishMatch(matchId: string, winnerId: string): Promise<void> {
-  await getSupabase()
-    .from('matches')
-    .update({ status: 'done', winner_id: winnerId, finished_at: new Date().toISOString() })
-    .eq('id', matchId);
+/** Record the result via the server RPC — the caller becomes the winner (server-verified). */
+export async function finishMatch(matchId: string, _winnerId?: string): Promise<void> {
+  await getSupabase().rpc('finish_match', { p_match: matchId });
 }
 
 export async function fetchNicknameOf(userId: string): Promise<string> {

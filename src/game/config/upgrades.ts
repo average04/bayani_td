@@ -198,10 +198,10 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     {
       name: 'Pugad Lawin',
       levels: [
-        { name: 'Kindled Torch', cost: 70, desc: 'Burn 10/s + 3% max HP/s, r65', delta: { burnAura: { radius: 65, dps: 10, hpFracPerSec: 0.03 } } },
-        { name: 'Bonfire', cost: 150, desc: 'Burn 16/s + 3% max HP/s, r70', delta: { burnAura: { radius: 70, dps: 16, hpFracPerSec: 0.03 } } },
-        { name: 'Blaze of Katipunan', cost: 280, desc: 'Burn 26/s + 3% max HP/s, r80', delta: { burnAura: { radius: 80, dps: 26, hpFracPerSec: 0.03 } } },
-        { name: 'Wildfire', cost: 520, desc: 'Burn 40/s + 3% max HP/s, r95', delta: { burnAura: { radius: 95, dps: 40, hpFracPerSec: 0.03 } } },
+        { name: 'Kindled Torch', cost: 70, desc: 'Burn 10/s + 1% max HP/s, r65', delta: { burnAura: { radius: 65, dps: 10, hpFracPerSec: 0.01 } } },
+        { name: 'Bonfire', cost: 150, desc: 'Burn 16/s + 1.5% max HP/s, r70', delta: { burnAura: { radius: 70, dps: 16, hpFracPerSec: 0.015 } } },
+        { name: 'Blaze of Katipunan', cost: 280, desc: 'Burn 26/s + 2% max HP/s, r80', delta: { burnAura: { radius: 80, dps: 26, hpFracPerSec: 0.02 } } },
+        { name: 'Wildfire', cost: 520, desc: 'Burn 40/s + 2.5% max HP/s, r95', delta: { burnAura: { radius: 95, dps: 40, hpFracPerSec: 0.025 } } },
       ],
     },
   ],
@@ -215,8 +215,8 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
       levels: [
         { name: 'Hex', cost: 60, desc: 'Poison 12/s, 3s', delta: { poison: { dps: 12, duration: 3 } } },
         { name: 'Wasting Curse', cost: 120, desc: 'Poison 18/s, 4s', delta: { poison: { dps: 18, duration: 4 } } },
-        { name: 'Plague', cost: 220, desc: 'Poison 24/s + 6% max HP/s, 5s', delta: { poison: { dps: 24, duration: 5, hpFracPerSec: 0.06 } } },
-        { name: 'Death Curse', cost: 410, desc: 'Poison 36/s + 8% max HP/s, 5s', delta: { poison: { dps: 36, duration: 5, hpFracPerSec: 0.08 } } },
+        { name: 'Plague', cost: 220, desc: 'Poison 24/s + 3% max HP/s, 5s', delta: { poison: { dps: 24, duration: 5, hpFracPerSec: 0.03 } } },
+        { name: 'Death Curse', cost: 410, desc: 'Poison 36/s + 4% max HP/s, 5s', delta: { poison: { dps: 36, duration: 5, hpFracPerSec: 0.04 } } },
       ],
     },
     {
@@ -224,8 +224,8 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
       levels: [
         { name: 'Quick Hexes', cost: 55, desc: '+0.5 attack speed', delta: { fireRate: 0.5 } },
         { name: 'Cursed Bolt', cost: 110, desc: '+6 damage', delta: { damage: 6 } },
-        { name: 'Deadly Vials', cost: 210, desc: 'Vials splash r45 — your poison hits everyone, +3% max HP/s, 7s', delta: { splashRadius: 45, poison: { duration: 7, hpFracPerSec: 0.03 } } },
-        { name: 'Malediction', cost: 390, desc: '+0.8 atk speed, +12 dmg; vial plague 4% max HP/s, 8s', delta: { fireRate: 0.8, damage: 12, poison: { duration: 8, hpFracPerSec: 0.04 } } },
+        { name: 'Deadly Vials', cost: 210, desc: 'Vials splash r45 — your poison hits everyone, +1.5% max HP/s, 7s', delta: { splashRadius: 45, poison: { duration: 7, hpFracPerSec: 0.015 } } },
+        { name: 'Malediction', cost: 390, desc: '+0.8 atk speed, +12 dmg; vial plague 2% max HP/s, 8s', delta: { fireRate: 0.8, damage: 12, poison: { duration: 8, hpFracPerSec: 0.02 } } },
       ],
     },
   ],

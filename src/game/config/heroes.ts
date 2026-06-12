@@ -69,7 +69,7 @@ export const HERO_TYPES: Record<string, HeroType> = {
   bonifacio: {
     id: 'bonifacio', name: 'Andres Bonifacio', cost: 120, range: 50, damage: 20, fireRate: 1.2,
     mobile: { speed: 85 },
-    burnAura: { radius: 60, dps: 6, hpFracPerSec: 0.03 },
+    burnAura: { radius: 60, dps: 6, hpFracPerSec: 0.01 }, // % grows up the Pugad Lawin path
     trait: { name: "Revolution's Flame", desc: 'Hunts the front-most enemy; his burning aura sears foes around him' },
   },
 };

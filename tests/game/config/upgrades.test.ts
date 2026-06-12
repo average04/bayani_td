@@ -26,10 +26,10 @@ describe('upgrades', () => {
     // Wasting Curse (L2) sets the flat 18/s; Deadly Vials/Malediction only add splash + HP-burn
     const s = effectiveStats(witch, [2, 4]);
     expect(s.splashRadius).toBe(45);
-    expect(s.poison).toEqual({ dps: 18, duration: 8, hpFracPerSec: 0.04 });
+    expect(s.poison).toEqual({ dps: 18, duration: 8, hpFracPerSec: 0.02 });
     // without Curse investment the vials ride on the base 8/s
     const vialsOnly = effectiveStats(witch, [0, 3]);
-    expect(vialsOnly.poison).toEqual({ dps: 8, duration: 7, hpFracPerSec: 0.03 });
+    expect(vialsOnly.poison).toEqual({ dps: 8, duration: 7, hpFracPerSec: 0.015 });
   });
 
   it('Diwata: splash and root only unlock at tier 3, so she gets one or the other', () => {

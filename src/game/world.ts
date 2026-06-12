@@ -301,8 +301,8 @@ export class World {
   private applyHit(affected: Enemy[], stats: TowerStats, damage: number): void {
     for (const e of affected) {
       let dmg = damage;
-      // Sunpierce: bonus vs near-full-HP targets
-      if (stats.firstStrike && e.hp >= e.maxHp * 0.9) dmg *= stats.firstStrike;
+      // Sunpierce: bonus while the target is still healthy (>=70% HP)
+      if (stats.firstStrike && e.hp >= e.maxHp * 0.7) dmg *= stats.firstStrike;
       e.takeDamage(dmg, stats.pierce);
       if (stats.slow) {
         e.applySlow(stats.slow.factor, stats.slow.duration);

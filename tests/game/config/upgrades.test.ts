@@ -18,7 +18,7 @@ describe('upgrades', () => {
     expect(a2.range).toBe(lapu.range + 10);
     const b4 = effectiveStats(lapu, [0, 4]);
     expect(b4.fireRate).toBeCloseTo(lapu.fireRate + 0.3 + 0.4 + 0.5);
-    expect(b4.slow).toEqual({ factor: 0.5, duration: 1.5 });
+    expect(b4.slow).toEqual({ factor: 0.7, duration: 1.5 }); // light slow only — deep chill is Diwata's
   });
 
   it('Mangkukulam: Dark Arts vials inherit the flat poison from the Curse tiers', () => {

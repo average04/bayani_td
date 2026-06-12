@@ -21,7 +21,7 @@ export interface HeroType {
   mark?: { amp: number }; // hits that slow also amplify ALL damage the enemy takes while slowed
   contagion?: { radius: number; maxTargets: number; minDuration: number }; // poison jumps on death
   pierce?: boolean; // shots ignore armor
-  firstStrike?: number; // damage multiplier vs enemies at >=90% HP
+  firstStrike?: number; // damage multiplier vs healthy enemies (>=70% HP)
   aura?: { damageAmp: number }; // OTHER towers within his range deal bonus damage (strongest aura wins)
   // enemies near him take true damage over time; hpFracPerSec adds % of victim max HP per second
   burnAura?: { radius: number; dps: number; hpFracPerSec?: number };
@@ -47,8 +47,8 @@ export const HERO_TYPES: Record<string, HeroType> = {
   },
   diwata: {
     id: 'diwata', name: 'Diwata', cost: 90, range: 130, damage: 12, fireRate: 1.4, slow: { factor: 0.6, duration: 1.5 },
-    mark: { amp: 0.15 },
-    trait: { name: 'Fey Mark', desc: 'Enemies she slows take +15% damage from all sources' },
+    mark: { amp: 0.2 },
+    trait: { name: 'Fey Mark', desc: 'Enemies she slows take +20% damage from all sources' },
   },
   mangkukulam: {
     id: 'mangkukulam', name: 'Mangkukulam', cost: 110, range: 120, damage: 13, fireRate: 0.8, poison: { dps: 8, duration: 3 },
@@ -59,7 +59,7 @@ export const HERO_TYPES: Record<string, HeroType> = {
     id: 'apolaki', name: 'Apolaki', cost: 130, range: 210, damage: 45, fireRate: 0.45,
     pierce: true,
     firstStrike: 1.5,
-    trait: { name: 'Sunpierce', desc: 'Sun lances ignore armor and deal +50% to unhurt enemies' },
+    trait: { name: 'Sunpierce', desc: 'Sun lances ignore armor and deal +50% to healthy foes' },
   },
   rizal: {
     id: 'rizal', name: 'Jose Rizal', cost: 110, range: 150, damage: 15, fireRate: 1.0,

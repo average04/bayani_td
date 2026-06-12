@@ -113,7 +113,7 @@ describe('Contagion (poison spreads on death)', () => {
 });
 
 describe('Sunpierce (armor pierce + first strike)', () => {
-  it('ignores armor and deals bonus damage to near-full-HP enemies', () => {
+  it('ignores armor and deals bonus damage while the target stays above 70% HP', () => {
     const hero: HeroType = {
       id: 'sun', name: 'S', cost: 0, range: 300, damage: 10, fireRate: 1000,
       pierce: true,
@@ -121,10 +121,14 @@ describe('Sunpierce (armor pierce + first strike)', () => {
     };
     const w = world(hero, { armored });
     const e = addEnemy(w, armored, 200);
-    w.update(0.016); // full HP: 10 * 1.5, no armor
+    w.update(0.016); // 100 HP (>=70%): 10 * 1.5, no armor
     expect(e.hp).toBe(85);
-    w.update(0.016); // hurt now: plain 10, still no armor
-    expect(e.hp).toBe(75);
+    w.update(0.016); // 85 HP (>=70%): still boosted
+    expect(e.hp).toBe(70);
+    w.update(0.016); // 70 HP (boundary, >=70%): boosted one last time
+    expect(e.hp).toBe(55);
+    w.update(0.016); // 55 HP (<70%): plain 10, still no armor
+    expect(e.hp).toBe(45);
   });
 });
 

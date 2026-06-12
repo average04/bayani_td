@@ -16,21 +16,14 @@ export interface LeaderboardState {
 
 export const leaderboardAvailable = (): boolean => supabaseConfigured;
 
-/** Record a finished run: keeps only the player's deepest wave. No-op without a nickname. */
+/** Record a finished run: keeps only the player's deepest wave. No-op without a nickname.
+ * Writes go through the validated `submit_infinite_score` RPC — the table is no longer
+ * client-writable, so a tampered client can't post a bogus score (server clamps + rate-limits). */
 export async function submitBestWave(wave: number): Promise<void> {
   if (!supabaseConfigured || wave < 1) return;
   const userId = await ensureSession();
   if (!(await getNickname(userId))) return; // no identity yet — caller offers the name form
-  const sb = getSupabase();
-  const { data: existing } = await sb
-    .from('infinite_scores')
-    .select('best_wave')
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (existing && existing.best_wave >= wave) return;
-  await sb
-    .from('infinite_scores')
-    .upsert({ user_id: userId, best_wave: wave, updated_at: new Date().toISOString() });
+  await getSupabase().rpc('submit_infinite_score', { p_wave: Math.floor(wave) });
 }
 
 /** First-time players: save a nickname, then submit in one step. */

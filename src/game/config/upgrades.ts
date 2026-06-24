@@ -184,7 +184,7 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     },
   ],
 
-  // Andres Bonifacio — roaming melee (base: dmg 20, range 50, rate 1.2, burn 6/s r60).
+  // Andres Bonifacio — roaming melee (base: dmg 20, range 50, rate 1.2, burn 12/s + 0.2% HP r60).
   bonifacio: [
     {
       name: 'Supremo',
@@ -198,10 +198,10 @@ export const UPGRADES: Record<string, HeroUpgrades> = {
     {
       name: 'Pugad Lawin',
       levels: [
-        { name: 'Kindled Torch', cost: 70, desc: 'Burn 10/s + 1% max HP/s, r65', delta: { burnAura: { radius: 65, dps: 10, hpFracPerSec: 0.01 } } },
-        { name: 'Bonfire', cost: 150, desc: 'Burn 16/s + 1.5% max HP/s, r70', delta: { burnAura: { radius: 70, dps: 16, hpFracPerSec: 0.015 } } },
-        { name: 'Blaze of Katipunan', cost: 280, desc: 'Burn 26/s + 2% max HP/s, r80', delta: { burnAura: { radius: 80, dps: 26, hpFracPerSec: 0.02 } } },
-        { name: 'Wildfire', cost: 520, desc: 'Burn 40/s + 2.5% max HP/s, r95', delta: { burnAura: { radius: 95, dps: 40, hpFracPerSec: 0.025 } } },
+        { name: 'Kindled Torch', cost: 70, desc: 'Burn 18/s + 0.3% max HP/s, r65', delta: { burnAura: { radius: 65, dps: 18, hpFracPerSec: 0.003 } } },
+        { name: 'Bonfire', cost: 150, desc: 'Burn 28/s + 0.35% max HP/s, r70', delta: { burnAura: { radius: 70, dps: 28, hpFracPerSec: 0.0035 } } },
+        { name: 'Blaze of Katipunan', cost: 280, desc: 'Burn 42/s + 0.45% max HP/s, r80', delta: { burnAura: { radius: 80, dps: 42, hpFracPerSec: 0.0045 } } },
+        { name: 'Wildfire', cost: 520, desc: 'Burn 60/s + 0.5% max HP/s, r95', delta: { burnAura: { radius: 95, dps: 60, hpFracPerSec: 0.005 } } },
       ],
     },
   ],

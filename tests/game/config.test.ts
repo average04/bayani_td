@@ -28,6 +28,15 @@ describe('config data', () => {
     expect(lateJump).toBeGreaterThan(earlyJump);
   });
 
+  it('ramps HP even steeper past wave 30 (deep-wave wall)', () => {
+    // a wave-by-wave jump just past 30 outpaces one just past 20 (steeper tier kicks in)
+    const deepJump = scaledMaxHp(60, 31) - scaledMaxHp(60, 30);
+    const lateJump = scaledMaxHp(60, 21) - scaledMaxHp(60, 20);
+    expect(deepJump).toBeGreaterThan(lateJump);
+    // and the wall is dramatic by deep waves: well past 20x the base by wave 40
+    expect(scaledMaxHp(60, 40)).toBeGreaterThan(60 * 20);
+  });
+
   it('endless wave counts grow slowly and cap (HP carries difficulty, not quantity)', () => {
     const total = (n: number): number => generateWave(n).spawns.reduce((s, sp) => s + sp.count, 0);
     expect(total(17)).toBeLessThan(total(30)); // still grows past the authored list

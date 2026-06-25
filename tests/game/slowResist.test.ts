@@ -8,11 +8,12 @@ import type { EnemyType } from '../../src/game/config/enemies';
 const path = [{ x: 0, y: 0 }, { x: 700, y: 0 }];
 
 describe('deep-wave slow resistance', () => {
-  it('ramps from 0% at wave 30 to 60% at wave 60, capped beyond', () => {
+  it('ramps from 0% at wave 30 to 100% at wave 60, capped beyond', () => {
     expect(slowResistFor(ENEMY_TYPES.kapre, 1)).toBe(0);
     expect(slowResistFor(ENEMY_TYPES.kapre, 30)).toBe(0);
-    expect(slowResistFor(ENEMY_TYPES.kapre, 45)).toBeCloseTo(0.3, 5);
+    expect(slowResistFor(ENEMY_TYPES.kapre, 45)).toBeCloseTo(0.5 * SLOW_RESIST_MAX, 5); // midpoint
     expect(slowResistFor(ENEMY_TYPES.kapre, 60)).toBeCloseTo(SLOW_RESIST_MAX, 5);
+    expect(SLOW_RESIST_MAX).toBe(1.0); // marked veterans become fully slow-immune by wave 60
     expect(slowResistFor(ENEMY_TYPES.kapre, 90)).toBeCloseTo(SLOW_RESIST_MAX, 5);
   });
 

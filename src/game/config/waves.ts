@@ -129,6 +129,9 @@ export const WAVES: WaveConfig[] = [
 // COUNTS grow slowly and cap out — the difficulty ramp comes from per-enemy HP scaling (see
 // scaledMaxHp), NOT from spawning ever more enemies. Fewer, tankier monsters keeps gold income
 // (which is per-kill) from ballooning in deep waves while the threat keeps rising.
+export const BOSS_PILE_WAVE = 30; // boss waves at/after this spawn more than one Bakunawa
+export const BOSS_PILE_MAX = 5; // hard cap on bosses per wave, to keep the path from flooding
+
 export function generateWave(n: number): WaveConfig {
   if (n <= WAVES.length) return WAVES[n - 1];
   const t = n - WAVES.length; // tiers past the last authored wave (1, 2, 3, …)
@@ -141,9 +144,11 @@ export function generateWave(n: number): WaveConfig {
     { enemyTypeId: 'tiktik', count: grow(8, 0.5, 22), interval: tighten(0.35, 0.01, 0.2) },
     { enemyTypeId: 'tiyanak', count: grow(10, 0.6, 26), interval: tighten(0.25, 0.01, 0.15) },
   ];
-  // every 10th wave the Bakunawa returns, in growing numbers (2 from wave 40, 3 from wave 70)
+  // The Bakunawa returns every 10th wave: a lone boss through wave 20, then from wave 30 they
+  // pile up — one extra each boss wave (2 @ w30, 3 @ w40, …), capped so the path never floods.
   if (n % 10 === 0) {
-    spawns.unshift({ enemyTypeId: 'bakunawa', count: Math.min(3, Math.floor(n / 35) + 1), interval: 1.5 });
+    const count = n < BOSS_PILE_WAVE ? 1 : Math.min(BOSS_PILE_MAX, (n - BOSS_PILE_WAVE) / 10 + 2);
+    spawns.unshift({ enemyTypeId: 'bakunawa', count, interval: 1.5 });
   }
   return { spawns };
 }

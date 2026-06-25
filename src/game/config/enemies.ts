@@ -27,17 +27,21 @@ export const ENEMY_TYPES: Record<string, EnemyType> = {
 };
 
 // Enemies get tankier every wave (gold rewards stay fixed). A gentle linear ramp early
-// (+HP_GROWTH_PER_WAVE of base per wave), then an extra COMPOUNDING ramp from wave 20 on so
-// deep endless waves become real walls. e.g. a 60-HP Aswang: 114 @w10, 174 @w20, ~505 @w30.
+// (+HP_GROWTH_PER_WAVE of base per wave), an extra COMPOUNDING ramp from wave 20, then an
+// even STEEPER compounding ramp from wave 30 so deep endless runs hit a real wall.
+// e.g. a 60-HP Aswang: 114 @w10, 174 @w20, ~505 @w30, ~2,570 @w40, ~12,500 @w50.
 export const HP_GROWTH_PER_WAVE = 0.1;
-export const LATE_WAVE = 20; // the steeper ramp kicks in past this wave
-export const LATE_HP_GROWTH_PER_WAVE = 0.08; // extra compounding growth per wave beyond LATE_WAVE
+export const LATE_WAVE = 20; // first compounding ramp kicks in past this wave
+export const LATE_HP_GROWTH_PER_WAVE = 0.08; // compounding growth per wave from LATE_WAVE up to DEEP_WAVE
+export const DEEP_WAVE = 30; // the steeper ramp kicks in past this wave
+export const DEEP_HP_GROWTH_PER_WAVE = 0.15; // extra compounding growth per wave beyond DEEP_WAVE
 
 // Deep-wave slow resistance: marked monsters shrug off a growing share of any slow,
-// from 0% at wave 30 up to 60% at wave 60 (capped). Keeps permaslow comps honest late.
+// from 0% at wave 30 up to FULL immunity (100%) at wave 60. Permaslow comps stop working
+// deep — late waves must be beaten on raw damage, not crowd control.
 export const SLOW_RESIST_START_WAVE = 30;
 export const SLOW_RESIST_END_WAVE = 60;
-export const SLOW_RESIST_MAX = 0.6;
+export const SLOW_RESIST_MAX = 1.0;
 
 export function slowResistFor(type: EnemyType, waveNumber: number): number {
   const base = type.slowResist ?? 0;
@@ -49,7 +53,11 @@ export function slowResistFor(type: EnemyType, waveNumber: number): number {
 export function scaledMaxHp(baseMaxHp: number, waveNumber: number): number {
   let mult = 1 + HP_GROWTH_PER_WAVE * Math.max(0, waveNumber - 1);
   if (waveNumber > LATE_WAVE) {
-    mult *= Math.pow(1 + LATE_HP_GROWTH_PER_WAVE, waveNumber - LATE_WAVE);
+    // the 8% ramp runs only across waves 20..30; beyond 30 the steeper ramp takes over
+    mult *= Math.pow(1 + LATE_HP_GROWTH_PER_WAVE, Math.min(waveNumber, DEEP_WAVE) - LATE_WAVE);
+  }
+  if (waveNumber > DEEP_WAVE) {
+    mult *= Math.pow(1 + DEEP_HP_GROWTH_PER_WAVE, waveNumber - DEEP_WAVE);
   }
   return Math.round(baseMaxHp * mult);
 }

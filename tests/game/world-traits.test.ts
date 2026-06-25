@@ -136,11 +136,12 @@ describe('boss waves', () => {
   it('authored wave 10 leads with the Bakunawa', () => {
     expect(WAVES[9].spawns[0].enemyTypeId).toBe('bakunawa');
   });
-  it('every generated 10th wave includes Bakunawa, growing in number', () => {
+  it('sends a lone Bakunawa each boss wave until they pile up from wave 30', () => {
     expect(generateWave(20).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 1 });
-    expect(generateWave(30).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 1 });
-    expect(generateWave(40).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 2 });
-    expect(generateWave(70).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 3 });
+    expect(generateWave(30).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 2 });
+    expect(generateWave(40).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 3 });
+    expect(generateWave(50).spawns[0]).toMatchObject({ enemyTypeId: 'bakunawa', count: 4 });
+    expect(generateWave(120).spawns[0].count).toBe(5); // capped so the path never floods
     expect(generateWave(21).spawns.some((s) => s.enemyTypeId === 'bakunawa')).toBe(false);
   });
 });

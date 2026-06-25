@@ -5,6 +5,7 @@ import {
 } from '../net/matchService';
 import { MatchChannel } from '../net/matchChannel';
 import type { MatchSession } from '../net/session';
+import { playSfx } from '../audio/sfx';
 
 export interface LobbyCallbacks {
   onMatched: (session: MatchSession) => void;
@@ -21,6 +22,10 @@ function el(html: string): HTMLElement {
 export function showLobby(cb: LobbyCallbacks): void {
   const root = el(`<div class="ui-lobby"><div class="ui-lobby-inner"></div></div>`);
   const inner = root.querySelector<HTMLElement>('.ui-lobby-inner')!;
+  // one delegated click cue for every lobby button (views are swapped in and out of `inner`)
+  root.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('button')) playSfx('click');
+  });
   document.body.appendChild(root);
   let leaving = false;
   let finished = false;

@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import type { Vec2 } from '../game/geometry';
 import { MANIFEST } from '../assets/manifest';
 import { HERO_TYPES } from '../game/config/heroes';
+import { ENEMY_TYPES } from '../game/config/enemies';
+import { playSfx, playHeroAttack } from '../audio/sfx';
 
 const FX_DEPTH = 5000;
 
@@ -267,6 +269,7 @@ export function spawnSlash(scene: Phaser.Scene, at: Vec2): void {
 
 // Power-shot flash (Rampage/Deadeye crits): a golden starburst + expanding ring at impact.
 export function spawnCritFlash(scene: Phaser.Scene, at: Vec2): void {
+  playSfx('crit');
   const g = scene.add.graphics({ x: at.x, y: at.y }).setDepth(FX_DEPTH + 1);
   g.fillStyle(0xffe28a, 0.95);
   for (let i = 0; i < 4; i++) {
@@ -285,6 +288,7 @@ export function spawnCritFlash(scene: Phaser.Scene, at: Vec2): void {
 
 // Aftershock landing: a dusty shockwave ring rippling out across the ground.
 export function spawnQuake(scene: Phaser.Scene, at: Vec2, radius: number): void {
+  playSfx('quake');
   const g = scene.add.graphics({ x: at.x, y: at.y }).setDepth(FX_DEPTH - 1);
   g.lineStyle(5, 0x9a8568, 0.85);
   g.strokeCircle(0, 0, 10);
@@ -302,6 +306,7 @@ export function spawnQuake(scene: Phaser.Scene, at: Vec2, radius: number): void 
 }
 
 export function spawnHitPuff(scene: Phaser.Scene, at: Vec2): void {
+  playSfx('hit');
   const s = scene.add.sprite(at.x, at.y, MANIFEST.fx.hitPuff.key).setDepth(FX_DEPTH);
   s.play(MANIFEST.fx.hitPuff.key);
   s.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => s.destroy());
@@ -331,6 +336,7 @@ export function spawnSpin(scene: Phaser.Scene, at: Vec2, radius: number): void {
 }
 
 export function spawnDeath(scene: Phaser.Scene, enemyTypeId: string, at: Vec2): void {
+  playSfx(ENEMY_TYPES[enemyTypeId]?.boss ? 'boss-death' : 'enemy-death');
   const s = scene.add.sprite(at.x, at.y, enemyTypeId).setDepth(FX_DEPTH);
   s.play(deathAnimKey(scene, enemyTypeId));
   s.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => s.destroy());
@@ -338,6 +344,7 @@ export function spawnDeath(scene: Phaser.Scene, enemyTypeId: string, at: Vec2): 
 
 // Rising "+N" gold text that floats up and fades, for gold gained at a position.
 export function spawnGoldPopup(scene: Phaser.Scene, at: Vec2, amount: number): void {
+  playSfx('gold');
   const t = scene.add
     .text(at.x, at.y - 8, `+${amount}`, {
       fontFamily: 'Trebuchet MS, sans-serif',
@@ -373,6 +380,7 @@ export function spawnHeroShotFx(
   to: Vec2,
   crit = false,
 ): void {
+  playHeroAttack(heroId);
   const hero = HERO_TYPES[heroId];
   if (hero?.spin) {
     spawnSpin(scene, from, hero.range);

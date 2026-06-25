@@ -1,6 +1,7 @@
 import { HERO_TYPES, HERO_ORDER, type HeroType } from '../game/config/heroes';
 import { LOADOUT_SIZE, isValidLoadout } from '../game/config/loadout';
 import { loadSave, saveLoadout } from '../services/localSave';
+import { playSfx } from '../audio/sfx';
 
 export interface HeroSelectCallbacks {
   onStart: (loadout: string[]) => void;
@@ -61,8 +62,13 @@ export function showHeroSelect(cb: HeroSelectCallbacks, opts?: { timerS?: number
       <span class="ui-card-check"></span>
     `;
     card.addEventListener('click', () => {
-      if (selected.has(id)) selected.delete(id);
-      else if (selected.size < LOADOUT_SIZE) selected.add(id);
+      if (selected.has(id)) {
+        selected.delete(id);
+        playSfx('cancel');
+      } else if (selected.size < LOADOUT_SIZE) {
+        selected.add(id);
+        playSfx('arm');
+      }
       refresh();
     });
     cards.set(id, card);
@@ -88,6 +94,7 @@ export function showHeroSelect(cb: HeroSelectCallbacks, opts?: { timerS?: number
     const loadout = HERO_ORDER.filter((id) => selected.has(id));
     if (!isValidLoadout(loadout)) return;
     started = true;
+    playSfx('count-go');
     if (countdown !== null) window.clearInterval(countdown);
     saveLoadout(loadout);
     root.remove();

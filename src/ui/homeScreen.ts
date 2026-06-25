@@ -1,5 +1,6 @@
 import { HERO_ORDER } from '../game/config/heroes';
 import { leaderboardAvailable, fetchLeaderboard } from '../net/leaderboard';
+import { playSfx } from '../audio/sfx';
 
 export interface HomeScreenCallbacks {
   onInfinite: () => void;
@@ -34,10 +35,12 @@ export function showHomeScreen(cb: HomeScreenCallbacks): void {
   document.body.appendChild(home);
 
   home.querySelector<HTMLElement>('#home-infinite')!.addEventListener('click', () => {
+    playSfx('click');
     home.remove();
     cb.onInfinite();
   });
   home.querySelector<HTMLElement>('#home-mp')!.addEventListener('click', () => {
+    playSfx('click');
     home.remove();
     cb.onMultiplayer();
   });

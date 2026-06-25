@@ -11,6 +11,8 @@ import { setLoadout } from './game/config/loadout';
 import { showLobby } from './ui/lobby';
 import { getSession, setSession, type MatchSession } from './net/session';
 import { BOARD_W, BOARD_GAP } from './scenes/GameScene';
+import { primeSfx, playSfx } from './audio/sfx';
+import { mountMuteButton } from './ui/muteButton';
 
 // Built lazily: multiplayer renders BOTH boards side by side (Bloons-Battles style),
 // so the canvas is double-wide plus a divider gap.
@@ -67,13 +69,16 @@ function readyThenStart(
     started = true;
     let n = 3;
     overlay.textContent = String(n);
+    playSfx('count-tick');
     const tick = window.setInterval(() => {
       n -= 1;
       if (n > 0) {
         overlay.textContent = String(n);
+        playSfx('count-tick');
       } else {
         window.clearInterval(tick);
         overlay.remove();
+        playSfx('count-go');
         startGame();
       }
     }, 1000);
@@ -97,6 +102,12 @@ function readyThenStart(
   maybeStart();
 }
 
+// Build every sound pool up front so the first cue has no fetch latency. (Loading is
+// always allowed; only playback waits for the first user gesture, which the home screen
+// buttons provide.)
+primeSfx();
+mountMuteButton();
+
 // Title screen -> hero card select -> the Phaser game boots with the chosen loadout.
 showHomeScreen({
   onInfinite: () => {
@@ -112,6 +123,7 @@ showHomeScreen({
       onBack: () => location.reload(),
       onMatched: (session) => {
         setSession(session);
+        playSfx('match-found');
         const readyState = { peerReady: false, onPeerReady: () => {} };
         session.transport.on('ready', () => {
           readyState.peerReady = true;

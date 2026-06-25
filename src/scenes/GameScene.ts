@@ -24,9 +24,11 @@ import { RivalBoardView } from '../render/rivalBoardView';
 import { finishMatch } from '../net/matchService';
 import { SEND_TABLE } from '../game/config/sends';
 import type { OpponentVM } from '../ui/uiState';
+import { playSfx } from '../audio/sfx';
 
 const HERO_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR'];
 const STORE_KEY = 'FIVE';
+const LOW_LIVES_THRESHOLD = 5; // lives at/under which the danger warning sounds
 
 // side-by-side multiplayer boards: ours at x=0, the rival's after a divider gap
 export const BOARD_W = LEVEL_ONE.cols * LEVEL_ONE.tileSize;
@@ -67,6 +69,12 @@ export class GameScene extends Phaser.Scene {
   private enemyViews = new Map<Enemy, EnemyView>();
   private towerViews = new Map<Tower, TowerView>();
   private storeViews = new Map<Store, StoreView>();
+  // previous-frame snapshot for firing state-change audio cues (leak, wave start, boss, etc.)
+  private prevLives = 0;
+  private prevWave = 0;
+  private prevBoss = false;
+  private prevWaveIdle = false; // true while a wave-clear countdown is showing (solo)
+  private lowLivesArmed = true; // re-arms above the threshold so the warning fires once per dip
 
   constructor() {
     super('Game');
@@ -94,6 +102,11 @@ export class GameScene extends Phaser.Scene {
     this.storeViews.clear();
     this.selectedTower = null;
     this.selectedStore = null;
+    this.prevLives = this.world.lives;
+    this.prevWave = this.world.waveNumber;
+    this.prevBoss = false;
+    this.prevWaveIdle = false;
+    this.lowLivesArmed = this.world.lives > LOW_LIVES_THRESHOLD;
 
     renderMap(this, LEVEL_ONE);
     this.hpBars = this.add.graphics().setDepth(9000);
@@ -129,6 +142,7 @@ export class GameScene extends Phaser.Scene {
         this.selectedHeroId = id;
         this.selectedTower = null;
         this.selectedStore = null;
+        playSfx('arm');
       });
     });
     this.input.keyboard?.on(`keydown-${STORE_KEY}`, () => {
@@ -136,6 +150,7 @@ export class GameScene extends Phaser.Scene {
       this.selectedHeroId = STORE.id;
       this.selectedTower = null;
       this.selectedStore = null;
+      playSfx('arm');
     });
     this.input.keyboard?.on('keydown-SPACE', () => this.world.startNextWave());
     this.input.keyboard?.on('keydown-R', () => {
@@ -143,6 +158,7 @@ export class GameScene extends Phaser.Scene {
     });
     // Esc / right-click cancel the in-progress deployment
     this.input.keyboard?.on('keydown-ESC', () => {
+      if (this.selectedHeroId || this.selectedTower || this.selectedStore) playSfx('cancel');
       this.selectedHeroId = null;
       this.selectedTower = null;
       this.selectedStore = null;
@@ -152,6 +168,7 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (this.mp && p.x >= BOARD_W) return; // the rival's half is view-only
       if (p.rightButtonDown()) {
+        if (this.selectedHeroId || this.selectedTower || this.selectedStore) playSfx('cancel');
         this.selectedHeroId = null;
         this.selectedTower = null;
         this.selectedStore = null;
@@ -166,9 +183,12 @@ export class GameScene extends Phaser.Scene {
       if (store) {
         this.selectedStore = store;
         this.selectedTower = null;
+        playSfx('click');
         return;
       }
-      this.selectedTower = this.world.towerAt(p.x, p.y);
+      const picked = this.world.towerAt(p.x, p.y);
+      if (picked) playSfx('click');
+      this.selectedTower = picked;
       this.selectedStore = null;
     });
 
@@ -177,29 +197,38 @@ export class GameScene extends Phaser.Scene {
     ui.onSelectHero = (id) => {
       // can't arm the store once the cap is hit (cancelling an armed store still works)
       if (id === STORE.id && this.selectedHeroId !== id && !this.world.canBuildStore()) return;
-      this.selectedHeroId = this.selectedHeroId === id ? null : id;
+      const arming = this.selectedHeroId !== id;
+      this.selectedHeroId = arming ? id : null;
       this.selectedTower = null;
       this.selectedStore = null;
+      playSfx(arming ? 'arm' : 'cancel');
     };
     ui.onUpgrade = (path) => {
-      if (this.selectedTower) this.world.upgradeTower(this.selectedTower, path);
+      if (this.selectedTower) playSfx(this.world.upgradeTower(this.selectedTower, path) ? 'upgrade' : 'error');
     };
     ui.onSell = () => {
       if (this.selectedTower) {
         this.world.sellTower(this.selectedTower);
         this.selectedTower = null;
+        playSfx('sell');
       }
     };
     ui.onSellStore = () => {
       if (this.selectedStore) {
         this.world.sellStore(this.selectedStore);
         this.selectedStore = null;
+        playSfx('sell');
       }
     };
     ui.onUpgradeStore = (path) => {
-      if (this.selectedStore) this.world.upgradeStore(this.selectedStore, path);
+      if (this.selectedStore) playSfx(this.world.upgradeStore(this.selectedStore, path) ? 'upgrade' : 'error');
     };
-    ui.onCycleTarget = () => this.selectedTower?.cycleTarget();
+    ui.onCycleTarget = () => {
+      if (this.selectedTower) {
+        this.selectedTower.cycleTarget();
+        playSfx('click');
+      }
+    };
     ui.onRestart = () => this.requestRestart();
     ui.onHome = () => {
       if (this.world.status !== 'playing') location.reload();
@@ -240,7 +269,10 @@ export class GameScene extends Phaser.Scene {
     this.peerWantsRematch = false;
     this.rivalPrev = null;
     this.rivalCur = null;
-    mp.transport.on('send', (e) => this.world.queueIncomingSend(e.enemyTypeId, e.count));
+    mp.transport.on('send', (e) => {
+      this.world.queueIncomingSend(e.enemyTypeId, e.count);
+      playSfx('send-in'); // rival just dumped monsters on us — make it heard
+    });
     mp.transport.on('status', (e) => {
       if (this.opponent) {
         this.opponent.lives = e.lives;
@@ -259,9 +291,11 @@ export class GameScene extends Phaser.Scene {
     mp.transport.on('defeat', () => this.winMatch());
     mp.transport.on('peerLeave', () => {
       if (this.world.status === 'playing') this.forfeitTimer = 30;
+      playSfx('peer-leave');
     });
     mp.transport.on('peerJoin', () => {
       this.forfeitTimer = null;
+      playSfx('peer-join');
     });
     mp.transport.on('rematch', () => {
       this.peerWantsRematch = true;
@@ -273,6 +307,9 @@ export class GameScene extends Phaser.Scene {
       const option = SEND_TABLE.find((o) => o.enemyTypeId === enemyTypeId);
       if (option && this.world.buySend(option)) {
         mp.transport.emit('send', { enemyTypeId, count: 1 });
+        playSfx('send-out');
+      } else {
+        playSfx('error');
       }
     };
     ui.onConcede = () => {
@@ -319,11 +356,11 @@ export class GameScene extends Phaser.Scene {
     if (this.world.status !== 'playing' || !this.selectedHeroId) return;
     if (this.selectedHeroId === STORE.id) {
       const { col, row } = footprintTopLeftAt(LEVEL_ONE, x, y, STORE.width, STORE.height);
-      this.world.placeStore(col, row);
+      playSfx(this.world.placeStore(col, row) ? 'place' : 'error');
       return;
     }
     const { col, row } = footprintTopLeftAt(LEVEL_ONE, x, y);
-    this.world.placeTower(this.selectedHeroId, col, row);
+    playSfx(this.world.placeTower(this.selectedHeroId, col, row) ? 'place' : 'error');
   }
 
   private drawGhost(): void {
@@ -418,6 +455,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.rivalView?.sync(this.interpolatedRivalBoard());
     this.consumeEvents();
+    this.emitStateCues();
     this.syncViews();
     this.drawAuras();
     this.drawHpBars();
@@ -485,6 +523,34 @@ export class GameScene extends Phaser.Scene {
     }
     for (const g of this.world.events.gold) {
       spawnGoldPopup(this, g.pos, g.amount);
+    }
+  }
+
+  // Audio for things the world doesn't surface as events: wave/boss/leak/clear are read
+  // off the exposed state each frame and fired on transitions. Keeps game logic silent.
+  private emitStateCues(): void {
+    const w = this.world;
+    if (w.waveNumber > this.prevWave) {
+      this.prevWave = w.waveNumber;
+      playSfx('wave-start');
+    }
+    const boss = w.bossActive;
+    if (boss && !this.prevBoss) playSfx('boss-spawn');
+    this.prevBoss = boss;
+    if (w.lives < this.prevLives) playSfx('leak');
+    // the danger warning fires once on the way down, re-arming only after climbing back out
+    if (this.lowLivesArmed && w.lives <= LOW_LIVES_THRESHOLD && w.lives > 0) {
+      this.lowLivesArmed = false;
+      playSfx('low-lives');
+    } else if (w.lives > LOW_LIVES_THRESHOLD) {
+      this.lowLivesArmed = true;
+    }
+    this.prevLives = w.lives;
+    // solo: the next-wave countdown appearing marks the field going quiet (a clear)
+    if (!this.mp) {
+      const idle = w.nextWaveIn !== null;
+      if (idle && !this.prevWaveIdle) playSfx('wave-clear');
+      this.prevWaveIdle = idle;
     }
   }
 
@@ -586,6 +652,7 @@ export class GameScene extends Phaser.Scene {
   private handleEndState(): void {
     if (this.world.status === 'playing' || this.endHandled) return;
     this.endHandled = true;
+    playSfx(this.world.status === 'won' ? 'victory' : 'defeat');
     saveBestWave(this.world.waveNumber);
     this.bestWave = Math.max(this.bestWave, this.world.waveNumber);
     if (this.mp && this.world.status === 'lost') {
